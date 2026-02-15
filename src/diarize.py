@@ -22,7 +22,7 @@ def load_diarization_pipeline(hf_token: str):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     pipeline = Pipeline.from_pretrained(
-        config.DIARIZATION_MODEL, use_auth_token=hf_token
+        config.DIARIZATION_MODEL, token=hf_token
     )
     pipeline.to(device)
     return pipeline
@@ -91,7 +91,7 @@ def extract_speaker_embeddings(
     from pyannote.audio import Model, Inference
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = Model.from_pretrained(config.EMBEDDING_MODEL, use_auth_token=hf_token)
+    model = Model.from_pretrained(config.EMBEDDING_MODEL, token=hf_token)
     inference = Inference(model, window="whole", device=device)
 
     samples, sr = load_wav(wav_path)
