@@ -53,7 +53,8 @@ def run_diarization(
             raw_segments.append((turn.start, turn.end, speaker))
     elif hasattr(diarization, "speaker_diarization"):
         for turn, speaker in diarization.speaker_diarization:
-            raw_segments.append((turn.start, turn.end, f"SPEAKER_{speaker:02d}"))
+            label = f"SPEAKER_{int(speaker):02d}" if str(speaker).isdigit() else str(speaker)
+            raw_segments.append((turn.start, turn.end, label))
     else:
         raise RuntimeError(
             f"Unexpected diarization output type: {type(diarization)}. "
