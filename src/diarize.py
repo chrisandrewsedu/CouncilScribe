@@ -37,15 +37,28 @@ def run_diarization(
 
     Adjacent same-speaker segments with gaps < MERGE_GAP_SECONDS are merged.
     """
+    from pyannote.audio.pipelines.utils.hook import ProgressHook
+
     kwargs = {}
     if num_speakers is not None:
         kwargs["num_speakers"] = num_speakers
 
-    diarization = pipeline(str(wav_path), **kwargs)
+    with ProgressHook() as hook:
+        diarization = pipeline(str(wav_path), hook=hook, **kwargs)
 
+    # Handle both old Annotation API (itertracks) and new DiarizeOutput API
     raw_segments: list[tuple[float, float, str]] = []
-    for turn, _, speaker in diarization.itertracks(yield_label=True):
-        raw_segments.append((turn.start, turn.end, speaker))
+    if hasattr(diarization, "itertracks"):
+        for turn, _, speaker in diarization.itertracks(yield_label=True):
+            raw_segments.append((turn.start, turn.end, speaker))
+    elif hasattr(diarization, "speaker_diarization"):
+        for turn, speaker in diarization.speaker_diarization:
+            raw_segments.append((turn.start, turn.end, f"SPEAKER_{speaker:02d}"))
+    else:
+        raise RuntimeError(
+            f"Unexpected diarization output type: {type(diarization)}. "
+            "Check pyannote.audio version compatibility."
+        )
 
     merged = _merge_segments(raw_segments)
 
