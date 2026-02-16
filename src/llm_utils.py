@@ -50,7 +50,7 @@ def prompt_for_speaker_id(
     segments: list[Segment],
     current_mappings: dict[str, SpeakerMapping],
     unknown_label: str,
-    window_size: int = 30,
+    window_size: int = 20,
 ) -> Optional[SpeakerMapping]:
     """Ask the LLM to identify a single unknown speaker from context.
 
@@ -109,6 +109,14 @@ Based on the context, who is {unknown_label}? Consider:
 
 Respond with ONLY a JSON object:
 {{"name": "Speaker Name or null", "reasoning": "brief explanation"}}"""
+
+    # Truncate prompt if it would exceed context window (leave room for response)
+    max_prompt_tokens = config.LLM_CONTEXT_TOKENS - 200
+    estimated_tokens = len(prompt) // 3  # rough estimate: ~3 chars per token
+    if estimated_tokens > max_prompt_tokens:
+        # Trim the transcript excerpt to fit
+        allowed_chars = max_prompt_tokens * 3
+        prompt = prompt[:allowed_chars] + '\n---\n\nRespond with ONLY a JSON object:\n{"name": "Speaker Name or null", "reasoning": "brief explanation"}'
 
     response = llm(
         prompt,
