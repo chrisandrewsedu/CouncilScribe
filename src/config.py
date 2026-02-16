@@ -21,7 +21,7 @@ WHISPER_COMPUTE_GPU = "float16"
 WHISPER_COMPUTE_CPU = "int8"
 
 # --- LLM (Layer 3 speaker identification) ---
-LLM_REPO = "microsoft/Phi-3.5-mini-instruct-GGUF"
+LLM_REPO = "bartowski/Phi-3.5-mini-instruct-GGUF"
 LLM_FILENAME = "Phi-3.5-mini-instruct-Q4_K_M.gguf"
 LLM_CONTEXT_TOKENS = 2048
 
