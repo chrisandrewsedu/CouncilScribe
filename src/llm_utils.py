@@ -159,22 +159,80 @@ def llm_identify_speakers(
     llm,
     segments: list[Segment],
     current_mappings: dict[str, SpeakerMapping],
+    partial_results_path=None,
 ) -> dict[str, SpeakerMapping]:
     """Identify all unresolved speakers using the LLM.
 
     This function is designed to be passed as llm_identify_fn to
     identify.identify_speakers().
+
+    If partial_results_path is provided, saves results after each speaker
+    so progress survives errors or session timeouts.
     """
-    all_labels = {seg.speaker_label for seg in segments}
+    all_labels = sorted({seg.speaker_label for seg in segments})
     unresolved = [
         label for label in all_labels
         if label not in current_mappings or not current_mappings[label].speaker_name
     ]
 
+    # Load any partial results from a previous run
     results: dict[str, SpeakerMapping] = {}
-    for label in unresolved:
-        mapping = prompt_for_speaker_id(llm, segments, current_mappings, label)
-        if mapping:
-            results[label] = mapping
+    already_done: set[str] = set()
+    if partial_results_path:
+        try:
+            with open(partial_results_path, "r") as f:
+                partial = json.load(f)
+            for label, data in partial.items():
+                results[label] = SpeakerMapping(
+                    speaker_label=label,
+                    speaker_name=data.get("speaker_name"),
+                    confidence=data.get("confidence", 0.75),
+                    id_method="llm",
+                )
+                already_done.add(label)
+            if already_done:
+                print(f"    Loaded {len(already_done)} partial LLM results from previous run")
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+
+    remaining = [l for l in unresolved if l not in already_done]
+    total = len(remaining)
+    print(f"    LLM identifying {total} unresolved speaker(s)...")
+
+    for i, label in enumerate(remaining):
+        print(f"    [{i+1}/{total}] Analyzing {label}...", end=" ", flush=True)
+        try:
+            mapping = prompt_for_speaker_id(llm, segments, current_mappings, label)
+            if mapping:
+                results[label] = mapping
+                # Update current_mappings so subsequent prompts have context
+                current_mappings[label] = mapping
+                print(f"-> {mapping.speaker_name}")
+            else:
+                print("-> (unresolved)")
+        except Exception as e:
+            print(f"-> error: {e}")
+            # Save what we have so far and re-raise
+            if partial_results_path:
+                _save_partial_results(results, partial_results_path)
+                print(f"    Partial results saved ({len(results)} speakers). Re-run to continue.")
+            raise
+
+        # Save after each successful identification
+        if partial_results_path:
+            _save_partial_results(results, partial_results_path)
 
     return results
+
+
+def _save_partial_results(results: dict[str, SpeakerMapping], path) -> None:
+    """Save partial LLM results to disk."""
+    data = {}
+    for label, m in results.items():
+        data[label] = {
+            "speaker_name": m.speaker_name,
+            "confidence": m.confidence,
+            "id_method": m.id_method,
+        }
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
