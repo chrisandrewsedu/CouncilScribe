@@ -93,6 +93,68 @@ class SpeakerMapping:
 
 
 @dataclass
+class SummarySection:
+    section_type: str  # roll_call, consent_agenda, discussion, public_comment, vote, opening, closing, procedural
+    title: str
+    content: str  # markdown
+    start_time: float = 0.0
+    end_time: float = 0.0
+    start_segment: int = 0
+    end_segment: int = 0
+
+    def to_dict(self) -> dict:
+        return {
+            "section_type": self.section_type,
+            "title": self.title,
+            "content": self.content,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "start_segment": self.start_segment,
+            "end_segment": self.end_segment,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> SummarySection:
+        return cls(
+            section_type=d["section_type"],
+            title=d["title"],
+            content=d.get("content", ""),
+            start_time=d.get("start_time", 0.0),
+            end_time=d.get("end_time", 0.0),
+            start_segment=d.get("start_segment", 0),
+            end_segment=d.get("end_segment", 0),
+        )
+
+
+@dataclass
+class MeetingSummary:
+    executive_summary: str = ""
+    key_decisions: list[str] = field(default_factory=list)
+    sections: list[SummarySection] = field(default_factory=list)
+    model: str = ""
+    generated_at: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "executive_summary": self.executive_summary,
+            "key_decisions": self.key_decisions,
+            "sections": [s.to_dict() for s in self.sections],
+            "model": self.model,
+            "generated_at": self.generated_at,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> MeetingSummary:
+        return cls(
+            executive_summary=d.get("executive_summary", ""),
+            key_decisions=d.get("key_decisions", []),
+            sections=[SummarySection.from_dict(s) for s in d.get("sections", [])],
+            model=d.get("model", ""),
+            generated_at=d.get("generated_at", ""),
+        )
+
+
+@dataclass
 class ProcessingMetadata:
     pipeline_version: str = "1.0.0"
     diarization_model: str = ""
@@ -132,10 +194,11 @@ class Meeting:
     duration_seconds: float = 0.0
     segments: list[Segment] = field(default_factory=list)
     speakers: dict[str, SpeakerMapping] = field(default_factory=dict)
+    summary: Optional[MeetingSummary] = None
     processing_metadata: ProcessingMetadata = field(default_factory=ProcessingMetadata)
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "meeting_id": self.meeting_id,
             "city": self.city,
             "date": self.date,
@@ -146,9 +209,13 @@ class Meeting:
             "speakers": {k: v.to_dict() for k, v in self.speakers.items()},
             "processing_metadata": self.processing_metadata.to_dict(),
         }
+        if self.summary is not None:
+            d["summary"] = self.summary.to_dict()
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> Meeting:
+        summary_data = d.get("summary")
         return cls(
             meeting_id=d["meeting_id"],
             city=d["city"],
@@ -161,6 +228,7 @@ class Meeting:
                 k: SpeakerMapping.from_dict(v)
                 for k, v in d.get("speakers", {}).items()
             },
+            summary=MeetingSummary.from_dict(summary_data) if summary_data else None,
             processing_metadata=ProcessingMetadata.from_dict(
                 d.get("processing_metadata", {})
             ),

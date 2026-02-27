@@ -1,9 +1,22 @@
 """Configuration constants and paths for CouncilScribe."""
 
+import os
 from pathlib import Path
 
-# --- Google Drive paths ---
-DRIVE_ROOT = Path("/content/drive/MyDrive/CouncilScribe")
+# --- Data root (auto-detect Colab vs local) ---
+_DEFAULT_LOCAL = Path.home() / "CouncilScribe"
+_DEFAULT_COLAB = Path("/content/drive/MyDrive/CouncilScribe")
+
+def _detect_root() -> Path:
+    """Resolve data root: CS_DATA_DIR env var > Colab Drive > ~/CouncilScribe."""
+    env = os.environ.get("CS_DATA_DIR")
+    if env:
+        return Path(env)
+    if _DEFAULT_COLAB.exists():
+        return _DEFAULT_COLAB
+    return _DEFAULT_LOCAL
+
+DRIVE_ROOT = _detect_root()
 MEETINGS_DIR = DRIVE_ROOT / "meetings"
 PROFILES_DIR = DRIVE_ROOT / "profiles"
 CONFIG_DIR = DRIVE_ROOT / "config"
@@ -21,13 +34,21 @@ WHISPER_COMPUTE_GPU = "float16"
 WHISPER_COMPUTE_CPU = "int8"
 
 # --- LLM (Layer 3 speaker identification) ---
-LLM_REPO = "bartowski/Phi-3.5-mini-instruct-GGUF"
-LLM_FILENAME = "Phi-3.5-mini-instruct-Q4_K_M.gguf"
-LLM_CONTEXT_TOKENS = 4096
+LLM_REPO = "bartowski/Qwen2.5-7B-Instruct-GGUF"
+LLM_FILENAME = "Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+LLM_CONTEXT_TOKENS = 8192
+
+# --- Summary generation (Anthropic API) ---
+SUMMARY_CLASSIFY_MODEL = "claude-haiku-4-5-20251001"    # Section classification
+SUMMARY_SYNTHESIZE_MODEL = "claude-sonnet-4-5"  # Discussion summaries & executive summary
+SUMMARY_MAX_TOKENS_CLASSIFY = 4096
+SUMMARY_MAX_TOKENS_SYNTHESIZE = 4096
+SUMMARY_CHUNK_SIZE = 150  # Max segments per classification chunk
 
 # --- Thresholds ---
-VOICE_MATCH_THRESHOLD = 0.85
-CONFIDENCE_REVIEW_THRESHOLD = 0.70
+VOICE_MATCH_THRESHOLD = 0.85          # Auto-enroll: voice match or high-confidence ID
+ENROLLMENT_PROMPT_THRESHOLD = 0.70    # Prompt for enrollment confirmation (interactive mode)
+CONFIDENCE_REVIEW_THRESHOLD = 0.70    # Flag for speaker ID review below this
 
 # --- Diarization tuning ---
 MERGE_GAP_SECONDS = 0.5  # merge adjacent same-speaker segments closer than this

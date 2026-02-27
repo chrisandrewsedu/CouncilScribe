@@ -18,8 +18,9 @@ class PipelineStage(IntEnum):
     DIARIZED = 2
     TRANSCRIBED = 3
     IDENTIFIED = 4
-    ENROLLED = 5
-    EXPORTED = 6
+    SUMMARIZED = 5
+    ENROLLED = 6
+    EXPORTED = 7
 
 
 class PipelineState:

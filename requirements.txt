@@ -11,3 +11,4 @@ soundfile>=0.12
 llama-cpp-python>=0.3.0
 requests>=2.28
 beautifulsoup4>=4.12
+anthropic>=0.40.0

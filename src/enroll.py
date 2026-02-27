@@ -85,6 +85,34 @@ def _name_to_slug(name: str) -> str:
     return filtered[0].lower()
 
 
+def _enroll_one(
+    db: ProfileDB,
+    slug: str,
+    display_name: str,
+    embedding: np.ndarray,
+    meeting_id: str,
+    seg_count: int,
+) -> None:
+    """Add or update a single speaker profile in the database."""
+    if slug in db.profiles:
+        profile = db.profiles[slug]
+        profile.embeddings.append(embedding)
+        if meeting_id not in profile.meetings_seen:
+            profile.meetings_seen.append(meeting_id)
+        profile.total_segments_confirmed += seg_count
+        profile.recompute_centroid()
+    else:
+        profile = StoredProfile(
+            speaker_id=slug,
+            display_name=display_name,
+            embeddings=[embedding],
+            meetings_seen=[meeting_id],
+            total_segments_confirmed=seg_count,
+        )
+        profile.recompute_centroid()
+        db.profiles[slug] = profile
+
+
 def enroll_speakers(
     db: ProfileDB,
     speaker_embeddings: dict[str, np.ndarray],
@@ -105,29 +133,165 @@ def enroll_speakers(
             continue
 
         slug = _name_to_slug(mapping.speaker_name)
-        embedding = speaker_embeddings[label]
+        seg_count = sum(1 for s in segments if s.speaker_label == label)
+        _enroll_one(db, slug, mapping.speaker_name, speaker_embeddings[label], meeting_id, seg_count)
 
-        # Count segments for this speaker
-        seg_count = sum(
-            1 for s in segments if s.speaker_label == label
+    return db
+
+
+def get_borderline_speakers(
+    mappings: dict[str, SpeakerMapping],
+    speaker_embeddings: dict[str, np.ndarray],
+    segments: list[Segment],
+) -> list[dict]:
+    """Find speakers eligible for interactive enrollment confirmation.
+
+    Returns speakers with:
+    - A name assigned
+    - Confidence between ENROLLMENT_PROMPT_THRESHOLD and VOICE_MATCH_THRESHOLD
+    - An embedding available
+    """
+    borderline = []
+    for label, mapping in mappings.items():
+        if not mapping.speaker_name:
+            continue
+        if label not in speaker_embeddings:
+            continue
+        if mapping.confidence >= config.VOICE_MATCH_THRESHOLD:
+            continue  # already auto-enrolled
+        if mapping.confidence < config.ENROLLMENT_PROMPT_THRESHOLD:
+            continue  # too low to consider
+
+        seg_count = sum(1 for s in segments if s.speaker_label == label)
+        total_speech = sum(
+            s.end_time - s.start_time
+            for s in segments if s.speaker_label == label
         )
 
-        if slug in db.profiles:
-            profile = db.profiles[slug]
-            profile.embeddings.append(embedding)
-            if meeting_id not in profile.meetings_seen:
-                profile.meetings_seen.append(meeting_id)
-            profile.total_segments_confirmed += seg_count
-            profile.recompute_centroid()
-        else:
-            profile = StoredProfile(
-                speaker_id=slug,
-                display_name=mapping.speaker_name,
-                embeddings=[embedding],
-                meetings_seen=[meeting_id],
-                total_segments_confirmed=seg_count,
-            )
-            profile.recompute_centroid()
-            db.profiles[slug] = profile
+        # Find a representative segment (near 1/3 point for context)
+        speaker_segs = [s for s in segments if s.speaker_label == label and s.text]
+        sample_seg = None
+        if speaker_segs:
+            idx = max(0, len(speaker_segs) // 3 - 1)
+            sample_seg = speaker_segs[idx]
+
+        borderline.append({
+            "label": label,
+            "mapping": mapping,
+            "seg_count": seg_count,
+            "total_speech_seconds": total_speech,
+            "sample_segment": sample_seg,
+        })
+
+    # Sort by confidence descending (most likely correct first)
+    borderline.sort(key=lambda x: x["mapping"].confidence, reverse=True)
+    return borderline
+
+
+def rename_profile(
+    db: ProfileDB,
+    old_slug: str,
+    new_display_name: str,
+) -> bool:
+    """Rename a profile's display_name and re-key it under the new slug.
+
+    Returns True if the rename was performed, False if old_slug not found.
+    If the new slug already exists, the profiles are merged instead.
+    """
+    if old_slug not in db.profiles:
+        return False
+
+    new_slug = _name_to_slug(new_display_name)
+    profile = db.profiles.pop(old_slug)
+
+    if new_slug in db.profiles:
+        # Merge into existing profile
+        target = db.profiles[new_slug]
+        target.embeddings.extend(profile.embeddings)
+        for mid in profile.meetings_seen:
+            if mid not in target.meetings_seen:
+                target.meetings_seen.append(mid)
+        target.total_segments_confirmed += profile.total_segments_confirmed
+        target.recompute_centroid()
+    else:
+        profile.speaker_id = new_slug
+        profile.display_name = new_display_name
+        db.profiles[new_slug] = profile
+
+    return True
+
+
+def merge_profiles(
+    db: ProfileDB,
+    source_slug: str,
+    dest_slug: str,
+) -> bool:
+    """Merge source profile into destination profile.
+
+    All embeddings, meetings, and segment counts from source are added
+    to dest. Source profile is then removed.
+
+    Returns True if merge was performed, False if either slug not found.
+    """
+    if source_slug not in db.profiles or dest_slug not in db.profiles:
+        return False
+    if source_slug == dest_slug:
+        return False
+
+    source = db.profiles.pop(source_slug)
+    dest = db.profiles[dest_slug]
+
+    dest.embeddings.extend(source.embeddings)
+    for mid in source.meetings_seen:
+        if mid not in dest.meetings_seen:
+            dest.meetings_seen.append(mid)
+    dest.total_segments_confirmed += source.total_segments_confirmed
+    dest.recompute_centroid()
+
+    return True
+
+
+def fix_profiles_with_roster(db: ProfileDB, roster) -> list[str]:
+    """Rename all profiles whose display_name matches a roster alias.
+
+    Returns list of change descriptions for logging.
+    """
+    from .roster import correct_speaker_name
+
+    changes = []
+    # Collect renames first to avoid mutating dict during iteration
+    renames = []
+    for slug, profile in list(db.profiles.items()):
+        corrected = correct_speaker_name(profile.display_name, roster)
+        if corrected != profile.display_name:
+            renames.append((slug, corrected, profile.display_name))
+
+    for old_slug, new_name, old_name in renames:
+        new_slug = _name_to_slug(new_name)
+        rename_profile(db, old_slug, new_name)
+        changes.append(f"{old_slug} ({old_name}) -> {new_slug} ({new_name})")
+
+    return changes
+
+
+def enroll_confirmed(
+    db: ProfileDB,
+    speaker_embeddings: dict[str, np.ndarray],
+    confirmed_labels: list[str],
+    mappings: dict[str, SpeakerMapping],
+    meeting_id: str,
+    segments: list[Segment],
+) -> ProfileDB:
+    """Enroll specific speakers that were confirmed interactively."""
+    for label in confirmed_labels:
+        mapping = mappings.get(label)
+        if not mapping or not mapping.speaker_name:
+            continue
+        if label not in speaker_embeddings:
+            continue
+
+        slug = _name_to_slug(mapping.speaker_name)
+        seg_count = sum(1 for s in segments if s.speaker_label == label)
+        _enroll_one(db, slug, mapping.speaker_name, speaker_embeddings[label], meeting_id, seg_count)
 
     return db

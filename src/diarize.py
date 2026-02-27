@@ -13,19 +13,58 @@ from .audio_utils import load_wav, slice_audio
 from .models import Segment
 
 
+def _get_torch_device() -> torch.device:
+    """Pick best available device: CUDA > MPS > CPU."""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def load_diarization_pipeline(hf_token: str):
     """Load pyannote speaker-diarization-3.1 pipeline.
 
-    Places model on CUDA if available.
+    Places model on CUDA or MPS if available, else CPU.
     """
     from pyannote.audio import Pipeline
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = _get_torch_device()
     pipeline = Pipeline.from_pretrained(
         config.DIARIZATION_MODEL, token=hf_token
     )
     pipeline.to(device)
+    print(f"  Diarization device: {device}")
     return pipeline
+
+
+class _LineProgressHook:
+    """Progress hook that prints line-by-line instead of tqdm carriage returns."""
+
+    def __init__(self):
+        self._current_step = None
+        self._last_pct = -1
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._current_step:
+            print(flush=True)
+
+    def __call__(self, step_name, step_artifact, file=None, total=None, completed=None):
+        if step_name != self._current_step:
+            if self._current_step:
+                print(flush=True)
+            self._current_step = step_name
+            self._last_pct = -1
+            print(f"  [{step_name}]", end="", flush=True)
+
+        if total and completed:
+            pct = int((completed / total) * 100)
+            if pct >= self._last_pct + 10:
+                print(f" {pct}%", end="", flush=True)
+                self._last_pct = pct
 
 
 def run_diarization(
@@ -37,13 +76,11 @@ def run_diarization(
 
     Adjacent same-speaker segments with gaps < MERGE_GAP_SECONDS are merged.
     """
-    from pyannote.audio.pipelines.utils.hook import ProgressHook
-
     kwargs = {}
     if num_speakers is not None:
         kwargs["num_speakers"] = num_speakers
 
-    with ProgressHook() as hook:
+    with _LineProgressHook() as hook:
         diarization = pipeline(str(wav_path), hook=hook, **kwargs)
 
     # Handle both old Annotation API (itertracks) and new DiarizeOutput API
@@ -104,7 +141,7 @@ def extract_speaker_embeddings(
     """
     from pyannote.audio import Model, Inference
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = _get_torch_device()
     model = Model.from_pretrained(config.EMBEDDING_MODEL, token=hf_token)
     inference = Inference(model, window="whole", device=device)
 
@@ -112,7 +149,8 @@ def extract_speaker_embeddings(
 
     speaker_embeddings: dict[str, list[np.ndarray]] = {}
 
-    for seg in segments:
+    total = len(segments)
+    for i, seg in enumerate(segments):
         audio_slice = slice_audio(samples, sr, seg.start_time, seg.end_time)
         if len(audio_slice) < sr * 0.3:  # skip very short segments (<0.3s)
             continue
@@ -124,6 +162,10 @@ def extract_speaker_embeddings(
         if label not in speaker_embeddings:
             speaker_embeddings[label] = []
         speaker_embeddings[label].append(embedding)
+
+        if (i + 1) % 50 == 0:
+            pct = ((i + 1) / total) * 100
+            print(f"  Embeddings: {i + 1}/{total} ({pct:.0f}%)", flush=True)
 
     centroids = {}
     for label, embs in speaker_embeddings.items():

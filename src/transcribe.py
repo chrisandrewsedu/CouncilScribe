@@ -63,6 +63,8 @@ def transcribe_segments(
         if len(audio_slice) < sr * 0.1:  # skip segments shorter than 0.1s
             seg.text = ""
             seg.words = []
+            if (i + 1) % 10 == 0:
+                print(f"  [{i + 1}/{total}] (skipped short segment)", flush=True)
             continue
 
         result_segments, _ = model.transcribe(
@@ -87,6 +89,12 @@ def transcribe_segments(
 
         seg.text = " ".join(text_parts).strip()
         seg.words = words
+
+        # Per-segment progress (every 10 segments)
+        if (i + 1) % 10 == 0:
+            pct = ((i + 1) / total) * 100
+            preview = seg.text[:60] + "..." if len(seg.text) > 60 else seg.text
+            print(f"  [{i + 1}/{total}] ({pct:.0f}%) {preview}", flush=True)
 
         if (
             checkpoint_callback

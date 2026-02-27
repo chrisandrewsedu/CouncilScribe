@@ -57,8 +57,25 @@ _TITLES = r"(?:Councilmember|Council\s*Member|Councilwoman|Councilman|" \
           r"President|Vice[\s-]?President|Clerk|Secretary|Treasurer|" \
           r"Supervisor|Representative)"
 
-# Name pattern: one or more capitalized words, handling hyphens/apostrophes
-_NAME = r"([A-Z][a-zA-Z'\u2019-]+(?:\s+[A-Z][a-zA-Z'\u2019-]+)*)"
+# Name pattern: 1-3 capitalized words, case-sensitive even when parent regex
+# uses IGNORECASE.  (?-i:...) turns off case-insensitive for the name group
+# so "Supervisor of employees" won't capture "of employees" as a name.
+_NAME = r"(?-i:([A-Z][a-zA-Z'\u2019-]+(?:\s+[A-Z][a-zA-Z'\u2019-]+){0,2}))"
+
+
+def _is_plausible_name(name: str) -> bool:
+    """Reject captures that don't look like person names."""
+    words = name.split()
+    if not words or len(words) > 3 or len(name) > 40:
+        return False
+    # Common words that slip through (e.g. "Here", "Yes", "Thank")
+    _NOT_NAMES = {
+        "here", "present", "yes", "no", "thank", "thanks", "okay",
+        "the", "this", "that", "what", "how", "who", "where", "when",
+    }
+    if words[0].lower() in _NOT_NAMES:
+        return False
+    return True
 
 _PATTERNS: list[tuple[str, re.Pattern, float, str]] = [
     # Roll call: "Councilmember X?" -> next speaker says "Present"/"Here"
@@ -135,7 +152,7 @@ def apply_pattern_matching(
 
             # Extract the identified name from the match
             name = match.group(match.lastindex) if match.lastindex else None
-            if not name:
+            if not name or not _is_plausible_name(name):
                 continue
 
             # Determine which speaker the name applies to
@@ -205,6 +222,7 @@ def identify_speakers(
     speaker_embeddings: dict[str, np.ndarray],
     stored_profiles: Optional[dict[str, np.ndarray]] = None,
     llm_identify_fn=None,
+    roster=None,
 ) -> dict[str, SpeakerMapping]:
     """Orchestrate all identification layers. Higher confidence wins.
 
@@ -214,6 +232,7 @@ def identify_speakers(
         stored_profiles: Existing voice profile centroids (Layer 1).
         llm_identify_fn: Optional callable for Layer 3 LLM identification.
             Signature: (segments, current_mappings) -> dict[str, SpeakerMapping]
+        roster: Optional Roster for post-identification name correction.
 
     Returns:
         Final speaker_label -> SpeakerMapping dict.
@@ -239,6 +258,11 @@ def identify_speakers(
         for label, mapping in llm_results.items():
             if label not in mappings or mapping.confidence > mappings[label].confidence:
                 mappings[label] = mapping
+
+    # Roster correction: fix misspelled/mistranscribed names
+    if roster:
+        from .roster import correct_mappings
+        correct_mappings(mappings, roster)
 
     # Flag low-confidence speakers for review
     all_labels = {seg.speaker_label for seg in segments}

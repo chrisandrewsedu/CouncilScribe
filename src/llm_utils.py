@@ -43,6 +43,8 @@ def unload_llm(llm) -> None:
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        torch.mps.empty_cache()
 
 
 def prompt_for_speaker_id(
@@ -51,6 +53,7 @@ def prompt_for_speaker_id(
     current_mappings: dict[str, SpeakerMapping],
     unknown_label: str,
     window_size: int = 20,
+    roster_hint: str = "",
 ) -> Optional[SpeakerMapping]:
     """Ask the LLM to identify a single unknown speaker from context.
 
@@ -64,8 +67,13 @@ def prompt_for_speaker_id(
     if not unknown_indices:
         return None
 
-    # Build context window around the first occurrence
-    center = unknown_indices[0]
+    # Pick a center point that maximizes surrounding context.
+    # Prefer an occurrence near the middle of the transcript over the first one,
+    # since early segments (e.g. roll call) often lack identifying context.
+    if len(unknown_indices) >= 3:
+        center = unknown_indices[len(unknown_indices) // 3]
+    else:
+        center = unknown_indices[0]
     start = max(0, center - window_size // 2)
     end = min(len(segments), center + window_size // 2)
     window = segments[start:end]
@@ -90,8 +98,12 @@ def prompt_for_speaker_id(
             known_speakers.append(f"  - {label} = {m.speaker_name}")
     known_section = "\n".join(known_speakers) if known_speakers else "  (none identified yet)"
 
-    prompt = f"""You are analyzing a city council meeting transcript to identify speakers.
+    roster_section = ""
+    if roster_hint:
+        roster_section = f"\n{roster_hint}\nIMPORTANT: Use the exact names from this roster when identifying speakers. Transcription may misspell names.\n"
 
+    prompt = f"""You are analyzing a city council meeting transcript to identify speakers.
+{roster_section}
 Known speakers:
 {known_section}
 
@@ -122,10 +134,13 @@ Respond with ONLY a JSON object:
         prompt,
         max_tokens=150,
         temperature=0.1,
-        stop=["\n\n"],
+        stop=["}\n"],  # stop after closing brace of JSON
     )
 
     text = response["choices"][0]["text"].strip()
+    # Ensure we have a complete JSON object
+    if text and "{" in text and "}" not in text:
+        text += "}"
     return _parse_llm_response(text, unknown_label)
 
 
@@ -160,6 +175,7 @@ def llm_identify_speakers(
     segments: list[Segment],
     current_mappings: dict[str, SpeakerMapping],
     partial_results_path=None,
+    roster_hint: str = "",
 ) -> dict[str, SpeakerMapping]:
     """Identify all unresolved speakers using the LLM.
 
@@ -202,7 +218,7 @@ def llm_identify_speakers(
     for i, label in enumerate(remaining):
         print(f"    [{i+1}/{total}] Analyzing {label}...", end=" ", flush=True)
         try:
-            mapping = prompt_for_speaker_id(llm, segments, current_mappings, label)
+            mapping = prompt_for_speaker_id(llm, segments, current_mappings, label, roster_hint=roster_hint)
             if mapping:
                 results[label] = mapping
                 # Update current_mappings so subsequent prompts have context

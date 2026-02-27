@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 
-from .models import Meeting, Segment
+from .models import Meeting, MeetingSummary, Segment
 
 
 def _format_timestamp(seconds: float) -> str:
@@ -126,8 +126,52 @@ def _srt_entry(
     )
 
 
+def export_summary_markdown(summary: MeetingSummary, meeting: Meeting, output_path: str | Path) -> Path:
+    """Export meeting summary as readable Markdown."""
+    output_path = Path(output_path)
+    lines = []
+
+    title = f"{meeting.city} {meeting.meeting_type}"
+    lines.append(f"# {title} — {meeting.date}")
+    lines.append("")
+
+    # Executive summary
+    if summary.executive_summary:
+        lines.append("## Executive Summary")
+        lines.append("")
+        lines.append(summary.executive_summary)
+        lines.append("")
+
+    # Key decisions
+    if summary.key_decisions:
+        lines.append("## Key Decisions")
+        lines.append("")
+        for decision in summary.key_decisions:
+            lines.append(f"- {decision}")
+        lines.append("")
+
+    lines.append("---")
+    lines.append("")
+
+    # Sections
+    for section in summary.sections:
+        ts = _format_timestamp(section.start_time)
+        if section.end_time > 0:
+            ts_end = _format_timestamp(section.end_time)
+            lines.append(f"### {section.title} [{ts}–{ts_end}]")
+        else:
+            lines.append(f"### {section.title} [{ts}]")
+        lines.append("")
+        if section.content:
+            lines.append(section.content)
+            lines.append("")
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+    return output_path
+
+
 def export_all(meeting: Meeting, export_dir: str | Path) -> dict[str, Path]:
-    """Run all three exporters. Returns dict of format -> filepath."""
+    """Run all exporters. Returns dict of format -> filepath."""
     export_dir = Path(export_dir)
     export_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,4 +180,10 @@ def export_all(meeting: Meeting, export_dir: str | Path) -> dict[str, Path]:
         "json": export_json(meeting, export_dir / "transcript.json"),
         "srt": export_srt(meeting, export_dir / "subtitles.srt"),
     }
+
+    if meeting.summary:
+        results["summary"] = export_summary_markdown(
+            meeting.summary, meeting, export_dir / "summary.md"
+        )
+
     return results
