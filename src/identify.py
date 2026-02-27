@@ -19,10 +19,18 @@ from .models import Segment, SpeakerMapping
 def match_voice_profiles(
     speaker_embeddings: dict[str, np.ndarray],
     stored_profiles: dict[str, np.ndarray],
+    profile_db=None,
 ) -> dict[str, SpeakerMapping]:
     """Compare speaker embeddings against stored profile centroids.
 
-    Returns mappings for speakers that exceed VOICE_MATCH_THRESHOLD.
+    Returns mappings for speakers that exceed the appropriate threshold.
+    Profiles seen in multiple meetings get a lower threshold (confidence
+    escalation), since they're more likely to be legitimate matches.
+
+    Args:
+        speaker_embeddings: Per-speaker centroid embeddings from diarization.
+        stored_profiles: profile_id -> centroid mapping.
+        profile_db: Optional ProfileDB for checking meetings_seen count.
     """
     mappings: dict[str, SpeakerMapping] = {}
 
@@ -36,13 +44,30 @@ def match_voice_profiles(
                 best_score = similarity
                 best_name = profile_id
 
-        if best_name and best_score >= config.VOICE_MATCH_THRESHOLD:
-            mappings[label] = SpeakerMapping(
-                speaker_label=label,
-                speaker_name=best_name,
-                confidence=round(best_score, 3),
-                id_method="voice_profile",
-            )
+        if best_name:
+            # Determine threshold based on how many meetings this profile has been seen in
+            threshold = config.VOICE_MATCH_THRESHOLD
+            returning_tag = ""
+            if profile_db and best_name in profile_db.profiles:
+                meetings_count = len(profile_db.profiles[best_name].meetings_seen)
+                if meetings_count >= 3:
+                    threshold = config.RETURNING_SPEAKER_THRESHOLD_3
+                    returning_tag = "returning_3+"
+                elif meetings_count >= 2:
+                    threshold = config.RETURNING_SPEAKER_THRESHOLD_2
+                    returning_tag = "returning_2"
+
+            if best_score >= threshold:
+                method = "voice_profile"
+                if returning_tag and best_score < config.VOICE_MATCH_THRESHOLD:
+                    method = f"voice_profile ({returning_tag})"
+                    print(f"  Matched {label} -> {best_name} ({best_score:.2f}, {returning_tag})")
+                mappings[label] = SpeakerMapping(
+                    speaker_label=label,
+                    speaker_name=best_name,
+                    confidence=round(best_score, 3),
+                    id_method=method,
+                )
 
     return mappings
 
@@ -258,6 +283,7 @@ def identify_speakers(
     stored_profiles: Optional[dict[str, np.ndarray]] = None,
     llm_identify_fn=None,
     roster=None,
+    profile_db=None,
 ) -> dict[str, SpeakerMapping]:
     """Orchestrate all identification layers. Higher confidence wins.
 
@@ -268,6 +294,7 @@ def identify_speakers(
         llm_identify_fn: Optional callable for Layer 3 LLM identification.
             Signature: (segments, current_mappings) -> dict[str, SpeakerMapping]
         roster: Optional Roster for post-identification name correction.
+        profile_db: Optional ProfileDB for confidence escalation on returning speakers.
 
     Returns:
         Final speaker_label -> SpeakerMapping dict.
@@ -276,7 +303,9 @@ def identify_speakers(
 
     # Layer 1: Voice profiles
     if stored_profiles:
-        voice_matches = match_voice_profiles(speaker_embeddings, stored_profiles)
+        voice_matches = match_voice_profiles(
+            speaker_embeddings, stored_profiles, profile_db=profile_db,
+        )
         for label, mapping in voice_matches.items():
             mappings[label] = mapping
 
@@ -325,6 +354,57 @@ def apply_mappings_to_segments(
             seg.confidence = mapping.confidence
             seg.id_method = mapping.id_method
     return segments
+
+
+def merge_adjacent_segments(
+    segments: list[Segment],
+    gap_threshold: float | None = None,
+) -> list[Segment]:
+    """Merge consecutive segments from the same speaker.
+
+    After identification, adjacent segments from the same person with a
+    small gap between them are merged into a single segment. This produces
+    cleaner transcripts with fewer fragmented entries.
+
+    Args:
+        segments: Segments with speaker_name populated.
+        gap_threshold: Max gap in seconds to merge across. Defaults to config value.
+
+    Returns:
+        New list of merged segments with updated IDs.
+    """
+    if gap_threshold is None:
+        gap_threshold = config.SEGMENT_MERGE_GAP
+
+    if not segments:
+        return segments
+
+    merged: list[Segment] = [segments[0]]
+
+    for seg in segments[1:]:
+        prev = merged[-1]
+        # Use speaker_name if available, fall back to speaker_label
+        prev_speaker = prev.speaker_name or prev.speaker_label
+        curr_speaker = seg.speaker_name or seg.speaker_label
+        gap = seg.start_time - prev.end_time
+
+        if prev_speaker == curr_speaker and gap < gap_threshold:
+            # Merge: extend the previous segment
+            prev.end_time = seg.end_time
+            if seg.text:
+                if prev.text:
+                    prev.text = prev.text + " " + seg.text
+                else:
+                    prev.text = seg.text
+            prev.words.extend(seg.words)
+        else:
+            merged.append(seg)
+
+    # Renumber segment IDs
+    for i, seg in enumerate(merged):
+        seg.segment_id = i
+
+    return merged
 
 
 def flag_for_review(

@@ -157,6 +157,16 @@ def fetch_catstv_meetings(search_url: str | None = None) -> list[dict]:
 
         video_url = f"{CATSTV_BLOB_BASE}/{m4v}" if not m4v.startswith("http") else m4v
 
+        # Derive VTT URL: same path as m4v but with .vtt extension
+        vtt_url = ""
+        m4v_base = m4v.rsplit(".", 1)[0] if "." in m4v else m4v
+        if m4v_base:
+            vtt_candidate = f"{m4v_base}.vtt"
+            if not vtt_candidate.startswith("http"):
+                vtt_url = f"{CATSTV_BLOB_BASE}/{vtt_candidate}"
+            else:
+                vtt_url = vtt_candidate
+
         meetings.append({
             "name": link.get("data-name", "").strip(),
             "subtitle": link.get("data-subtitle", "").strip(),
@@ -164,12 +174,28 @@ def fetch_catstv_meetings(search_url: str | None = None) -> list[dict]:
             "duration": link.get("data-duration", "").strip(),
             "m4v": m4v,
             "video_url": video_url,
+            "vtt_url": vtt_url,
             "permalink": link.get("data-permalink", "").strip(),
             "has_agenda": link.get("data-hasagenda", "").lower() == "true",
             "documents_url": link.get("data-documentsurl", "").strip(),
         })
 
     return meetings
+
+
+def download_vtt(vtt_url: str, output_path: str | Path) -> Path | None:
+    """Download a VTT subtitle file. Returns path or None on failure."""
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        resp = requests.get(vtt_url, timeout=(_CONNECT_TIMEOUT, 60))
+        if resp.status_code == 200 and resp.text.strip().startswith("WEBVTT"):
+            output_path.write_text(resp.text, encoding="utf-8")
+            return output_path
+        return None
+    except Exception:
+        return None
 
 
 def display_catstv_meetings(meetings: list[dict], limit: int = 25) -> None:

@@ -50,9 +50,15 @@ VOICE_MATCH_THRESHOLD = 0.85          # Auto-enroll: voice match or high-confide
 SOFT_MATCH_THRESHOLD = 0.50           # Show as hint during pre-identification
 ENROLLMENT_PROMPT_THRESHOLD = 0.70    # Prompt for enrollment confirmation (interactive mode)
 CONFIDENCE_REVIEW_THRESHOLD = 0.70    # Flag for speaker ID review below this
+RETURNING_SPEAKER_THRESHOLD_2 = 0.78  # Lowered match threshold for profiles seen in 2 meetings
+RETURNING_SPEAKER_THRESHOLD_3 = 0.70  # Lowered match threshold for profiles seen in 3+ meetings
 
 # --- Diarization tuning ---
 MERGE_GAP_SECONDS = 0.5  # merge adjacent same-speaker segments closer than this
+SPEAKER_MERGE_THRESHOLD = 0.80  # merge diarized speakers with embedding similarity above this
+
+# --- Post-identification segment merging ---
+SEGMENT_MERGE_GAP = 2.0  # merge adjacent same-speaker segments with gap < this (seconds)
 
 # --- Checkpoint ---
 CHECKPOINT_EVERY_N_SEGMENTS = 50

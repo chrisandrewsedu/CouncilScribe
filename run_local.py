@@ -255,6 +255,8 @@ def run_pipeline(args: argparse.Namespace) -> None:
     print("STAGE 1: Audio Ingestion")
     print("=" * 60)
 
+    vtt_path = meeting_dir / "captions.vtt"
+
     if state.is_complete(PipelineStage.INGESTED):
         print("  Already complete. Skipping.")
         from src.audio_utils import get_audio_duration
@@ -268,6 +270,18 @@ def run_pipeline(args: argparse.Namespace) -> None:
         meeting.duration_seconds = metadata["duration_seconds"]
         state.mark_complete(PipelineStage.INGESTED)
         print(f"  Done in {elapsed:.1f}s")
+
+        # Try to download VTT if input is a CATS TV URL
+        if not vtt_path.exists() and isinstance(audio_path, str) and "catstv" in audio_path:
+            from src.download import download_vtt
+            # Derive VTT URL from video URL
+            m4v_base = audio_path.rsplit(".", 1)[0] if "." in audio_path else audio_path
+            vtt_url = m4v_base + ".vtt"
+            result = download_vtt(vtt_url, vtt_path)
+            if result:
+                print(f"  Downloaded VTT captions: {vtt_path.name}")
+            else:
+                print("  No VTT captions available from CATS TV")
 
     duration_min = meeting.duration_seconds / 60
     print(f"  Audio duration: {duration_min:.1f} minutes\n")
@@ -336,6 +350,40 @@ def run_pipeline(args: argparse.Namespace) -> None:
     print(f"  {len(segments)} segments, {len(unique_speakers)} speakers detected")
     meeting.processing_metadata.diarization_model = config.DIARIZATION_MODEL
     print()
+
+    # ======================================================================
+    # Stage 2.5: Auto-merge fragmented speakers
+    # ======================================================================
+    if not args.no_merge:
+        if embeddings_path.exists():
+            with open(embeddings_path, "r") as f:
+                emb_data = json.load(f)
+            speaker_embeddings = {k: np.array(v) for k, v in emb_data.items()}
+
+            from src.merge import merge_similar_speakers
+
+            before_count = len(set(s.speaker_label for s in segments))
+            segments, speaker_embeddings, merge_log = merge_similar_speakers(
+                segments, speaker_embeddings,
+            )
+            after_count = len(set(s.speaker_label for s in segments))
+
+            if merge_log:
+                print("Speaker merge:")
+                for entry in merge_log:
+                    print(f"  {entry}")
+                print(f"  {before_count} speakers -> {after_count} speakers")
+
+                # Update embeddings.json on disk
+                emb_data = {k: v.tolist() for k, v in speaker_embeddings.items()}
+                with open(embeddings_path, "w") as f:
+                    json.dump(emb_data, f)
+
+                # Update diarization.json with merged labels
+                with open(diarization_path, "w") as f:
+                    json.dump([s.to_dict() for s in segments], f, indent=2)
+
+                print()
 
     # ======================================================================
     # Pre-identification (optional, between diarization and transcription)
@@ -420,10 +468,15 @@ def run_pipeline(args: argparse.Namespace) -> None:
         print()
 
     # ======================================================================
-    # Stage 3: Transcription
+    # Stage 3: Transcription (Whisper or VTT alignment)
     # ======================================================================
     print("=" * 60)
-    print("STAGE 3: Transcription")
+    use_vtt = args.use_vtt or (vtt_path.exists() and not state.is_complete(PipelineStage.TRANSCRIBED))
+    if use_vtt and vtt_path.exists():
+        print("STAGE 3: VTT Alignment (skipping Whisper)")
+    else:
+        print("STAGE 3: Transcription")
+        use_vtt = False  # force off if no VTT file
     print("=" * 60)
 
     from src.transcribe import (
@@ -439,6 +492,18 @@ def run_pipeline(args: argparse.Namespace) -> None:
         print("  Already complete. Loading from checkpoint...")
         segments = load_raw_transcript(transcript_path)
         print(f"  Loaded {len(segments)} transcribed segments")
+    elif use_vtt:
+        from src.vtt_align import align_vtt_to_segments
+
+        t0 = time.time()
+        print(f"  Aligning VTT captions from {vtt_path.name}...")
+        segments = align_vtt_to_segments(vtt_path, segments)
+        elapsed = time.time() - t0
+
+        meeting.processing_metadata.transcription_model = "vtt_alignment"
+        save_raw_transcript(segments, transcript_path)
+        state.mark_complete(PipelineStage.TRANSCRIBED)
+        print(f"  Done in {elapsed:.1f}s")
     else:
         resume_from = state.transcription_progress
         if resume_from > 0:
@@ -545,6 +610,7 @@ def run_pipeline(args: argparse.Namespace) -> None:
             stored_profiles=stored_centroids if stored_centroids else None,
             llm_identify_fn=llm_fn,
             roster=roster,
+            profile_db=profile_db,
         )
         elapsed = time.time() - t0
 
@@ -752,6 +818,17 @@ def run_pipeline(args: argparse.Namespace) -> None:
     print()
 
     # ======================================================================
+    # Post-identification segment merging
+    # ======================================================================
+    from src.identify import merge_adjacent_segments
+
+    before_count = len(meeting.segments)
+    meeting.segments = merge_adjacent_segments(meeting.segments)
+    after_count = len(meeting.segments)
+    if before_count != after_count:
+        print(f"  Segment merge: {before_count} -> {after_count} segments")
+
+    # ======================================================================
     # Stage 7: Export
     # ======================================================================
     print("=" * 60)
@@ -784,6 +861,151 @@ def run_pipeline(args: argparse.Namespace) -> None:
         print(f"  Summary:    {export_dir / 'summary.md'}")
 
 
+def _parse_batch_inputs(batch_path: str) -> list[dict]:
+    """Parse batch input: a text file or a directory of video files.
+
+    Returns list of dicts with keys: input, date, city, meeting_type.
+    """
+    p = Path(batch_path)
+
+    if p.is_dir():
+        # Directory of video files
+        video_exts = {".m4v", ".mp4", ".mkv", ".webm", ".avi", ".mov"}
+        entries = []
+        for f in sorted(p.iterdir()):
+            if f.suffix.lower() in video_exts:
+                # Try to extract date from filename (YYYY-MM-DD pattern)
+                import re
+                date_match = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
+                date = date_match.group(1) if date_match else ""
+                entries.append({
+                    "input": str(f),
+                    "date": date,
+                    "city": "Bloomington",
+                    "meeting_type": "Regular Session",
+                })
+        return entries
+
+    if p.is_file():
+        # Text file with one entry per line
+        # Format: PATH_OR_URL [DATE] [CITY] [TYPE]
+        # or just: PATH_OR_URL
+        entries = []
+        with open(p, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split(maxsplit=3)
+                entry = {
+                    "input": parts[0],
+                    "date": parts[1] if len(parts) > 1 else "",
+                    "city": parts[2] if len(parts) > 2 else "Bloomington",
+                    "meeting_type": parts[3] if len(parts) > 3 else "Regular Session",
+                }
+                entries.append(entry)
+        return entries
+
+    print(f"Error: batch path '{batch_path}' is not a file or directory.")
+    sys.exit(1)
+
+
+def _run_batch(args: argparse.Namespace) -> None:
+    """Run batch processing on multiple meetings.
+
+    Runs Stages 1-3 (ingest, diarize, transcribe) + automated Stage 4
+    (no interactive review) for each meeting. Skips pre-identify and
+    human review in batch mode.
+    """
+    entries = _parse_batch_inputs(args.batch)
+    if not entries:
+        print("No inputs found for batch processing.")
+        return
+
+    print(f"Batch processing: {len(entries)} meeting(s)")
+    print()
+
+    results = []
+    for i, entry in enumerate(entries):
+        print(f"{'=' * 60}")
+        print(f"BATCH [{i+1}/{len(entries)}]: {entry['input']}")
+        print(f"{'=' * 60}")
+
+        # Check if already processed (for --batch-resume)
+        if args.batch_resume and entry["date"]:
+            from src import config
+            from src.checkpoint import PipelineStage, PipelineState
+            mid = f"{entry['date']}-{entry['meeting_type'].lower().replace(' ', '-')}"
+            mdir = config.MEETINGS_DIR / mid
+            state_file = mdir / "pipeline_state.json"
+            if state_file.exists():
+                state = PipelineState(mdir)
+                if state.is_complete(PipelineStage.IDENTIFIED):
+                    print(f"  Already complete (stage {state.completed_stage.name}). Skipping.")
+                    results.append({"input": entry["input"], "status": "skipped (complete)", "meeting_id": mid})
+                    print()
+                    continue
+
+        # Build args for run_pipeline
+        batch_args = argparse.Namespace(
+            input=entry["input"],
+            date=entry["date"],
+            city=entry["city"],
+            meeting_type=entry["meeting_type"],
+            meeting_id="",
+            num_speakers=0,
+            noise_reduce=False,
+            skip_llm=args.skip_llm if hasattr(args, "skip_llm") else False,
+            skip_summary=True,  # skip summary in batch mode
+            confirm_enroll=False,
+            no_merge=args.no_merge if hasattr(args, "no_merge") else False,
+            pre_identify=False,  # skip interactive pre-identify
+            use_vtt=args.use_vtt if hasattr(args, "use_vtt") else False,
+        )
+
+        # Auto-generate date if missing
+        if not batch_args.date:
+            from datetime import date
+            batch_args.date = date.today().isoformat()
+            print(f"  No date provided, using today: {batch_args.date}")
+
+        mid = f"{batch_args.date}-{batch_args.meeting_type.lower().replace(' ', '-')}"
+
+        try:
+            run_pipeline(batch_args)
+            results.append({"input": entry["input"], "status": "completed", "meeting_id": mid})
+        except Exception as e:
+            print(f"\n  ERROR: {e}")
+            results.append({"input": entry["input"], "status": f"failed: {e}", "meeting_id": mid})
+
+        print()
+
+    # Print summary
+    print("=" * 60)
+    print("BATCH SUMMARY")
+    print("=" * 60)
+    completed = [r for r in results if r["status"] == "completed"]
+    skipped = [r for r in results if r["status"].startswith("skipped")]
+    failed = [r for r in results if r["status"].startswith("failed")]
+
+    print(f"  Completed: {len(completed)}")
+    print(f"  Skipped:   {len(skipped)}")
+    print(f"  Failed:    {len(failed)}")
+
+    if completed:
+        print("\nCompleted:")
+        for r in completed:
+            print(f"  {r['meeting_id']}")
+
+    if failed:
+        print("\nFailed (need review):")
+        for r in failed:
+            print(f"  {r['meeting_id']}: {r['status']}")
+
+    if completed or skipped:
+        print(f"\nUse --review-meeting MEETING_ID to review speaker identifications.")
+
+
 def _fix_transcripts() -> None:
     """Re-correct speaker names in all existing transcripts using the roster.
 
@@ -794,7 +1016,7 @@ def _fix_transcripts() -> None:
     from src import config
     from src.export import export_all
     from src.models import Meeting
-    from src.roster import correct_speaker_name, load_roster
+    from src.roster import add_alias, correct_speaker_name, load_roster
 
     roster = load_roster()
     if not roster:
@@ -820,6 +1042,7 @@ def _fix_transcripts() -> None:
     print()
 
     total_corrections = 0
+    total_aliases = 0
 
     for mdir in meeting_dirs:
         named_path = mdir / "transcript_named.json"
@@ -836,7 +1059,11 @@ def _fix_transcripts() -> None:
             if mapping.speaker_name:
                 corrected = correct_speaker_name(mapping.speaker_name, roster)
                 if corrected != mapping.speaker_name:
-                    corrections.append(f"    {label}: {mapping.speaker_name} -> {corrected}")
+                    corrections.append({
+                        "label": label,
+                        "original": mapping.speaker_name,
+                        "corrected": corrected,
+                    })
                     mapping.speaker_name = corrected
 
         # Fix segment speaker names
@@ -857,12 +1084,19 @@ def _fix_transcripts() -> None:
 
             print(f"  {mdir.name}: {len(corrections)} correction(s)")
             for c in corrections:
-                print(c)
+                print(f"    {c['label']}: {c['original']} -> {c['corrected']}")
+                # Auto-learn: add original name as alias for the corrected name
+                if add_alias(None, c["corrected"], c["original"]):
+                    print(f"      -> Added '{c['original']}' as alias for '{c['corrected']}'")
+                    total_aliases += 1
+
             total_corrections += len(corrections)
         else:
             print(f"  {mdir.name}: no corrections needed")
 
     print(f"\nDone. {total_corrections} total correction(s) across {len(meeting_dirs)} meeting(s).")
+    if total_aliases:
+        print(f"  {total_aliases} new alias(es) auto-added to roster.")
 
 
 def _format_ts(seconds: float) -> str:
@@ -1047,6 +1281,13 @@ def _interactive_speaker_review(
                 current_mappings[label] = mapping
                 changes.append({"label": label, "old_name": old_name, "new_name": choice})
                 print(f"  Updated: {label} -> {choice}")
+
+                # Roster auto-learning: offer to add old wrong name as alias
+                if old_name and old_name != choice:
+                    from src.roster import add_alias
+                    if add_alias(None, choice, old_name):
+                        print(f"  Auto-added alias: '{old_name}' -> '{choice}'")
+
                 break
         else:
             continue
@@ -1442,6 +1683,10 @@ Environment Variables:
                         help="Skip meeting summary generation (requires ANTHROPIC_API_KEY)")
     parser.add_argument("--confirm-enroll", action="store_true",
                         help="Interactively confirm enrollment for borderline speakers (0.70-0.85 confidence)")
+    parser.add_argument("--no-merge", action="store_true",
+                        help="Skip auto-merging of fragmented speakers after diarization")
+    parser.add_argument("--use-vtt", action="store_true",
+                        help="Use VTT subtitles instead of Whisper (auto-detected if captions.vtt exists)")
 
     # Utilities
     parser.add_argument("--list-profiles", action="store_true",
@@ -1460,6 +1705,10 @@ Environment Variables:
                         help="Standalone speaker identification with video clips and voice hints (works pre-transcription)")
     parser.add_argument("--pre-identify", action="store_true",
                         help="Interactive speaker identification after diarization, before transcription (pipeline mode)")
+    parser.add_argument("--batch", metavar="FILE_OR_DIR",
+                        help="Batch mode: text file with one input per line (path or 'URL DATE'), or directory of videos")
+    parser.add_argument("--batch-resume", action="store_true",
+                        help="Resume an interrupted batch run (skip already-completed meetings)")
 
     args = parser.parse_args()
 
@@ -1552,6 +1801,11 @@ Environment Variables:
 
     if args.identify_speakers:
         _identify_speakers_standalone(args.identify_speakers)
+        return
+
+    # --- Batch mode ---
+    if args.batch:
+        _run_batch(args)
         return
 
     # --- CATS TV browser ---

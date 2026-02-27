@@ -153,6 +153,65 @@ def correct_mappings(
     return mappings
 
 
+def add_alias(
+    roster_path: Optional[Path],
+    canonical_name: str,
+    new_alias: str,
+) -> bool:
+    """Add a new alias to a roster member's alias list.
+
+    Loads the roster JSON, adds the alias if not already present, and saves.
+    Guards against nonsense aliases (too short, generic labels, etc.).
+
+    Args:
+        roster_path: Path to roster JSON file. Uses default if None.
+        canonical_name: The canonical member name to add the alias to.
+        new_alias: The alias to add.
+
+    Returns:
+        True if alias was added, False otherwise.
+    """
+    if roster_path is None:
+        roster_path = config.CONFIG_DIR / "council_roster.json"
+    if not roster_path.exists():
+        return False
+
+    # Guard: reject nonsense aliases
+    if not new_alias or len(new_alias.strip()) < 3:
+        return False
+    alias_stripped = new_alias.strip()
+    # Skip generic/placeholder names
+    _SKIP = {"speaker", "unknown", "unidentified", "none", "n/a"}
+    if alias_stripped.lower() in _SKIP:
+        return False
+    # Skip SPEAKER_XX labels
+    if alias_stripped.startswith("SPEAKER_"):
+        return False
+
+    with open(roster_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    for member in data.get("members", []):
+        if member["name"].lower() != canonical_name.lower():
+            continue
+
+        existing = [a.lower() for a in member.get("aliases", [])]
+        if alias_stripped.lower() in existing:
+            return False  # already present
+        if alias_stripped.lower() == member["name"].lower():
+            return False  # same as canonical
+
+        if "aliases" not in member:
+            member["aliases"] = []
+        member["aliases"].append(alias_stripped)
+
+        with open(roster_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return True
+
+    return False  # member not found
+
+
 def roster_names_for_prompt(roster: Roster) -> str:
     """Format roster members for inclusion in an LLM prompt.
 
