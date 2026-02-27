@@ -47,6 +47,41 @@ def match_voice_profiles(
     return mappings
 
 
+def soft_match_voice_profiles(
+    speaker_embeddings: dict[str, np.ndarray],
+    stored_profiles: dict[str, np.ndarray],
+    display_names: dict[str, str],
+) -> dict[str, list[tuple[str, float]]]:
+    """Find all profile matches above SOFT_MATCH_THRESHOLD for each speaker.
+
+    Unlike match_voice_profiles which only returns the best match above
+    VOICE_MATCH_THRESHOLD, this returns all candidates above a lower bar
+    so the user can see hints during interactive identification.
+
+    Args:
+        speaker_embeddings: Per-speaker centroid embeddings from diarization.
+        stored_profiles: profile_id -> centroid mapping.
+        display_names: profile_id -> display_name mapping.
+
+    Returns:
+        Dict of speaker_label -> [(display_name, similarity_score), ...] sorted by score desc.
+    """
+    hints: dict[str, list[tuple[str, float]]] = {}
+
+    for label, embedding in speaker_embeddings.items():
+        matches = []
+        for profile_id, centroid in stored_profiles.items():
+            similarity = 1.0 - cosine(embedding, centroid)
+            if similarity >= config.SOFT_MATCH_THRESHOLD:
+                name = display_names.get(profile_id, profile_id)
+                matches.append((name, round(similarity, 3)))
+        if matches:
+            matches.sort(key=lambda x: x[1], reverse=True)
+            hints[label] = matches
+
+    return hints
+
+
 # ---------------------------------------------------------------------------
 # Layer 2: Rule-Based Pattern Matching
 # ---------------------------------------------------------------------------

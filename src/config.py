@@ -47,6 +47,7 @@ SUMMARY_CHUNK_SIZE = 150  # Max segments per classification chunk
 
 # --- Thresholds ---
 VOICE_MATCH_THRESHOLD = 0.85          # Auto-enroll: voice match or high-confidence ID
+SOFT_MATCH_THRESHOLD = 0.50           # Show as hint during pre-identification
 ENROLLMENT_PROMPT_THRESHOLD = 0.70    # Prompt for enrollment confirmation (interactive mode)
 CONFIDENCE_REVIEW_THRESHOLD = 0.70    # Flag for speaker ID review below this
 

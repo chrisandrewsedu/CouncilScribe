@@ -338,6 +338,88 @@ def run_pipeline(args: argparse.Namespace) -> None:
     print()
 
     # ======================================================================
+    # Pre-identification (optional, between diarization and transcription)
+    # ======================================================================
+    pre_identifications = {}
+    pre_id_path = meeting_dir / "pre_identifications.json"
+
+    # Load existing pre-identifications if present (from --identify-speakers)
+    if pre_id_path.exists():
+        with open(pre_id_path, "r") as f:
+            pre_data = json.load(f)
+        from src.models import SpeakerMapping as SM
+        for label, data in pre_data.items():
+            pre_identifications[label] = SM(
+                speaker_label=label,
+                speaker_name=data["speaker_name"],
+                confidence=data.get("confidence", 1.0),
+                id_method=data.get("id_method", "human_review"),
+            )
+        print(f"  Loaded {len(pre_identifications)} pre-identification(s) from previous session")
+
+    if args.pre_identify and sys.stdin.isatty():
+        print("=" * 60)
+        print("PRE-IDENTIFICATION: Identify speakers by video clip")
+        print("=" * 60)
+
+        video_path = find_video_file(meeting_dir, meeting.audio_source)
+        speaker_stats = _build_speaker_stats(segments)
+        soft_matches = _load_soft_matches(embeddings_path)
+
+        sorted_labels = sorted(
+            speaker_stats.keys(),
+            key=lambda l: speaker_stats[l]["total_speech"],
+            reverse=True,
+        )
+
+        if video_path:
+            print(f"  Video: {Path(video_path).name}")
+        else:
+            print("  Video: not found")
+        if soft_matches:
+            matched = sum(1 for l in sorted_labels if l in soft_matches)
+            print(f"  Voice hints: {matched} speaker(s) have possible profile matches")
+        print(f"  Speakers: {len(sorted_labels)}")
+        print()
+
+        # Build temporary mappings dict for the review
+        from src.models import SpeakerMapping as SM
+        temp_mappings = dict(pre_identifications)  # start with any existing
+        for label in sorted_labels:
+            if label not in temp_mappings:
+                temp_mappings[label] = SM(speaker_label=label)
+
+        changes = _interactive_speaker_review(
+            sorted_labels, speaker_stats, temp_mappings,
+            video_path, soft_matches=soft_matches, show_text=False,
+        )
+
+        if changes:
+            for label, mapping in temp_mappings.items():
+                if isinstance(mapping, SM) and mapping.speaker_name:
+                    pre_identifications[label] = mapping
+
+            # Save pre-identifications
+            pre_data = {}
+            for label, m in pre_identifications.items():
+                pre_data[label] = {
+                    "speaker_name": m.speaker_name,
+                    "confidence": m.confidence,
+                    "id_method": m.id_method,
+                }
+            with open(pre_id_path, "w") as f:
+                json.dump(pre_data, f, indent=2)
+
+            print(f"\n  {len(changes)} identification(s) saved. These will be used in Stage 4.")
+
+            # Offer enrollment
+            _enroll_after_review(
+                changes, temp_mappings, meeting_dir,
+                meeting_id, segments,
+            )
+        print()
+
+    # ======================================================================
     # Stage 3: Transcription
     # ======================================================================
     print("=" * 60)
@@ -471,6 +553,20 @@ def run_pipeline(args: argparse.Namespace) -> None:
             del llm
         if llm_partial_path.exists():
             llm_partial_path.unlink()
+
+        # Apply pre-identifications (override automated results)
+        if pre_identifications:
+            overrides = 0
+            for label, pre_map in pre_identifications.items():
+                if label in mappings:
+                    if pre_map.confidence > mappings[label].confidence:
+                        mappings[label] = pre_map
+                        overrides += 1
+                else:
+                    mappings[label] = pre_map
+                    overrides += 1
+            if overrides:
+                print(f"  Applied {overrides} pre-identification(s) as ground truth")
 
         print(f"  Done in {elapsed:.1f}s")
         for label, m in mappings.items():
@@ -769,6 +865,530 @@ def _fix_transcripts() -> None:
     print(f"\nDone. {total_corrections} total correction(s) across {len(meeting_dirs)} meeting(s).")
 
 
+def _format_ts(seconds: float) -> str:
+    """Format seconds as MM:SS."""
+    m = int(seconds // 60)
+    s = int(seconds % 60)
+    return f"{m:02d}:{s:02d}"
+
+
+def _build_speaker_stats(segments) -> dict:
+    """Build per-speaker statistics from segments.
+
+    Returns dict of label -> {seg_count, total_speech, first_seg, sample_seg, segments}.
+    """
+    stats = {}
+    for seg in segments:
+        label = seg.speaker_label
+        if label not in stats:
+            stats[label] = {
+                "seg_count": 0,
+                "total_speech": 0.0,
+                "first_seg": seg,
+                "sample_seg": None,
+                "segments": [],
+            }
+        stats[label]["seg_count"] += 1
+        stats[label]["total_speech"] += seg.end_time - seg.start_time
+        stats[label]["segments"].append(seg)
+
+    # Pick representative sample for each speaker (near 1/3 point)
+    for label, s in stats.items():
+        text_segs = [seg for seg in s["segments"] if seg.text and seg.text.strip()]
+        if text_segs:
+            idx = max(0, len(text_segs) // 3 - 1)
+            s["sample_seg"] = text_segs[idx]
+        elif s["segments"]:
+            # No text segments — use a segment near 1/3 for video clip
+            idx = max(0, len(s["segments"]) // 3 - 1)
+            s["sample_seg"] = s["segments"][idx]
+
+    return stats
+
+
+def _load_soft_matches(embeddings_path: Path) -> dict[str, list[tuple[str, float]]]:
+    """Load embeddings and compute soft voice profile matches.
+
+    Returns dict of label -> [(display_name, similarity), ...] or empty dict
+    if embeddings or profiles aren't available.
+    """
+    import numpy as np
+
+    if not embeddings_path.exists():
+        return {}
+
+    try:
+        from src.enroll import get_stored_centroids, load_profiles
+        from src.identify import soft_match_voice_profiles
+    except ImportError:
+        return {}
+
+    with open(embeddings_path, "r") as f:
+        emb_data = json.load(f)
+    speaker_embeddings = {k: np.array(v) for k, v in emb_data.items()}
+
+    profile_db = load_profiles()
+    stored_centroids = get_stored_centroids(profile_db)
+    if not stored_centroids:
+        return {}
+
+    display_names = {pid: p.display_name for pid, p in profile_db.profiles.items()}
+    return soft_match_voice_profiles(speaker_embeddings, stored_centroids, display_names)
+
+
+def _interactive_speaker_review(
+    sorted_labels: list[str],
+    speaker_stats: dict,
+    current_mappings: dict,
+    video_path: str | None,
+    soft_matches: dict[str, list[tuple[str, float]]] | None = None,
+    show_text: bool = True,
+) -> list[dict]:
+    """Core interactive loop for reviewing/identifying speakers.
+
+    Args:
+        sorted_labels: Speaker labels in display order.
+        speaker_stats: Per-speaker stats from _build_speaker_stats().
+        current_mappings: label -> SpeakerMapping dict (modified in place).
+        video_path: Path to video file for clip playback, or None.
+        soft_matches: label -> [(name, score), ...] from soft voice matching.
+        show_text: Whether to show transcript text samples (False if pre-transcription).
+
+    Returns:
+        List of change dicts: [{label, old_name, new_name}, ...].
+    """
+    from src.models import SpeakerMapping
+
+    if not sys.stdin.isatty():
+        print("(non-interactive mode — cannot review)")
+        return []
+
+    changes = []
+
+    for i, label in enumerate(sorted_labels):
+        stats = speaker_stats[label]
+        mapping = current_mappings.get(label, SpeakerMapping(speaker_label=label))
+        name = mapping.speaker_name or "(unidentified)"
+        mins = stats["total_speech"] / 60
+        sample = stats["sample_seg"]
+
+        # Header
+        print(f"\n[{i+1}/{len(sorted_labels)}] {label}: {name}")
+        print(f"  Segments: {stats['seg_count']}, Speech: {mins:.1f}m", end="")
+        if mapping.confidence > 0:
+            print(f", Confidence: {mapping.confidence:.2f}, Method: {mapping.id_method or 'none'}", end="")
+        print()
+
+        # Soft match hints
+        if soft_matches and label in soft_matches:
+            hints = soft_matches[label]
+            # Don't show hint if already identified with high confidence as this name
+            if not (mapping.speaker_name and mapping.confidence >= 0.85):
+                for hint_name, hint_score in hints[:3]:  # show top 3
+                    marker = "*" if hint_score >= 0.85 else "?"
+                    print(f"  {marker} Voice match: {hint_name} ({hint_score:.2f})")
+
+        # Text sample
+        if show_text and sample and sample.text and sample.text.strip():
+            text_preview = sample.text[:120] + "..." if len(sample.text) > 120 else sample.text
+            print(f"  Sample [{_format_ts(sample.start_time)}]: \"{text_preview}\"")
+        elif sample:
+            print(f"  Clip at [{_format_ts(sample.start_time)}]")
+
+        # Accept shortcut: if there's exactly one high soft match, allow [Y] to confirm
+        top_hint = None
+        if soft_matches and label in soft_matches:
+            hints = soft_matches[label]
+            if hints and not (mapping.speaker_name and mapping.confidence >= 0.85):
+                top_hint = hints[0]
+
+        while True:
+            prompt_parts = ["  "]
+            if video_path and sample:
+                prompt_parts.append("[V]iew")
+            if top_hint:
+                prompt_parts.append(f"[Y=accept {top_hint[0]}]")
+            prompt_parts.append("[Enter=skip] [Q=quit] or type name: ")
+            choice = input(" ".join(prompt_parts)).strip()
+
+            if choice.lower() in ("v", "view") and video_path and sample:
+                play_video_clip(
+                    video_path,
+                    start_time=sample.start_time,
+                    duration=20.0,
+                    title=f"{label} → {name}",
+                )
+                continue  # re-prompt after viewing
+            elif choice.lower() == "q":
+                print("  Quitting review.")
+                break
+            elif choice == "":
+                # Skip — keep current name
+                break
+            elif choice.lower() in ("y", "yes") and top_hint:
+                # Accept top soft match
+                old_name = mapping.speaker_name
+                new_name = top_hint[0]
+                mapping.speaker_name = new_name
+                mapping.confidence = 1.0
+                mapping.id_method = "human_confirmed"
+                mapping.needs_review = False
+                current_mappings[label] = mapping
+                changes.append({"label": label, "old_name": old_name, "new_name": new_name})
+                print(f"  Confirmed: {label} -> {new_name}")
+                break
+            else:
+                # User typed a new name
+                old_name = mapping.speaker_name
+                mapping.speaker_name = choice
+                mapping.confidence = 1.0
+                mapping.id_method = "human_review"
+                mapping.needs_review = False
+                current_mappings[label] = mapping
+                changes.append({"label": label, "old_name": old_name, "new_name": choice})
+                print(f"  Updated: {label} -> {choice}")
+                break
+        else:
+            continue
+
+        if choice.lower() == "q":
+            break
+
+    return changes
+
+
+def _enroll_after_review(
+    changes: list[dict],
+    current_mappings: dict,
+    meeting_dir: Path,
+    meeting_id: str,
+    segments,
+) -> None:
+    """Offer to enroll speakers that were identified or corrected during review.
+
+    Only runs if embeddings are available on disk.
+    """
+    import numpy as np
+
+    from src.enroll import _enroll_one, _name_to_slug, load_profiles, save_profiles
+
+    embeddings_path = meeting_dir / "embeddings.json"
+    if not embeddings_path.exists():
+        return
+
+    if not changes:
+        return
+
+    if not sys.stdin.isatty():
+        return
+
+    with open(embeddings_path, "r") as f:
+        emb_data = json.load(f)
+    speaker_embeddings = {k: np.array(v) for k, v in emb_data.items()}
+
+    # Find which changed speakers have embeddings available
+    enrollable = []
+    profile_db = load_profiles()
+
+    for change in changes:
+        label = change["label"]
+        new_name = change["new_name"]
+        if not new_name or label not in speaker_embeddings:
+            continue
+        slug = _name_to_slug(new_name)
+        is_new = slug not in profile_db.profiles
+        enrollable.append({
+            "label": label,
+            "name": new_name,
+            "slug": slug,
+            "is_new": is_new,
+        })
+
+    if not enrollable:
+        return
+
+    print(f"\n{len(enrollable)} speaker(s) can be enrolled/updated in voice profiles:")
+    for e in enrollable:
+        tag = "NEW" if e["is_new"] else "UPDATE"
+        print(f"  {e['label']}: {e['name']} [{tag}]")
+
+    choice = input("\nEnroll these speakers? [Y/n] ").strip().lower()
+    if choice in ("", "y", "yes"):
+        for e in enrollable:
+            mapping = current_mappings.get(e["label"])
+            seg_count = sum(1 for s in segments if s.speaker_label == e["label"])
+            _enroll_one(
+                profile_db, e["slug"], e["name"],
+                speaker_embeddings[e["label"]],
+                meeting_id, seg_count,
+            )
+            tag = "NEW" if e["is_new"] else "UPDATE"
+            print(f"  Enrolled: {e['name']} ({e['slug']}) [{tag}]")
+
+        save_profiles(profile_db)
+        print(f"  Voice profiles saved ({len(profile_db.profiles)} total)")
+    else:
+        print("  Skipped enrollment.")
+
+
+def _review_meeting(meeting_id: str) -> None:
+    """Interactively review and correct all speakers in an existing meeting."""
+    from src import config
+    from src.export import export_all
+    from src.models import Meeting, SpeakerMapping
+
+    meeting_dir = config.MEETINGS_DIR / meeting_id
+    named_path = meeting_dir / "transcript_named.json"
+
+    if not named_path.exists():
+        print(f"No transcript found for meeting: {meeting_id}")
+        print(f"  Expected at: {named_path}")
+        available = sorted(
+            d.name for d in config.MEETINGS_DIR.iterdir()
+            if d.is_dir() and not d.name.startswith(".")
+        ) if config.MEETINGS_DIR.exists() else []
+        if available:
+            print(f"  Available meetings: {', '.join(available)}")
+        sys.exit(1)
+
+    with open(named_path, "r") as f:
+        meeting = Meeting.from_dict(json.load(f))
+
+    video_path = find_video_file(meeting_dir, meeting.audio_source)
+    speaker_stats = _build_speaker_stats(meeting.segments)
+    embeddings_path = meeting_dir / "embeddings.json"
+    soft_matches = _load_soft_matches(embeddings_path)
+
+    sorted_labels = sorted(
+        speaker_stats.keys(),
+        key=lambda l: speaker_stats[l]["total_speech"],
+        reverse=True,
+    )
+
+    print(f"\nReviewing: {meeting.city} {meeting.meeting_type} ({meeting.date})")
+    print(f"Meeting ID: {meeting_id}")
+    if video_path:
+        print(f"Video: {Path(video_path).name}")
+    else:
+        print("Video: not found (no clip playback available)")
+    print(f"Speakers: {len(sorted_labels)}")
+    print()
+
+    # Show overview table
+    print("  #  Label         Current Name                  Segs  Speech  Conf   Method")
+    print("  " + "-" * 90)
+    for i, label in enumerate(sorted_labels):
+        stats = speaker_stats[label]
+        mapping = meeting.speakers.get(label)
+        name = mapping.speaker_name if mapping and mapping.speaker_name else "(unidentified)"
+        conf = mapping.confidence if mapping else 0.0
+        method = mapping.id_method or ""
+        mins = stats["total_speech"] / 60
+        hint = ""
+        if soft_matches and label in soft_matches:
+            top = soft_matches[label][0]
+            if not (mapping and mapping.speaker_name and mapping.confidence >= 0.85):
+                hint = f"  ~ {top[0]} ({top[1]:.2f})"
+        print(f"  {i+1:>2}  {label:<13} {name:<30} {stats['seg_count']:>4}  {mins:>5.1f}m  {conf:.2f}  {method}{hint}")
+
+    print()
+    print("Commands for each speaker:")
+    print("  [Enter]  Skip (keep current name)")
+    print("  [V]      View video clip of this speaker")
+    print("  [Y]      Accept suggested voice match (if shown)")
+    print("  [name]   Type a new name to assign")
+    print("  [Q]      Quit review (save changes so far)")
+    print()
+
+    changes = _interactive_speaker_review(
+        sorted_labels, speaker_stats, meeting.speakers,
+        video_path, soft_matches=soft_matches, show_text=True,
+    )
+
+    # Apply corrections to segments and save
+    if changes:
+        for seg in meeting.segments:
+            m = meeting.speakers.get(seg.speaker_label)
+            if m and m.speaker_name:
+                seg.speaker_name = m.speaker_name
+                seg.confidence = m.confidence
+                seg.id_method = m.id_method
+
+        with open(named_path, "w") as f:
+            json.dump(meeting.to_dict(), f, indent=2)
+
+        export_dir = meeting_dir / "exports"
+        export_all(meeting, export_dir)
+
+        print(f"\n{len(changes)} correction(s) saved:")
+        for c in changes:
+            old = c["old_name"] or "(unidentified)"
+            print(f"  {c['label']}: {old} -> {c['new_name']}")
+        print(f"Exports updated: {export_dir}")
+
+        # Offer enrollment
+        _enroll_after_review(
+            changes, meeting.speakers, meeting_dir,
+            meeting.meeting_id, meeting.segments,
+        )
+    else:
+        print("\nNo changes made.")
+
+
+def _identify_speakers_standalone(meeting_id: str) -> None:
+    """Standalone pre-identification for an existing meeting.
+
+    Works on any meeting that has diarization + embeddings.
+    Does not require transcription to be complete.
+    """
+    from src import config
+    from src.models import Meeting, SpeakerMapping
+
+    meeting_dir = config.MEETINGS_DIR / meeting_id
+    diarization_path = meeting_dir / "diarization.json"
+    embeddings_path = meeting_dir / "embeddings.json"
+
+    if not diarization_path.exists():
+        print(f"No diarization found for meeting: {meeting_id}")
+        print(f"  Expected at: {diarization_path}")
+        available = sorted(
+            d.name for d in config.MEETINGS_DIR.iterdir()
+            if d.is_dir() and not d.name.startswith(".")
+        ) if config.MEETINGS_DIR.exists() else []
+        if available:
+            print(f"  Available meetings: {', '.join(available)}")
+        sys.exit(1)
+
+    # Load segments (prefer transcribed, fall back to diarization-only)
+    from src.models import Segment
+
+    transcript_path = meeting_dir / "transcript_raw.json"
+    named_path = meeting_dir / "transcript_named.json"
+    has_text = False
+
+    if named_path.exists():
+        with open(named_path, "r") as f:
+            meeting = Meeting.from_dict(json.load(f))
+        segments = meeting.segments
+        current_mappings = meeting.speakers
+        has_text = any(s.text for s in segments)
+    elif transcript_path.exists():
+        with open(transcript_path, "r") as f:
+            segments = [Segment.from_dict(d) for d in json.load(f)]
+        current_mappings = {}
+        has_text = any(s.text for s in segments)
+    else:
+        with open(diarization_path, "r") as f:
+            segments = [Segment.from_dict(d) for d in json.load(f)]
+        current_mappings = {}
+
+    video_path = find_video_file(meeting_dir, "")
+    speaker_stats = _build_speaker_stats(segments)
+    soft_matches = _load_soft_matches(embeddings_path)
+
+    sorted_labels = sorted(
+        speaker_stats.keys(),
+        key=lambda l: speaker_stats[l]["total_speech"],
+        reverse=True,
+    )
+
+    print(f"\nSpeaker Identification: {meeting_id}")
+    if video_path:
+        print(f"Video: {Path(video_path).name}")
+    else:
+        print("Video: not found")
+    if has_text:
+        print("Transcript: available (text samples shown)")
+    else:
+        print("Transcript: not yet available (video clips only)")
+    print(f"Speakers: {len(sorted_labels)}")
+    if soft_matches:
+        matched = sum(1 for l in sorted_labels if l in soft_matches)
+        print(f"Voice hints: {matched} speaker(s) have possible profile matches")
+    print()
+
+    # Show overview table
+    print("  #  Label         Current Name                  Segs  Speech  Voice Hint")
+    print("  " + "-" * 85)
+    for i, label in enumerate(sorted_labels):
+        stats = speaker_stats[label]
+        mapping = current_mappings.get(label)
+        name = mapping.speaker_name if mapping and mapping.speaker_name else "(unidentified)"
+        mins = stats["total_speech"] / 60
+        hint = ""
+        if soft_matches and label in soft_matches:
+            top = soft_matches[label][0]
+            if top[1] >= 0.85:
+                hint = f"* {top[0]} ({top[1]:.2f})"
+            else:
+                hint = f"? {top[0]} ({top[1]:.2f})"
+        print(f"  {i+1:>2}  {label:<13} {name:<30} {stats['seg_count']:>4}  {mins:>5.1f}m  {hint}")
+
+    print()
+    print("Commands for each speaker:")
+    print("  [Enter]  Skip")
+    print("  [V]      View video clip of this speaker")
+    print("  [Y]      Accept suggested voice match (if shown)")
+    print("  [name]   Type a name to assign")
+    print("  [Q]      Quit (save changes so far)")
+    print()
+
+    changes = _interactive_speaker_review(
+        sorted_labels, speaker_stats, current_mappings,
+        video_path, soft_matches=soft_matches, show_text=has_text,
+    )
+
+    if changes:
+        # Save identifications as pre_identifications.json
+        pre_id_path = meeting_dir / "pre_identifications.json"
+        pre_ids = {}
+        for label, mapping in current_mappings.items():
+            if isinstance(mapping, SpeakerMapping) and mapping.speaker_name:
+                pre_ids[label] = {
+                    "speaker_name": mapping.speaker_name,
+                    "confidence": mapping.confidence,
+                    "id_method": mapping.id_method,
+                }
+        with open(pre_id_path, "w") as f:
+            json.dump(pre_ids, f, indent=2)
+
+        print(f"\n{len(changes)} identification(s) saved to {pre_id_path.name}")
+        for c in changes:
+            old = c["old_name"] or "(unidentified)"
+            print(f"  {c['label']}: {old} -> {c['new_name']}")
+
+        # If named transcript exists, update it too
+        if named_path.exists():
+            with open(named_path, "r") as f:
+                meeting = Meeting.from_dict(json.load(f))
+            for label, mapping in current_mappings.items():
+                if isinstance(mapping, SpeakerMapping):
+                    meeting.speakers[label] = mapping
+            for seg in meeting.segments:
+                m = meeting.speakers.get(seg.speaker_label)
+                if m and m.speaker_name:
+                    seg.speaker_name = m.speaker_name
+                    seg.confidence = m.confidence
+                    seg.id_method = m.id_method
+            with open(named_path, "w") as f:
+                json.dump(meeting.to_dict(), f, indent=2)
+            from src.export import export_all
+            export_dir = meeting_dir / "exports"
+            export_all(meeting, export_dir)
+            print(f"Transcript and exports updated.")
+
+        # Offer enrollment
+        _enroll_after_review(
+            changes, current_mappings, meeting_dir,
+            meeting_id, segments,
+        )
+
+        print("\nThese identifications will be used as ground truth in Stage 4")
+        print("(overriding LLM/pattern matching for identified speakers).")
+    else:
+        print("\nNo identifications made.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="CouncilScribe — Automated City Council Meeting Transcription",
@@ -834,6 +1454,12 @@ Environment Variables:
                         help="Merge SOURCE profile into DEST profile and exit (use slugs from --list-profiles)")
     parser.add_argument("--show-roster", action="store_true",
                         help="Display the current council roster and exit")
+    parser.add_argument("--review-meeting", metavar="MEETING_ID",
+                        help="Interactively review and correct all speakers in an existing meeting")
+    parser.add_argument("--identify-speakers", metavar="MEETING_ID",
+                        help="Standalone speaker identification with video clips and voice hints (works pre-transcription)")
+    parser.add_argument("--pre-identify", action="store_true",
+                        help="Interactive speaker identification after diarization, before transcription (pipeline mode)")
 
     args = parser.parse_args()
 
@@ -918,6 +1544,14 @@ Environment Variables:
 
     if args.fix_transcripts:
         _fix_transcripts()
+        return
+
+    if args.review_meeting:
+        _review_meeting(args.review_meeting)
+        return
+
+    if args.identify_speakers:
+        _identify_speakers_standalone(args.identify_speakers)
         return
 
     # --- CATS TV browser ---
