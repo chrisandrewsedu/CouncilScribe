@@ -7,7 +7,10 @@ common transcription errors (e.g. "Sasseberg" -> "President Asare").
 from __future__ import annotations
 
 import json
+import logging
+import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Optional
@@ -28,27 +31,98 @@ class Roster:
     members: list[RosterMember] = field(default_factory=list)
 
 
-def load_roster(path: Optional[Path] = None) -> Optional[Roster]:
+def load_roster(
+    path: Optional[Path] = None,
+    *,
+    body_slug: Optional[str] = None,
+) -> Optional[Roster]:
     """Load council roster from config directory.
 
-    Returns None if roster file doesn't exist.
-    """
-    if path is None:
-        path = config.CONFIG_DIR / "council_roster.json"
-    if not path.exists():
-        return None
+    Two paths:
+    - Legacy: ``load_roster()`` or ``load_roster(path=...)`` reads the
+      existing ``council_roster.json`` format unchanged.
+    - Per-body (Phase 108): ``load_roster(body_slug="...")`` reads the
+      per-body cache at ``CONFIG_DIR/rosters/{body_slug}.json`` written
+      by ``refresh_roster.py`` and returns a ``Roster`` whose
+      ``members[].name`` is constructed as ``"{title} {last_name}"`` to
+      match the legacy format consumed by ``correct_speaker_name`` and
+      ``roster_names_for_prompt``.
 
-    with open(path, "r", encoding="utf-8") as f:
+    Returns None if the resolved file doesn't exist. The 30-day staleness
+    warning only fires on the slug path (CSROSTER-05).
+    """
+    # Legacy path — unchanged behavior.
+    if body_slug is None:
+        if path is None:
+            path = config.CONFIG_DIR / "council_roster.json"
+        if not path.exists():
+            return None
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        members = [
+            RosterMember(name=m["name"], aliases=m.get("aliases", []))
+            for m in data.get("members", [])
+        ]
+        return Roster(
+            city=data.get("city", ""),
+            body=data.get("body", ""),
+            members=members,
+        )
+
+    # Slug path — per-body cache written by refresh_roster.py.
+    slug_path = config.CONFIG_DIR / "rosters" / f"{body_slug}.json"
+    if not slug_path.exists():
+        return None
+    with open(slug_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    members = [
-        RosterMember(name=m["name"], aliases=m.get("aliases", []))
-        for m in data.get("members", [])
-    ]
+    # Staleness check — CSROSTER-05, non-blocking.
+    fetched_at_str = data.get("fetched_at", "")
+    if fetched_at_str:
+        try:
+            # Normalize 'Z' suffix for datetime.fromisoformat compatibility.
+            normalized = fetched_at_str.replace("Z", "+00:00")
+            fetched_at = datetime.fromisoformat(normalized)
+            if fetched_at.tzinfo is None:
+                fetched_at = fetched_at.replace(tzinfo=timezone.utc)
+            age_days = (datetime.now(timezone.utc) - fetched_at).days
+            if age_days > 30:
+                msg = (
+                    f"Roster '{body_slug}' is {age_days} days old "
+                    f"(fetched {fetched_at_str[:10]}). "
+                    f"Re-run: python refresh_roster.py --body {body_slug}"
+                )
+                logging.warning(msg)
+                print(f"WARNING: {msg}", file=sys.stderr)
+        except ValueError:
+            logging.warning(
+                "Roster '%s' has unparseable fetched_at: %r",
+                body_slug,
+                fetched_at_str,
+            )
+
+    # Build Roster from per-body cache. Canonical RosterMember.name =
+    # "{title} {last_name}" where last_name is the last whitespace token
+    # of full_name (Phase 107 API does not expose last_name directly).
+    slug_members: list[RosterMember] = []
+    for pol in data.get("politicians", []):
+        full_name = pol.get("full_name", "")
+        title = pol.get("title", "")
+        last_name = full_name.split()[-1] if full_name else ""
+        if title and last_name:
+            canonical = f"{title} {last_name}"
+        else:
+            canonical = full_name
+        slug_members.append(
+            RosterMember(
+                name=canonical,
+                aliases=list(pol.get("aliases", [])),
+            )
+        )
     return Roster(
-        city=data.get("city", ""),
-        body=data.get("body", ""),
-        members=members,
+        city="",
+        body=data.get("body_key", ""),
+        members=slug_members,
     )
 
 
