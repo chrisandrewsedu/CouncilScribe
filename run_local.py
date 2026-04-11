@@ -17,9 +17,11 @@ import argparse
 import gc
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 # Ensure src/ is importable when running from the repo root
 _REPO_DIR = Path(__file__).resolve().parent
@@ -34,6 +36,53 @@ if _env_file.exists():
             if _line and not _line.startswith("#") and "=" in _line:
                 _key, _, _val = _line.partition("=")
                 os.environ.setdefault(_key.strip(), _val.strip())
+
+
+# ---------------------------------------------------------------------------
+# Phase 109: pre-Stage-1 fail-fast guard (CSMEETING-02, D-07/D-08/D-09/D-13)
+# ---------------------------------------------------------------------------
+
+_BODY_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+
+def ensure_body_roster_cached(body_slug: Optional[str]) -> None:
+    """Phase 109 fail-fast guard: verify {body_slug}.json exists in the roster cache.
+
+    Implements CSMEETING-02:
+      - D-05: if body_slug is None/empty, return silently (legacy path).
+      - D-07: runs BEFORE Stage 1, after argparse + metadata resolve.
+      - D-08: on missing cache, print 2-line stderr error + sys.exit(2).
+      - D-09: stale cache (>30 days) is NOT a fail-fast — file must merely exist.
+      - D-10: behaves identically on resume after cache delete.
+      - T-109-03: validates slug shape before composing filesystem paths.
+    """
+    if not body_slug:
+        return  # D-05 legacy path
+
+    # T-109-03: reject path-traversal / shell metacharacters BEFORE filesystem join.
+    if not _BODY_SLUG_RE.match(body_slug):
+        print(
+            f'ERROR: Invalid body slug "{body_slug}" — must match '
+            f'[a-z0-9][a-z0-9_-]*',
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    from src import config
+    cache_path = config.CONFIG_DIR / "rosters" / f"{body_slug}.json"
+    if not cache_path.exists():
+        # D-08: exact 2-line error. D-13: literal ~-path string, do NOT expand CONFIG_DIR.
+        print(
+            f'ERROR: Body "{body_slug}" has no cached roster at '
+            f'~/CouncilScribe/config/rosters/{body_slug}.json',
+            file=sys.stderr,
+        )
+        print(
+            f'Run: python refresh_roster.py --body {body_slug}',
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    # D-09: staleness is checked later inside load_roster() — not our concern here.
 
 
 def get_hf_token() -> str:
