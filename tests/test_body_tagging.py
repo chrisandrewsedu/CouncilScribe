@@ -192,7 +192,15 @@ def test_missing_roster_fails_fast(tmp_path, tmp_config_dir, tmp_meetings_dir):
     Line 2: Run: python refresh_roster.py --body <slug>"
     Decision D-13: "Exit before any Stage 1 work begins."
     """
-    pytest.fail("not yet implemented — Plan 02, Task 2")
+    import run_local
+
+    slug = "bloomington-common-council"
+    # No roster file in tmp_config_dir/rosters/ — omitted intentionally
+
+    with pytest.raises(SystemExit) as exc_info:
+        run_local.ensure_body_roster_cached(slug)
+
+    assert exc_info.value.code == 2, f"expected exit 2, got {exc_info.value.code}"
 
 
 def test_resume_after_cache_delete_fails_fast(tmp_path, tmp_config_dir, tmp_meetings_dir, tagged_meeting_dir):
@@ -202,7 +210,26 @@ def test_resume_after_cache_delete_fails_fast(tmp_path, tmp_config_dir, tmp_meet
     Stage 3, and then ~/CouncilScribe/config/rosters/X.json was deleted,
     a subsequent resume invocation fails fast at the same pre-Stage-1 check."
     """
-    pytest.fail("not yet implemented — Plan 02, Task 2")
+    import run_local
+
+    slug = "bloomington-common-council"
+    # Create then delete the roster file to simulate "was there but deleted"
+    roster_file = tmp_config_dir / "rosters" / f"{slug}.json"
+    roster_file.write_text("{}", encoding="utf-8")
+    roster_file.unlink()  # simulate deletion
+
+    # Meeting dir with persisted body_slug
+    mdir = tagged_meeting_dir(slug, completed_stage=3)
+
+    # Loading state shows slug is persisted
+    state = PipelineState(mdir)
+    assert state.body_slug == slug
+
+    # Guard must fail fast identically to D-08 (cache missing)
+    with pytest.raises(SystemExit) as exc_info:
+        run_local.ensure_body_roster_cached(state.body_slug)
+
+    assert exc_info.value.code == 2, f"expected exit 2, got {exc_info.value.code}"
 
 
 def test_stale_cache_is_non_blocking(tmp_path, tmp_config_dir, fake_roster_cache):
@@ -213,7 +240,14 @@ def test_stale_cache_is_non_blocking(tmp_path, tmp_config_dir, fake_roster_cache
     loads — the non-blocking WARNING from load_roster(body_slug=...) fires as
     today. Fail-fast only triggers on truly missing files."
     """
-    pytest.fail("not yet implemented — Plan 02, Task 2")
+    import run_local
+
+    slug = "bloomington-common-council"
+    # Write a cache file with a very old fetched_at (>30 days ago)
+    fake_roster_cache(slug, fetched_at="2020-01-01T00:00:00Z")
+
+    # Guard must NOT raise SystemExit — stale but present file is not a fail-fast
+    run_local.ensure_body_roster_cached(slug)  # should return without error
 
 
 def test_stage4_uses_body_roster(tmp_path, tmp_config_dir, tmp_meetings_dir, tagged_meeting_dir, fake_roster_cache):

@@ -315,6 +315,10 @@ def run_pipeline(args: argparse.Namespace) -> None:
         # D-01 / D-06: single info line for operator visibility
         print(f"Body: {effective_body_slug}")
 
+    # Phase 109 D-07: fail fast if tagged meeting has no cached roster.
+    # Must run before Stage 1 ingestion so operators don't burn GPU on a bad run.
+    ensure_body_roster_cached(effective_body_slug)
+
     meeting = Meeting(
         meeting_id=meeting_id,
         city=args.city,
