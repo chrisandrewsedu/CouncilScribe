@@ -653,10 +653,24 @@ def run_pipeline(args: argparse.Namespace) -> None:
     named_transcript_path = meeting_dir / "transcript_named.json"
     llm_partial_path = meeting_dir / "llm_partial_results.json"
 
-    # Load roster for name correction
-    roster = load_roster()
+    # Phase 109 CSMEETING-03: load body-specific roster when meeting is tagged.
+    # effective_body_slug comes from the Plan 01 resolve block; Plan 02's guard has
+    # already verified the cache file exists if effective_body_slug is set.
+    # NOTE: this is the ONLY load_roster() site Phase 109 updates. The 3 offline
+    # utility sites (~line 1021 _fix_transcripts, ~line 1719 --show-roster,
+    # ~line 1749 --fix-profiles) remain on bare load_roster() because they have
+    # no meeting context. See 109-RESEARCH.md §1. Phase 110/111 will revisit them.
+    if effective_body_slug:
+        roster = load_roster(body_slug=effective_body_slug)
+    else:
+        roster = load_roster()  # D-05 legacy fallback
     if roster:
-        print(f"  Loaded council roster: {len(roster.members)} members ({roster.city} {roster.body})")
+        # Roster dataclass may not have .city/.body when loaded from a body-keyed cache;
+        # print whichever label is available without crashing the legacy path.
+        label = f"{getattr(roster, 'city', '') or ''} {getattr(roster, 'body', '') or ''}".strip()
+        if not label and effective_body_slug:
+            label = effective_body_slug
+        print(f"  Loaded council roster: {len(roster.members)} members ({label})")
     roster_hint = roster_names_for_prompt(roster) if roster else ""
 
     if state.is_complete(PipelineStage.IDENTIFIED):
