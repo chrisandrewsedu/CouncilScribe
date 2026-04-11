@@ -121,3 +121,31 @@ def test_response_size_cap(mock_get):
         fetch_body_roster("bloomington-common-council")
     assert "too large" in str(exc_info.value)
     mock_get.return_value.json.assert_not_called()
+
+
+@patch("src.essentials_client.requests.get")
+def test_fetch_body_roster_non_json_200_wrapped(mock_get):
+    """HTTP 200 with non-JSON body must raise EssentialsClientError, not
+    let requests.exceptions.JSONDecodeError escape. Regression for
+    Phase 108.1 / CSROSTER-03 / G2 gap from 108-HUMAN-UAT."""
+    import requests as _r
+
+    html_body = (
+        "<!doctype html><html><head><title>Admin</title></head>"
+        "<body><div id='root'></div></body></html>"
+    )
+    m = MagicMock()
+    m.status_code = 200
+    m.headers = {"Content-Type": "text/html; charset=utf-8"}
+    m.text = html_body
+    m.json.side_effect = _r.exceptions.JSONDecodeError(
+        "Expecting value", "doc", 0
+    )
+    mock_get.return_value = m
+
+    with pytest.raises(EssentialsClientError) as exc_info:
+        fetch_body_roster("bloomington-common-council")
+
+    msg = str(exc_info.value)
+    assert "Non-JSON response" in msg
+    assert "<!doctype html" in msg
