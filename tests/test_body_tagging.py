@@ -259,7 +259,33 @@ def test_stage4_uses_body_roster(tmp_path, tmp_config_dir, tmp_meetings_dir, tag
     D-05: "No code path falls back to the legacy global roster when a body_slug
     is present."
     """
-    pytest.fail("not yet implemented — Plan 03, Task 1")
+    import run_local
+    from src.roster import Roster, RosterMember
+
+    slug = "bloomington-common-council"
+    fake_roster_cache(slug)
+
+    # Build a sentinel Roster that we can assert was passed downstream
+    sentinel_roster = Roster(
+        city="Bloomington",
+        body="Common Council",
+        members=[RosterMember(name="Isabel Piedmont-Smith")],
+    )
+
+    called_with_slug = []
+
+    def mock_load_roster(path=None, *, body_slug=None):
+        called_with_slug.append(body_slug)
+        return sentinel_roster
+
+    # _load_stage4_roster replicates the Stage 4 load_roster conditional:
+    # if effective_body_slug: load_roster(body_slug=...) else load_roster()
+    result = run_local._load_stage4_roster(slug, _load_fn=mock_load_roster)
+
+    assert called_with_slug == [slug], (
+        f"Expected load_roster called with body_slug={slug!r}, got calls: {called_with_slug}"
+    )
+    assert result is sentinel_roster, "Stage 4 must use the body-specific Roster object"
 
 
 def test_legacy_fallback_intact(tmp_path, tmp_config_dir, tmp_meetings_dir):
@@ -270,7 +296,21 @@ def test_legacy_fallback_intact(tmp_path, tmp_config_dir, tmp_meetings_dir):
     Stage 4 calls bare load_roster(), which resolves to
     ~/CouncilScribe/config/council_roster.json."
     """
-    pytest.fail("not yet implemented — Plan 03, Task 1")
+    import run_local
+
+    called_with_slug = []
+
+    def mock_load_roster(path=None, *, body_slug=None):
+        called_with_slug.append(body_slug)
+        return None  # legacy path returns None when no council_roster.json
+
+    # None effective_body_slug → D-05 legacy fallback
+    result = run_local._load_stage4_roster(None, _load_fn=mock_load_roster)
+
+    assert called_with_slug == [None], (
+        f"Expected bare load_roster() (body_slug=None), got calls: {called_with_slug}"
+    )
+    assert result is None, "Legacy fallback returns None when no council_roster.json present"
 
 
 def test_batch_propagates_body(tmp_path, tmp_config_dir, fake_roster_cache):
