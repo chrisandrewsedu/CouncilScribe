@@ -230,6 +230,42 @@ def run_pipeline(args: argparse.Namespace) -> None:
     meeting_dir = ensure_drive_structure(meeting_id)
     state = PipelineState(meeting_dir)
 
+    # ── Phase 109: resolve effective body_slug (D-01..D-06, D-11) ──
+    cli_body = getattr(args, "body", None)
+    persisted_body = state.body_slug
+    force_retag = getattr(args, "force_retag", False)
+
+    if cli_body and persisted_body and cli_body != persisted_body and not force_retag:
+        # D-02: hard error on mismatch
+        print(
+            f"ERROR: Meeting already tagged as \"{persisted_body}\". "
+            f"Pass --body {persisted_body} to continue, or add --force-retag "
+            f"to change the body (this will re-run Stages 4-7).",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    if cli_body and persisted_body and cli_body != persisted_body and force_retag:
+        # D-03 + D-04 + D-11: overwrite, rewind, clear stale pre_ids
+        print(f"  Force-retag: {persisted_body} → {cli_body}", file=sys.stderr)
+        state.body_slug = cli_body
+        state.rewind_for_retag()
+        state.save()
+    elif cli_body and not persisted_body:
+        # D-01: first run persists
+        state.body_slug = cli_body
+        state.save()
+    elif not cli_body and persisted_body and force_retag:
+        # Already guarded at argparse level; defensive no-op
+        pass
+    # else: D-05 (no flag, no persisted — legacy) or D-06 (no flag, persisted — silent read)
+
+    effective_body_slug = state.body_slug  # used by Plan 02 guard + Plan 03 Stage 4
+
+    if effective_body_slug:
+        # D-01 / D-06: single info line for operator visibility
+        print(f"Body: {effective_body_slug}")
+
     meeting = Meeting(
         meeting_id=meeting_id,
         city=args.city,
@@ -961,6 +997,8 @@ def _run_batch(args: argparse.Namespace) -> None:
             no_merge=args.no_merge if hasattr(args, "no_merge") else False,
             pre_identify=False,  # skip interactive pre-identify
             use_vtt=args.use_vtt if hasattr(args, "use_vtt") else False,
+            body=getattr(args, "body", None),
+            force_retag=getattr(args, "force_retag", False),
         )
 
         # Auto-generate date if missing
@@ -1709,8 +1747,26 @@ Environment Variables:
                         help="Batch mode: text file with one input per line (path or 'URL DATE'), or directory of videos")
     parser.add_argument("--batch-resume", action="store_true",
                         help="Resume an interrupted batch run (skip already-completed meetings)")
+    parser.add_argument(
+        "--body",
+        type=str,
+        default=None,
+        help="Governing body slug (e.g. bloomington-common-council). "
+             "Persisted to pipeline_state.json on first run; omit on re-invocation.",
+    )
+    parser.add_argument(
+        "--force-retag",
+        action="store_true",
+        default=False,
+        help="Overwrite a meeting's persisted body_slug. Rewinds stages 4-7. "
+             "Requires --body.",
+    )
 
     args = parser.parse_args()
+
+    # D-12: --force-retag requires --body
+    if args.force_retag and not args.body:
+        parser.error("--force-retag requires --body <slug>")
 
     # --- Utility commands ---
     if args.show_roster:
