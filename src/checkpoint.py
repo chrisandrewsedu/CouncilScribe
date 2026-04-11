@@ -32,6 +32,7 @@ class PipelineState:
         self.completed_stage: PipelineStage = PipelineStage.NOT_STARTED
         self.transcription_progress: int = 0  # last completed segment index
         self.total_segments: int = 0
+        self.body_slug: Optional[str] = None
         self._load()
 
     def _load(self) -> None:
@@ -41,6 +42,7 @@ class PipelineState:
             self.completed_stage = PipelineStage(data.get("completed_stage", 0))
             self.transcription_progress = data.get("transcription_progress", 0)
             self.total_segments = data.get("total_segments", 0)
+            self.body_slug = data.get("body_slug")  # None if legacy/untagged — D-05 compat
 
     def save(self) -> None:
         """Atomic write: write to temp file then rename."""
@@ -48,6 +50,7 @@ class PipelineState:
             "completed_stage": int(self.completed_stage),
             "transcription_progress": self.transcription_progress,
             "total_segments": self.total_segments,
+            "body_slug": self.body_slug,
         }
         fd, tmp_path = tempfile.mkstemp(
             dir=str(self.meeting_dir), suffix=".tmp"
@@ -64,6 +67,19 @@ class PipelineState:
     def mark_complete(self, stage: PipelineStage) -> None:
         self.completed_stage = stage
         self.save()
+
+    def rewind_for_retag(self) -> None:
+        """D-04: Invalidate downstream stages when body_slug changes.
+
+        Rewinds completed_stage to TRANSCRIBED (stage 3) so Stages 4-7 re-run,
+        and deletes any pre_identifications.json (D-11) which is stale against
+        the old roster. Caller must set self.body_slug to the new slug BEFORE
+        calling this, then call save().
+        """
+        self.completed_stage = PipelineStage.TRANSCRIBED
+        pre_ids = self.meeting_dir / "pre_identifications.json"
+        if pre_ids.exists():
+            pre_ids.unlink()
 
     def is_complete(self, stage: PipelineStage) -> bool:
         return self.completed_stage >= stage
