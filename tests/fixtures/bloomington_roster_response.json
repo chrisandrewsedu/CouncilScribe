@@ -1,0 +1,12 @@
+{
+  "slug": "bloomington-common-council",
+  "name_formal": "Bloomington Common Council",
+  "state": "IN",
+  "fetched_at": "2026-04-11T12:00:00Z",
+  "members": [
+    {"politician_slug":"isabel-piedmont-smith","politician_id":"uuid-ips","full_name":"Isabel Piedmont-Smith","preferred_name":"Isabel","title":"Councilmember","chamber_name":"Bloomington Common Council","district_label":"District 5","photo_url":null},
+    {"politician_slug":"sydney-asare","politician_id":"uuid-a","full_name":"Sydney Asare","preferred_name":"Sydney","title":"Council President","chamber_name":"Bloomington Common Council","district_label":"At-Large","photo_url":null},
+    {"politician_slug":"maria-garcia","politician_id":"uuid-g","full_name":"María García","preferred_name":"María","title":"Councilmember","chamber_name":"Bloomington Common Council","district_label":"District 2","photo_url":null},
+    {"politician_slug":"nicole-bolden","politician_id":"uuid-b","full_name":"Nicole Bolden","preferred_name":"Nicole","title":"City Clerk","chamber_name":"Bloomington Common Council","district_label":"","photo_url":null}
+  ]
+}
