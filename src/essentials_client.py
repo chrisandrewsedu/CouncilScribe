@@ -111,4 +111,11 @@ def fetch_body_roster(body_slug: str, base_url: str | None = None) -> dict:
             status=resp.status_code,
         )
 
-    return resp.json()
+    try:
+        return resp.json()
+    except ValueError as exc:  # includes requests.exceptions.JSONDecodeError
+        snippet = (resp.text or "")[:200]
+        raise EssentialsClientError(
+            f"Non-JSON response from {url}: {snippet}",
+            status=resp.status_code,
+        ) from exc
