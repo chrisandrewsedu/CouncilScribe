@@ -274,14 +274,16 @@ def test_reenroll_reads_body_slug(
     # Set up roster cache
     fake_roster_cache("bloomington-common-council")
 
+    import reenroll_profiles
+
     # Mock embedding extraction (avoid loading real model)
     monkeypatch.setattr(
-        "src.diarize.extract_speaker_embeddings",
+        "reenroll_profiles.extract_speaker_embeddings",
         lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
     )
 
     # Mock load_profiles to return empty DB
-    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+    monkeypatch.setattr("reenroll_profiles.load_profiles", lambda: ProfileDB())
 
     # Capture saved DB
     saved = {}
@@ -289,15 +291,13 @@ def test_reenroll_reads_body_slug(
     def _capture_save(db):
         saved["db"] = db
 
-    monkeypatch.setattr("src.enroll.save_profiles", _capture_save)
+    monkeypatch.setattr("reenroll_profiles.save_profiles", _capture_save)
 
     # Mock HF token
     monkeypatch.setenv("HF_TOKEN", "fake-token")
 
     # Run reenroll for just this meeting
     monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-meeting"])
-
-    import reenroll_profiles
 
     rc = reenroll_profiles.main()
     assert rc == 0
@@ -316,18 +316,18 @@ def test_reenroll_promotes_to_essentials_key(
 
     fake_roster_cache("bloomington-common-council")
 
+    import reenroll_profiles
+
     monkeypatch.setattr(
-        "src.diarize.extract_speaker_embeddings",
+        "reenroll_profiles.extract_speaker_embeddings",
         lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
     )
-    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+    monkeypatch.setattr("reenroll_profiles.load_profiles", lambda: ProfileDB())
 
     saved = {}
-    monkeypatch.setattr("src.enroll.save_profiles", lambda db: saved.update(db=db))
+    monkeypatch.setattr("reenroll_profiles.save_profiles", lambda db: saved.update(db=db))
     monkeypatch.setenv("HF_TOKEN", "fake-token")
     monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-promote"])
-
-    import reenroll_profiles
 
     rc = reenroll_profiles.main()
     assert rc == 0
@@ -357,18 +357,18 @@ def test_reenroll_untagged_meeting_local_slug(
     _write_transcript_named(mdir)
     (mdir / "audio.wav").touch()
 
+    import reenroll_profiles
+
     monkeypatch.setattr(
-        "src.diarize.extract_speaker_embeddings",
+        "reenroll_profiles.extract_speaker_embeddings",
         lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
     )
-    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+    monkeypatch.setattr("reenroll_profiles.load_profiles", lambda: ProfileDB())
 
     saved = {}
-    monkeypatch.setattr("src.enroll.save_profiles", lambda db: saved.update(db=db))
+    monkeypatch.setattr("reenroll_profiles.save_profiles", lambda db: saved.update(db=db))
     monkeypatch.setenv("HF_TOKEN", "fake-token")
     monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-untagged"])
-
-    import reenroll_profiles
 
     rc = reenroll_profiles.main()
     assert rc == 0
