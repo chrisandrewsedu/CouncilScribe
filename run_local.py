@@ -299,7 +299,6 @@ def run_pipeline(args: argparse.Namespace) -> None:
         print(f"  Force-retag: {persisted_body} → {cli_body}", file=sys.stderr)
         state.body_slug = cli_body
         state.rewind_for_retag()
-        state.save()
     elif cli_body and not persisted_body:
         # D-01: first run persists
         state.body_slug = cli_body
