@@ -42,7 +42,7 @@ if _env_file.exists():
 # Phase 109: pre-Stage-1 fail-fast guard (CSMEETING-02, D-07/D-08/D-09/D-13)
 # ---------------------------------------------------------------------------
 
-_BODY_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+_BODY_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 
 def ensure_body_roster_cached(body_slug: Optional[str]) -> None:
@@ -63,7 +63,7 @@ def ensure_body_roster_cached(body_slug: Optional[str]) -> None:
     if not _BODY_SLUG_RE.match(body_slug):
         print(
             f'ERROR: Invalid body slug "{body_slug}" — must match '
-            f'[a-z0-9][a-z0-9_-]*',
+            f'[a-z0-9][a-z0-9_-]{{0,63}} (1-64 chars)',
             file=sys.stderr,
         )
         sys.exit(2)
