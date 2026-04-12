@@ -22,6 +22,8 @@ from . import config
 class RosterMember:
     name: str  # canonical name, e.g. "President Asare"
     aliases: list[str] = field(default_factory=list)
+    politician_slug: Optional[str] = None
+    politician_id: Optional[str] = None
 
 
 @dataclass
@@ -117,6 +119,8 @@ def load_roster(
             RosterMember(
                 name=canonical,
                 aliases=list(pol.get("aliases", [])),
+                politician_slug=pol.get("politician_slug"),
+                politician_id=pol.get("politician_id"),
             )
         )
     return Roster(

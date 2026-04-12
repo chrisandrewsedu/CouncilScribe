@@ -27,7 +27,11 @@ CHANNELS = 1  # mono
 
 # --- Model identifiers ---
 DIARIZATION_MODEL = "pyannote/speaker-diarization-3.1"
-EMBEDDING_MODEL = "pyannote/embedding"
+# WeSpeaker ResNet34 — higher-quality embeddings than pyannote/embedding (256-dim).
+# NOTE: changing this invalidates stored voice profiles (different dimension).
+# PROFILE_SCHEMA_VERSION is bumped whenever this model changes so load_profiles()
+# can detect and discard stale embeddings instead of silently mis-matching.
+EMBEDDING_MODEL = "pyannote/wespeaker-voxceleb-resnet34-LM"
 WHISPER_MODEL_GPU = "large-v3"
 WHISPER_MODEL_CPU = "medium"
 WHISPER_COMPUTE_GPU = "float16"
@@ -65,4 +69,9 @@ CHECKPOINT_EVERY_N_SEGMENTS = 50
 
 # --- Profile DB ---
 PROFILE_DB_FILENAME = "speaker_profiles.pkl"
-PROFILE_SCHEMA_VERSION = 1
+# Bumped to 2 on 2026-04-10 when EMBEDDING_MODEL switched from pyannote/embedding
+# (512-dim) to pyannote/wespeaker-voxceleb-resnet34-LM (256-dim). Profiles with
+# older schema versions are discarded on load and must be re-enrolled.
+# Bumped to 3 on 2026-04-12: added politician_slug and politician_id identity
+# fields to StoredProfile for essentials-keyed enrollment.
+PROFILE_SCHEMA_VERSION = 3

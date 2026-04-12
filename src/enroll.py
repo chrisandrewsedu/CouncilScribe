@@ -21,6 +21,8 @@ class StoredProfile:
     centroid: Optional[np.ndarray] = None
     meetings_seen: list[str] = field(default_factory=list)
     total_segments_confirmed: int = 0
+    politician_slug: Optional[str] = None   # essentials identifier
+    politician_id: Optional[str] = None     # essentials UUID
 
     def recompute_centroid(self) -> None:
         if self.embeddings:
@@ -44,6 +46,20 @@ def load_profiles() -> ProfileDB:
         with open(path, "rb") as f:
             db = pickle.load(f)
         if not isinstance(db, ProfileDB):
+            return ProfileDB()
+        stored_version = getattr(db, "schema_version", 1)
+        if stored_version != config.PROFILE_SCHEMA_VERSION:
+            print(
+                f"  [enroll] Profile DB schema v{stored_version} incompatible with "
+                f"current v{config.PROFILE_SCHEMA_VERSION} (embedding model changed). "
+                f"Discarding {len(db.profiles)} stale profile(s); re-enroll from fresh meetings."
+            )
+            backup = path.with_suffix(f".v{stored_version}.pkl.bak")
+            try:
+                path.rename(backup)
+                print(f"  [enroll] Previous DB backed up to {backup.name}")
+            except OSError:
+                pass
             return ProfileDB()
         return db
     return ProfileDB()
