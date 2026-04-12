@@ -37,6 +37,7 @@ if _env_file.exists():
                 _key, _, _val = _line.partition("=")
                 os.environ.setdefault(_key.strip(), _val.strip())
 
+from src import config  # lightweight; must follow .env.local load (CS_DATA_DIR)
 
 # ---------------------------------------------------------------------------
 # Phase 109: pre-Stage-1 fail-fast guard (CSMEETING-02, D-07/D-08/D-09/D-13)
@@ -68,7 +69,6 @@ def ensure_body_roster_cached(body_slug: Optional[str]) -> None:
         )
         sys.exit(2)
 
-    from src import config
     cache_path = config.CONFIG_DIR / "rosters" / f"{body_slug}.json"
     if not cache_path.exists():
         # D-08: exact 2-line error. D-13: literal ~-path string, do NOT expand CONFIG_DIR.
