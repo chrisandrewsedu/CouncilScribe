@@ -848,7 +848,7 @@ def run_pipeline(args: argparse.Namespace) -> None:
         # Auto-enroll high-confidence speakers (>= 0.85)
         profile_db = enroll_speakers(
             profile_db, speaker_embeddings, meeting.speakers,
-            meeting_id=meeting_id, segments=segments,
+            meeting_id=meeting_id, segments=segments, roster=roster,
         )
 
         auto_count = len(profile_db.profiles) - before_count
@@ -908,6 +908,7 @@ def run_pipeline(args: argparse.Namespace) -> None:
                     profile_db = enroll_confirmed(
                         profile_db, speaker_embeddings, confirmed,
                         meeting.speakers, meeting_id=meeting_id, segments=segments,
+                        roster=roster,
                     )
                     print(f"\n  Enrolled {len(confirmed)} additional speaker(s) via confirmation")
             else:
