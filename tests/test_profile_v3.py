@@ -225,3 +225,157 @@ def test_enroll_confirmed_roster_member():
         ProfileDB(), embeddings, ["SPEAKER_01"], mappings, "m1", segments, roster=roster
     )
     assert "essentials:isabel-piedmont-smith" in db.profiles
+
+
+# ---------------------------------------------------------------------------
+# Task 3 (Plan 02): reenroll_profiles.py body-slug-aware re-enrollment
+# ---------------------------------------------------------------------------
+
+import json
+import sys
+
+
+def _write_transcript_named(meeting_dir: Path, speaker_name: str = "Councilmember Piedmont-Smith"):
+    """Write a minimal transcript_named.json into a meeting directory."""
+    data = {
+        "segments": [
+            {
+                "segment_id": 0,
+                "start_time": 0,
+                "end_time": 1,
+                "speaker_label": "SPEAKER_01",
+                "text": "test",
+            }
+        ],
+        "speakers": {
+            "SPEAKER_01": {
+                "speaker_label": "SPEAKER_01",
+                "speaker_name": speaker_name,
+                "confidence": 0.95,
+                "id_method": "human_review",
+            }
+        },
+    }
+    (meeting_dir / "transcript_named.json").write_text(
+        json.dumps(data, indent=2), encoding="utf-8"
+    )
+
+
+def test_reenroll_reads_body_slug(
+    tagged_meeting_dir, fake_roster_cache, tmp_meetings_dir, monkeypatch
+):
+    """reenroll main() reads body_slug from PipelineState and loads the roster,
+    producing an essentials-keyed profile for a roster-matched speaker."""
+    # Set up meeting dir with body_slug and transcript
+    mdir = tagged_meeting_dir("bloomington-common-council", "2026-test-meeting", completed_stage=4)
+    _write_transcript_named(mdir)
+    (mdir / "audio.wav").touch()
+
+    # Set up roster cache
+    fake_roster_cache("bloomington-common-council")
+
+    # Mock embedding extraction (avoid loading real model)
+    monkeypatch.setattr(
+        "src.diarize.extract_speaker_embeddings",
+        lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
+    )
+
+    # Mock load_profiles to return empty DB
+    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+
+    # Capture saved DB
+    saved = {}
+
+    def _capture_save(db):
+        saved["db"] = db
+
+    monkeypatch.setattr("src.enroll.save_profiles", _capture_save)
+
+    # Mock HF token
+    monkeypatch.setenv("HF_TOKEN", "fake-token")
+
+    # Run reenroll for just this meeting
+    monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-meeting"])
+
+    import reenroll_profiles
+
+    rc = reenroll_profiles.main()
+    assert rc == 0
+    assert "db" in saved
+    assert "essentials:isabel-piedmont-smith" in saved["db"].profiles
+
+
+def test_reenroll_promotes_to_essentials_key(
+    tagged_meeting_dir, fake_roster_cache, tmp_meetings_dir, monkeypatch
+):
+    """Re-enrollment of a body-tagged meeting promotes roster-matched speakers
+    to essentials:<politician_slug> keys with identity fields populated."""
+    mdir = tagged_meeting_dir("bloomington-common-council", "2026-test-promote", completed_stage=4)
+    _write_transcript_named(mdir)
+    (mdir / "audio.wav").touch()
+
+    fake_roster_cache("bloomington-common-council")
+
+    monkeypatch.setattr(
+        "src.diarize.extract_speaker_embeddings",
+        lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
+    )
+    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+
+    saved = {}
+    monkeypatch.setattr("src.enroll.save_profiles", lambda db: saved.update(db=db))
+    monkeypatch.setenv("HF_TOKEN", "fake-token")
+    monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-promote"])
+
+    import reenroll_profiles
+
+    rc = reenroll_profiles.main()
+    assert rc == 0
+
+    profile = saved["db"].profiles["essentials:isabel-piedmont-smith"]
+    assert profile.politician_slug == "isabel-piedmont-smith"
+    assert profile.politician_id == "uuid-ips"
+    assert profile.display_name == "Councilmember Piedmont-Smith"
+
+
+def test_reenroll_untagged_meeting_local_slug(
+    tmp_meetings_dir, monkeypatch
+):
+    """Re-enrollment of an untagged legacy meeting enrolls under local slugs,
+    not essentials keys."""
+    # Create meeting dir WITHOUT body_slug in pipeline_state.json
+    mdir = tmp_meetings_dir / "2026-test-untagged"
+    mdir.mkdir(parents=True, exist_ok=True)
+    state = {
+        "completed_stage": 4,
+        "transcription_progress": 0,
+        "total_segments": 0,
+    }
+    (mdir / "pipeline_state.json").write_text(
+        json.dumps(state, indent=2), encoding="utf-8"
+    )
+    _write_transcript_named(mdir)
+    (mdir / "audio.wav").touch()
+
+    monkeypatch.setattr(
+        "src.diarize.extract_speaker_embeddings",
+        lambda wav, segs, token: {"SPEAKER_01": np.random.randn(256).astype(np.float32)},
+    )
+    monkeypatch.setattr("src.enroll.load_profiles", lambda: ProfileDB())
+
+    saved = {}
+    monkeypatch.setattr("src.enroll.save_profiles", lambda db: saved.update(db=db))
+    monkeypatch.setenv("HF_TOKEN", "fake-token")
+    monkeypatch.setattr(sys, "argv", ["reenroll_profiles.py", "2026-test-untagged"])
+
+    import reenroll_profiles
+
+    rc = reenroll_profiles.main()
+    assert rc == 0
+    assert "db" in saved
+
+    keys = list(saved["db"].profiles.keys())
+    # Should use local slug, not essentials: prefix
+    assert not any(k.startswith("essentials:") for k in keys)
+    # _name_to_slug("Councilmember Piedmont-Smith") strips "councilmember" -> "piedmont-smith"
+    assert "piedmont-smith" in keys
