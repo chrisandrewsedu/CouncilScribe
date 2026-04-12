@@ -301,6 +301,12 @@ def run_pipeline(args: argparse.Namespace) -> None:
         state.rewind_for_retag()
     elif cli_body and not persisted_body:
         # D-01: first run persists
+        if force_retag:
+            print(
+                f"  --force-retag on untagged meeting: behaving as first-run "
+                f"persist of {cli_body}",
+                file=sys.stderr,
+            )
         state.body_slug = cli_body
         state.save()
     elif not cli_body and persisted_body and force_retag:
