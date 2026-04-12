@@ -304,8 +304,8 @@ def run_pipeline(args: argparse.Namespace) -> None:
         state.body_slug = cli_body
         state.save()
     elif not cli_body and persisted_body and force_retag:
-        # Already guarded at argparse level; defensive no-op
-        pass
+        # Should be unreachable: D-12 enforced at argparse (line 1835).
+        raise AssertionError("--force-retag without --body bypassed D-12 guard")
     # else: D-05 (no flag, no persisted — legacy) or D-06 (no flag, persisted — silent read)
 
     effective_body_slug = state.body_slug  # used by Plan 02 guard + Plan 03 Stage 4
