@@ -72,14 +72,27 @@ class PipelineState:
         """D-04: Invalidate downstream stages when body_slug changes.
 
         Rewinds completed_stage to TRANSCRIBED (stage 3) so Stages 4-7 re-run,
-        and deletes any pre_identifications.json (D-11) which is stale against
-        the old roster. Caller must set self.body_slug to the new slug BEFORE
-        calling this, then call save().
+        deletes stale Stage 4+ artifacts produced against the old roster
+        (pre_identifications.json per D-11, plus llm_partial_results.json and
+        transcript_named.json), and atomically persists the rewound state.
+        Caller must set self.body_slug to the new slug BEFORE calling this.
+
+        Files are deleted BEFORE save() so that if the process crashes between
+        the unlinks and the save, pipeline_state.json still reflects the old
+        stage and a resume will regenerate the missing artifacts rather than
+        trust a stale state file.
         """
         self.completed_stage = PipelineStage.TRANSCRIBED
-        pre_ids = self.meeting_dir / "pre_identifications.json"
-        if pre_ids.exists():
-            pre_ids.unlink()
+        stale = (
+            "pre_identifications.json",   # D-11: stale roster-specific guesses
+            "llm_partial_results.json",   # Stage 4 LLM resume cache
+            "transcript_named.json",      # Stage 4 output with old-roster names
+        )
+        for name in stale:
+            p = self.meeting_dir / name
+            if p.exists():
+                p.unlink()
+        self.save()
 
     def is_complete(self, stage: PipelineStage) -> bool:
         return self.completed_stage >= stage

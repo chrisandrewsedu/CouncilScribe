@@ -147,8 +147,10 @@ def test_force_retag_rewinds_and_clears(tmp_path, tmp_config_dir, fake_roster_ca
     fake_roster_cache(slug_y)
     # Meeting is at EXPORTED (stage 7) with old slug
     mdir = tagged_meeting_dir(slug_x, completed_stage=7)
-    # Simulate pre_identifications.json from old run
+    # Simulate all stale Stage 4+ artifacts from the old-roster run
     (mdir / "pre_identifications.json").write_text("{}", encoding="utf-8")
+    (mdir / "llm_partial_results.json").write_text("{}", encoding="utf-8")
+    (mdir / "transcript_named.json").write_text("{}", encoding="utf-8")
 
     state = PipelineState(mdir)
     assert state.body_slug == slug_x
@@ -161,7 +163,10 @@ def test_force_retag_rewinds_and_clears(tmp_path, tmp_config_dir, fake_roster_ca
     state2 = PipelineState(mdir)
     assert state2.body_slug == slug_y
     assert state2.completed_stage == PipelineStage.TRANSCRIBED  # D-04: rewound to 3
-    assert not (mdir / "pre_identifications.json").exists()  # D-11: stale file removed
+    # H-01 / D-11: all stale Stage 4+ artifacts removed
+    assert not (mdir / "pre_identifications.json").exists()
+    assert not (mdir / "llm_partial_results.json").exists()
+    assert not (mdir / "transcript_named.json").exists()
 
 
 def test_force_retag_requires_body(tmp_path):
