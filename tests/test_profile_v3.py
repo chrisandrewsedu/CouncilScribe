@@ -78,35 +78,150 @@ def test_load_roster_populates_identity_fields(fake_roster_cache):
 
 
 # ---------------------------------------------------------------------------
-# Task 2: Enrollment keying (placeholders — will be un-skipped in Task 2)
+# Task 2: Enrollment keying — resolve_enrollment_key + wiring
 # ---------------------------------------------------------------------------
 
+from src.enroll import enroll_speakers, enroll_confirmed
+from src.models import Segment, SpeakerMapping
+from src.roster import Roster
 
-@pytest.mark.skip(reason="Task 2")
+
+def _make_roster():
+    """Build a test roster with one politician member."""
+    return Roster(
+        city="",
+        body="Bloomington Common Council",
+        members=[
+            RosterMember(
+                name="Councilmember Piedmont-Smith",
+                aliases=["Isabel Piedmont-Smith", "Piedmont-Smith", "Isabel"],
+                politician_slug="isabel-piedmont-smith",
+                politician_id="uuid-ips",
+            ),
+        ],
+    )
+
+
+def _make_embedding():
+    return np.random.randn(256).astype(np.float32)
+
+
+def _make_mapping(speaker_name, label="SPEAKER_01"):
+    return {
+        label: SpeakerMapping(
+            speaker_label=label,
+            speaker_name=speaker_name,
+            confidence=0.90,
+            id_method="human_review",
+        )
+    }
+
+
+def _make_segments(label="SPEAKER_01"):
+    return [
+        Segment(
+            segment_id=0,
+            start_time=0.0,
+            end_time=5.0,
+            speaker_label=label,
+            text="Hello world",
+        )
+    ]
+
+
 def test_enroll_roster_member_uses_essentials_key():
-    pass
+    """Enrolling a roster-matched speaker uses essentials:<slug> key."""
+    roster = _make_roster()
+    embeddings = {"SPEAKER_01": _make_embedding()}
+    mappings = _make_mapping("Councilmember Piedmont-Smith")
+    segments = _make_segments()
+
+    db = enroll_speakers(ProfileDB(), embeddings, mappings, "m1", segments, roster=roster)
+    assert "essentials:isabel-piedmont-smith" in db.profiles
 
 
-@pytest.mark.skip(reason="Task 2")
 def test_essentials_profile_identity_fields():
-    pass
+    """After enrolling a roster member, profile carries identity fields."""
+    roster = _make_roster()
+    embeddings = {"SPEAKER_01": _make_embedding()}
+    mappings = _make_mapping("Councilmember Piedmont-Smith")
+    segments = _make_segments()
+
+    db = enroll_speakers(ProfileDB(), embeddings, mappings, "m1", segments, roster=roster)
+    profile = db.profiles["essentials:isabel-piedmont-smith"]
+    assert profile.politician_slug == "isabel-piedmont-smith"
+    assert profile.politician_id == "uuid-ips"
 
 
-@pytest.mark.skip(reason="Task 2")
 def test_non_roster_speaker_local_slug():
-    pass
+    """Non-roster speaker enrolls under local slug with no identity fields."""
+    roster = _make_roster()
+    embeddings = {"SPEAKER_01": _make_embedding()}
+    mappings = _make_mapping("John Public")
+    segments = _make_segments()
+
+    db = enroll_speakers(ProfileDB(), embeddings, mappings, "m1", segments, roster=roster)
+    assert "public_john" in db.profiles
+    assert db.profiles["public_john"].politician_slug is None
 
 
-@pytest.mark.skip(reason="Task 2")
 def test_mixed_profiles_coexist():
-    pass
+    """Essentials-keyed and local-keyed profiles coexist in the same DB."""
+    roster = _make_roster()
+    embeddings = {
+        "SPEAKER_01": _make_embedding(),
+        "SPEAKER_02": _make_embedding(),
+    }
+    mappings = {
+        "SPEAKER_01": SpeakerMapping(
+            speaker_label="SPEAKER_01",
+            speaker_name="Councilmember Piedmont-Smith",
+            confidence=0.90,
+            id_method="human_review",
+        ),
+        "SPEAKER_02": SpeakerMapping(
+            speaker_label="SPEAKER_02",
+            speaker_name="John Public",
+            confidence=0.90,
+            id_method="human_review",
+        ),
+    }
+    segments = [
+        Segment(segment_id=0, start_time=0.0, end_time=5.0, speaker_label="SPEAKER_01", text="A"),
+        Segment(segment_id=1, start_time=5.0, end_time=10.0, speaker_label="SPEAKER_02", text="B"),
+    ]
+
+    db = enroll_speakers(ProfileDB(), embeddings, mappings, "m1", segments, roster=roster)
+    assert "essentials:isabel-piedmont-smith" in db.profiles
+    assert "public_john" in db.profiles
+    assert len(db.profiles) == 2
 
 
-@pytest.mark.skip(reason="Task 2")
 def test_essentials_profile_accumulates_across_meetings():
-    pass
+    """Re-enrolling same politician from second meeting adds to existing profile."""
+    roster = _make_roster()
+    mappings = _make_mapping("Councilmember Piedmont-Smith")
+    segments = _make_segments()
+
+    emb1 = {"SPEAKER_01": _make_embedding()}
+    emb2 = {"SPEAKER_01": _make_embedding()}
+
+    db = enroll_speakers(ProfileDB(), emb1, mappings, "m1", segments, roster=roster)
+    db = enroll_speakers(db, emb2, mappings, "m2", segments, roster=roster)
+
+    profile = db.profiles["essentials:isabel-piedmont-smith"]
+    assert len(profile.embeddings) == 2
+    assert profile.meetings_seen == ["m1", "m2"]
 
 
-@pytest.mark.skip(reason="Task 2")
 def test_enroll_confirmed_roster_member():
-    pass
+    """enroll_confirmed with a roster uses essentials key for roster members."""
+    roster = _make_roster()
+    embeddings = {"SPEAKER_01": _make_embedding()}
+    mappings = _make_mapping("Councilmember Piedmont-Smith")
+    segments = _make_segments()
+
+    db = enroll_confirmed(
+        ProfileDB(), embeddings, ["SPEAKER_01"], mappings, "m1", segments, roster=roster
+    )
+    assert "essentials:isabel-piedmont-smith" in db.profiles

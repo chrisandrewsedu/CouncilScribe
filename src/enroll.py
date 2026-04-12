@@ -5,12 +5,15 @@ from __future__ import annotations
 import pickle
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
 from . import config
 from .models import Segment, SpeakerMapping
+
+if TYPE_CHECKING:
+    from .roster import Roster
 
 
 @dataclass
@@ -101,6 +104,32 @@ def _name_to_slug(name: str) -> str:
     return filtered[0].lower()
 
 
+def resolve_enrollment_key(
+    display_name: str,
+    roster: Optional["Roster"] = None,
+) -> tuple[str, Optional[str], Optional[str]]:
+    """Return (profile_key, politician_slug, politician_id).
+
+    If display_name matches a roster member (via correct_speaker_name),
+    key = 'essentials:<politician_slug>', identity fields from roster.
+    Otherwise: key = _name_to_slug(display_name), both identity fields None.
+    """
+    if roster is not None:
+        from .roster import correct_speaker_name
+
+        corrected = correct_speaker_name(display_name, roster)
+        for member in roster.members:
+            if corrected == member.name:
+                if member.politician_slug:
+                    return (
+                        f"essentials:{member.politician_slug}",
+                        member.politician_slug,
+                        member.politician_id,
+                    )
+                break
+    return (_name_to_slug(display_name), None, None)
+
+
 def _enroll_one(
     db: ProfileDB,
     slug: str,
@@ -108,6 +137,8 @@ def _enroll_one(
     embedding: np.ndarray,
     meeting_id: str,
     seg_count: int,
+    politician_slug: Optional[str] = None,
+    politician_id: Optional[str] = None,
 ) -> None:
     """Add or update a single speaker profile in the database."""
     if slug in db.profiles:
@@ -116,6 +147,9 @@ def _enroll_one(
         if meeting_id not in profile.meetings_seen:
             profile.meetings_seen.append(meeting_id)
         profile.total_segments_confirmed += seg_count
+        if politician_slug and not profile.politician_slug:
+            profile.politician_slug = politician_slug
+            profile.politician_id = politician_id
         profile.recompute_centroid()
     else:
         profile = StoredProfile(
@@ -124,6 +158,8 @@ def _enroll_one(
             embeddings=[embedding],
             meetings_seen=[meeting_id],
             total_segments_confirmed=seg_count,
+            politician_slug=politician_slug,
+            politician_id=politician_id,
         )
         profile.recompute_centroid()
         db.profiles[slug] = profile
@@ -135,10 +171,13 @@ def enroll_speakers(
     mappings: dict[str, SpeakerMapping],
     meeting_id: str,
     segments: list[Segment],
+    roster: Optional["Roster"] = None,
 ) -> ProfileDB:
     """Enroll confirmed speakers into the profile database.
 
     Only enrolls speakers with confidence >= VOICE_MATCH_THRESHOLD.
+    When a roster is provided, roster-matched speakers are keyed under
+    ``essentials:<politician_slug>`` with identity fields populated.
     """
     for label, mapping in mappings.items():
         if not mapping.speaker_name:
@@ -148,9 +187,13 @@ def enroll_speakers(
         if label not in speaker_embeddings:
             continue
 
-        slug = _name_to_slug(mapping.speaker_name)
+        slug, pol_slug, pol_id = resolve_enrollment_key(mapping.speaker_name, roster)
         seg_count = sum(1 for s in segments if s.speaker_label == label)
-        _enroll_one(db, slug, mapping.speaker_name, speaker_embeddings[label], meeting_id, seg_count)
+        _enroll_one(
+            db, slug, mapping.speaker_name, speaker_embeddings[label],
+            meeting_id, seg_count,
+            politician_slug=pol_slug, politician_id=pol_id,
+        )
 
     return db
 
@@ -297,6 +340,7 @@ def enroll_confirmed(
     mappings: dict[str, SpeakerMapping],
     meeting_id: str,
     segments: list[Segment],
+    roster: Optional["Roster"] = None,
 ) -> ProfileDB:
     """Enroll specific speakers that were confirmed interactively."""
     for label in confirmed_labels:
@@ -306,8 +350,12 @@ def enroll_confirmed(
         if label not in speaker_embeddings:
             continue
 
-        slug = _name_to_slug(mapping.speaker_name)
+        slug, pol_slug, pol_id = resolve_enrollment_key(mapping.speaker_name, roster)
         seg_count = sum(1 for s in segments if s.speaker_label == label)
-        _enroll_one(db, slug, mapping.speaker_name, speaker_embeddings[label], meeting_id, seg_count)
+        _enroll_one(
+            db, slug, mapping.speaker_name, speaker_embeddings[label],
+            meeting_id, seg_count,
+            politician_slug=pol_slug, politician_id=pol_id,
+        )
 
     return db
