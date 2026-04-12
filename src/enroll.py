@@ -12,6 +12,21 @@ import numpy as np
 from . import config
 from .models import Segment, SpeakerMapping
 
+
+class RestrictedUnpickler(pickle.Unpickler):
+    """Only allow unpickling of known safe types used by profile data."""
+
+    _SAFE_MODULE_ROOTS = {"numpy", "builtins"}
+    _SAFE_MODULES = {"src.enroll"}
+
+    def find_class(self, module: str, name: str) -> type:
+        root = module.split(".")[0]
+        if root in self._SAFE_MODULE_ROOTS or module in self._SAFE_MODULES:
+            return super().find_class(module, name)
+        raise pickle.UnpicklingError(
+            f"Blocked unpickling of {module}.{name}"
+        )
+
 if TYPE_CHECKING:
     from .roster import Roster
 
@@ -47,7 +62,7 @@ def load_profiles() -> ProfileDB:
     path = _db_path()
     if path.exists():
         with open(path, "rb") as f:
-            db = pickle.load(f)
+            db = RestrictedUnpickler(f).load()
         if not isinstance(db, ProfileDB):
             return ProfileDB()
         stored_version = getattr(db, "schema_version", 1)
@@ -271,6 +286,10 @@ def rename_profile(
             if mid not in target.meetings_seen:
                 target.meetings_seen.append(mid)
         target.total_segments_confirmed += profile.total_segments_confirmed
+        # Preserve identity fields from source if target lacks them
+        if profile.politician_slug and not target.politician_slug:
+            target.politician_slug = profile.politician_slug
+            target.politician_id = profile.politician_id
         target.recompute_centroid()
     else:
         profile.speaker_id = new_slug
@@ -326,9 +345,28 @@ def fix_profiles_with_roster(db: ProfileDB, roster) -> list[str]:
             renames.append((slug, corrected, profile.display_name))
 
     for old_slug, new_name, old_name in renames:
-        new_slug = _name_to_slug(new_name)
-        rename_profile(db, old_slug, new_name)
-        changes.append(f"{old_slug} ({old_name}) -> {new_slug} ({new_name})")
+        new_key, pol_slug, pol_id = resolve_enrollment_key(new_name, roster)
+        if old_slug == new_key:
+            continue
+        profile = db.profiles.pop(old_slug)
+        if new_key in db.profiles:
+            target = db.profiles[new_key]
+            target.embeddings.extend(profile.embeddings)
+            for mid in profile.meetings_seen:
+                if mid not in target.meetings_seen:
+                    target.meetings_seen.append(mid)
+            target.total_segments_confirmed += profile.total_segments_confirmed
+            if pol_slug and not target.politician_slug:
+                target.politician_slug = pol_slug
+                target.politician_id = pol_id
+            target.recompute_centroid()
+        else:
+            profile.speaker_id = new_key
+            profile.display_name = new_name
+            profile.politician_slug = pol_slug
+            profile.politician_id = pol_id
+            db.profiles[new_key] = profile
+        changes.append(f"{old_slug} ({old_name}) -> {new_key} ({new_name})")
 
     return changes
 
