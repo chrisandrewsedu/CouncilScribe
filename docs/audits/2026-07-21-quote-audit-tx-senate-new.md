@@ -1,0 +1,71 @@
+# Quote Audit — TX Senate new (2026 U.S. Senate Texas) - drafts
+
+**21 findings** — 10 high, 11 medium, 0 low
+
+## Summary by race
+- **race 216ead27-9e86-49f2-b21c-af659d114faf** — 21 findings (10 high, 11 med, 0 low)
+
+## race 216ead27-9e86-49f2-b21c-af659d114faf
+- `high` · `decision-required` · **source-unverified** (quote) — Ken Paxton / campaign-finance [4bc5520b-2dfa-4c82-aa9f-2c890a65ef5a]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Ted Brown / economic-development [95053d57-6c78-466f-b805-1622e0674fe2]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — James Talarico / fossil-fuels [c30eb30d-9853-4f76-8095-ea829c350dad]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — James Talarico / immigration [d4a2f3f1-9ffa-4d0d-b1e1-d159b36b2439]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Ted Brown / redistricting [e3d3c48a-4c05-4013-aa42-b1684fe99f1c]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Hans Truelson / religious-freedom [6a66302d-3791-49c7-9c15-02f7dff520e9]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `guided` · **deid-dishonest** (quote) — Ken Paxton / campaign-finance [4bc5520b-2dfa-4c82-aa9f-2c890a65ef5a]
+    - Blind text rewrote/relabeled instead of marking edits (McCain-Feingold meaning drift + unbracketed self-ID swap).
+    - fix: Rebuild blind with honest brackets; preserve 'it did' meaning. (RESOLVED)
+- `high` · `guided` · **deid-dishonest** (quote) — James Talarico / economic-development [1b08c528-4b3c-427d-8329-b02fbdeaa5d7]
+    - Unmarked place-name substitution (Louisiana/Oklahoma -> neighboring states).
+    - fix: Restore verbatim place names (not a speaker tell in a single-state race). (RESOLVED)
+- `high` · `guided` · **deid-dishonest** (quote) — Hans Truelson / housing [6cce03f9-9f5b-419e-a7a3-1d9c18e35f79]
+    - Silently dropped hedge 'I would guess', firming the land-amount certainty.
+    - fix: Restore the hedge in blind text. (RESOLVED)
+- `high` · `guided` · **deid-dishonest** (quote) — Ken Paxton / immigration [3658133f-e468-41e7-a294-89284ca5568d]
+    - Named person substituted unmarked (the Elon Musk of the world -> world-class talent).
+    - fix: Bracket the depersonalization: [world-class talent]. (RESOLVED)
+- `medium` · `decision-required` · **not-rankable** (topic) —  / campaign-finance [campaign-finance]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / childcare [childcare]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / economic-development [economic-development]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / fossil-fuels [fossil-fuels]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / healthcare [healthcare]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / housing [housing]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / immigration [immigration]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / medicare/aid [medicare/aid]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / redistricting [redistricting]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / religious-freedom [religious-freedom]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / voting-rights [voting-rights]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.

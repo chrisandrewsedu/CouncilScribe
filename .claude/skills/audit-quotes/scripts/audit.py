@@ -10,6 +10,37 @@ from scripts.checks import run_mechanical
 from scripts.verify_source import run_source_checks, make_page_fetcher
 from scripts.report import render
 
+
+def build_bundle(race_id, rows, stances):
+    """Group one race's rows for the judgment agent.
+
+    `topics` drives the per-quote checks and the existing report. `questions` drives the per-set
+    checks: several questions can share one topic, so judging a whole topic as a set would compare
+    answers to different questions -- the incommensurability the rubric exists to catch.
+    Quotes with no question_id can't be judged per-set; they are listed rather than dropped.
+    """
+    bundle = {"race_id": race_id, "topics": {}, "questions": {}, "unattached_quote_ids": []}
+    for r in rows:
+        enriched = {**r, "stance": stances.get((r["race_id"], r.get("politician_id"), r["topic_key"]))}
+        topic = bundle["topics"].setdefault(
+            r["topic_key"], {"topic_key": r["topic_key"], "quotes": []})
+        topic["quotes"].append(enriched)
+
+        qid = r.get("question_id")
+        if not qid:
+            bundle["unattached_quote_ids"].append(r["id"])
+            continue
+        question = bundle["questions"].setdefault(qid, {
+            "question_id": qid,
+            "question_text": r.get("question_text"),
+            "origin": r.get("question_origin"),
+            "topic_key": r["topic_key"],
+            "quotes": [],
+        })
+        question["quotes"].append(enriched)
+    return bundle
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--candidate"); ap.add_argument("--topic"); ap.add_argument("--ids")
@@ -62,15 +93,13 @@ def main():
         by_race.setdefault(r["race_id"], []).append(r)
     stance_cache = {}
     for race, rrows in by_race.items():
-        bundle = {"race_id": race, "topics": {}}
         for r in rrows:
             key = (r["race_id"], r["politician_id"], r["topic_key"])
             if key not in stance_cache:
                 stance_cache[key] = fetch_stance(
                     conn, r["politician_id"], r["topic_key"], race_id=r["race_id"]
                 )
-            t = bundle["topics"].setdefault(r["topic_key"], {"topic_key": r["topic_key"], "quotes": []})
-            t["quotes"].append({**r, "stance": stance_cache[key]})
+        bundle = build_bundle(race, rrows, stance_cache)
         safe = str(race).replace("/", "_")
         (run_dir / "context" / f"{safe}.json").write_text(json.dumps(bundle, indent=2, default=str))
 

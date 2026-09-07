@@ -1,0 +1,611 @@
+# Quote Audit — LA Mayor (comparability, 2026-08-07)
+
+**201 findings** — 109 high, 92 medium, 0 low
+
+## Summary by race
+- **race 9e888818-c50b-4c61-a106-a0839ff2479d** — 201 findings (109 high, 92 med, 0 low)
+
+## race 9e888818-c50b-4c61-a106-a0839ff2479d
+- `high` · `decision-required` · **is-attack** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - 'when you give contracts to people because they are going to fund your campaigns' accuses the opponent personally of trading city contracts for campaign money — an integrity/fitness charge aimed at a person, not the policy-or-institution critique the carve-out protects. The police-union half would qualify for the carve-out, but nothing forward survives once the personal charge is removed.
+    - fix: Do not use this row in Read & Rank. If the union-influence point is worth keeping, source a passage where she states the rule she wants rather than the accusation.
+- `high` · `decision-required` · **not-forward** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - The operative clause is a swipe plus self-praise, not a position on money in politics: 'when you give contracts to people because they are going to fund your campaigns. And by the way, I'm the only person on the stage that is being spent against because I had the courage to speak out.' It proposes no rule for campaign money, and the middle clause is a sentence fragment with no main verb.
+    - fix: Retire this row for campaign-finance, or replace it with a statement that says what rules she would set. The live row (30a9ab18) already carries a forward position.
+- `high` · `decision-required` · **set-incommensurable** (topic) —  / city-sanitation [city-sanitation]
+    - Question a1d1e930-c7b3-42cf-b54e-e3f11fb797a0 — "How should your community approach street cleanliness and sanitation?" Set (each candidate's best available answer after discarding off-question): 2638f09b-b695-4c5b-a29c-a3c7cb739a10 (Karen Ruth Bass) — "We need cooperation from the governor, for example, we need the governor to support us in cleaning up our highways, doing the landscaping. It looks a mess. We need the graffiti removed." — and 6bd26b05-af05-4f77-be7a-82d512f0fa2e (Nithya Raman) — "I will also fight to preserve full funding for city departments responsible for street and sidewalk repairs, tree maintenance, trash collection, and other essential services." Both are responsive, but they are not rival: Bass answers a jurisdictional question (the state should do its part on state-owned highways and landscaping), Raman answers a municipal budget question (protect city sanitation departments from cuts). Neither takes a position the other contradicts, and no dimension orders them — preferring one says nothing about preferring the other. (Raman's other answer here, a6bb4672, was flagged non-differentiating-goal by the per-quote pass.)
+    - fix: Propose splitting this into two race-local ranking questions: (a) who is responsible for cleaning the state-owned corridors that run through the city, and how should the mayor pursue that; (b) how should the city fund its own street, sidewalk and trash services under budget pressure. Note for the curator: on the material currently in the bundle each half has only one candidate, so the likely near-term outcome is two surfaced-not-rankable questions rather than two rankable ones — the split is still the correct diagnosis, and it identifies exactly what to source. Do not drop or demote either quote; neither is at fault.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / civil-rights [3ecab197-0265-4d87-9576-351082d214fa]
+    - The ranking question asks what role government should play in addressing racial and social inequality. The quote is a diagnosis — segregation was produced by 'an intentional regime of laws and intimidation' and is now 'reinforced by more subtle forms of exclusion, including through our zoning codes' — and never says what government should do about it. A citizen cannot prefer this over another candidate's answer because it states no position to prefer.
+    - fix: Re-home the passage under a housing/zoning question it does answer, or find a statement where she names the role she wants government to take. If none exists she is legitimately absent from this topic.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / civil-rights [97459d18-b3dd-44d4-8648-8358c18969dd]
+    - 'L.A. is one of the most segregated cities in America.' is a single factual assertion with no position attached — it does not engage the axis the question sets (how much government should do about inequality). It is also a strict subset of row 3ecab197 from the same article.
+    - fix: Retire this row; it offers a citizen nothing to weigh. Keep at most one row from this source and only if a genuine position can be found in it.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / climate-change [a417cde7-06b8-412d-93e5-80c02e26f59e]
+    - The operative clause is a recitation of accomplishment: 'we're not just setting goals, we're delivering results… We have taken bold steps to reduce pollution, expand clean energy…'. The only forward content is 'we will continue to lead with urgency,' which states no priority or tradeoff. This is record, which belongs in Essentials, not a Read & Rank answer.
+    - fix: Source a passage where she says what priority climate should get against competing energy/economic demands, or leave her absent from this topic rather than laundering the record into a position.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / climate-change [f0ab8f00-9952-483e-a261-dc1ff0c9e197]
+    - 'Air pollution kills more than 1,300 Angelenos a year — making Los Angeles the deadliest city in the country for fatal air pollution.' is a statistic about harm, not an answer to what priority climate should receive in energy and economic policy. Nothing here can be ranked against another candidate's priority.
+    - fix: Replace with a statement of the priority she would give climate in energy/economic decisions — her own '100 percent real clean energy by 2030' row (94abcce6) already does this on-question.
+- `high` · `decision-required` · **off-question** (quote) — Karen Ruth Bass / climate-change [3613b765-e753-4111-b526-c4521e2bcc85]
+    - 'Why do you replace copper lights when you can deal with your environmental goals and there's nothing to steal if it's solar?' is a rhetorical question about streetlight procurement and copper theft. It touches clean energy but engages a procurement/anti-theft dimension, not the question's axis (what priority climate gets in energy and economic policy). The editor_note has to infer 'a preference for incremental clean-energy investment' rather than read it off the words.
+    - fix: Re-home under an infrastructure/procurement question if one exists, or find a passage where she states climate's priority directly. Do not rank an inferred stance.
+- `high` · `decision-required` · **source-summary** (quote) — Nithya Raman / data-centers [8efe9a05-b24d-46a5-830d-0b6126a5eaa7]
+    - 'Support a moratorium on any new large-scale data centers until…' is a platform bullet harvested from a campaign issues page — an imperative with no subject, not a sentence the candidate wrote or said in her own voice. The editor_note calls it 'verbatim, no edits,' which is true of the bullet and beside the point: a bullet is not an utterance.
+    - fix: Find a first-person sentence on the same page (or in an interview) stating the moratorium position, and cite that instead. If the page carries only bullets, she is absent from this topic.
+- `high` · `decision-required` · **misleading-verbatim** (quote) — Karen Ruth Bass / deportation [c42c8d5f-e9f3-4474-98b7-88db7788fe75]
+    - Accurately transcribed, but the position a citizen would take from the blind card is not one she asserted. The sentence is a counterfactual about protest — 'If ICE was coming in doing what they said they were going to do… I don't think anybody would have risen up in protests' — and the 'worst of the worst / violent felons' language is her relaying ICE's stated claim, not her own enforcement priority. The editor_note concedes as much ('meaning her stance is…'), i.e. the ranked position is the curator's inference from a hypothetical.
+    - fix: Do not rank an inferred stance. Find a passage where she states directly who she thinks should be prioritized for removal; otherwise leave her absent from this topic.
+- `high` · `decision-required` · **off-question** (quote) — Karen Ruth Bass / deportation [e17f505f-f985-4440-be4d-05043f9631f1]
+    - The ranking question is 'Who should be deported, and how aggressively?' The live quote — "My approach is 'resistance with a purpose.' We will protect our residents from aggressive enforcement while ensuring the federal government fulfills its obligations" — states a posture toward federal enforcement and names no class of people, no priority and no threshold. It answers the local-immigration question (a separate topic in this race), not this one.
+    - fix: Re-home under local-immigration, where it is genuinely responsive, and either find an on-question deportation statement or mark her absent from deportation.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / deportation [8403a778-c94c-4bd1-971d-76ae1abdaf8c]
+    - "LAPD's job is keeping Angelenos safe, not assisting ICE." answers whether local police should cooperate with federal immigration enforcement — which is the local-immigration question in this same bundle — not who should be deported or how aggressively.
+    - fix: Re-home under local-immigration (where the candidate already has rows) rather than ranking it as a deportation answer.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - The operative clause is record: 'We have a strategy that is working. We are working with the downtown business associations. We are increasing public safety there. That's why I did the adaptive reuse ordinance… those conversions are taking place right now.' Nothing here says what she would do next or why.
+    - fix: Prefer a passage stating the approach she would take going forward; the record belongs in Essentials.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - Entirely record: 'we have expedited permits. I established one person who is a czar… We also lowered the cost to do filming… we reduced those amounts by 70%. We are beginning to bring the industry back.' There is no statement of what should be done or why.
+    - fix: Replace with a forward statement of her economic-development approach, or leave her absent on this question rather than presenting the record as a position.
+- `high` · `decision-required` · **source-summary** (quote) — Nithya Raman / fossil-fuels [ddb3c20a-a6d2-47d5-8da5-54a21e74686c]
+    - 'End neighborhood oil drilling for good.' is a campaign-page bullet in the imperative with no subject — a harvested platform item, not a sentence the candidate wrote or spoke. The note's 'Verbatim, no edits' is accurate about the bullet and does not rescue it.
+    - fix: Find a first-person sentence stating the drilling position and cite that; otherwise treat her as absent from this topic.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - The operative clause is record and blame for the past: 'it's been haphazard up until now, left to the wishes of every single council member. I have instituted and started a comprehensive infrastructure plan and moving right away into replacing 60,000 solar lights.' It says what has been started, not how growth and new development should be managed going forward.
+    - fix: Prefer a passage stating how she would manage growth and development ahead; the infrastructure-plan record belongs in Essentials.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / growth-and-development [55f75e21-5fc3-4c61-a400-db36fada7602]
+    - 'The result is an 18-month average permitting timeline that makes building in Los Angeles slower, more expensive, and less predictable than almost anywhere else in the country.' is a diagnostic statistic, not an answer to how government should manage growth and new development. It also opens with 'The result is', whose antecedent is not in the quote, so on a blind card it refers to nothing.
+    - fix: Prefer her permitting-reform passages that state what she would do (9ea38e55, f7ecad4a), which are on-question and carry a mechanism.
+- `high` · `decision-required` · **set-incommensurable** (topic) —  / growth-and-development [growth-and-development]
+    - Question 6d31a33f-f9c6-41c5-a5cd-d52c237df308 — "How should government manage population growth and new development?" Set after discarding off-question (55f75e21): e294ef7e-5f85-42d6-9b89-cf018e817001 (Karen Ruth Bass) — "we are the only major city that does not have a comprehensive infrastructure plan... I have instituted and started a comprehensive infrastructure plan and moving right away into replacing 60,000 solar lights" — and f7ecad4a-90cf-4a8f-b7b3-d9d3151644f3 (Nithya Raman) — "I want to make sure that we are having a single inspector look at a project from day one to finish, so that bureaucracy is not giving you two different responses..." Bass answers about capital-infrastructure planning for growth; Raman answers about the consistency of development permitting and inspection. Both are real positions on 'managing development', but they act on different objects and no dimension orders 'a comprehensive infrastructure plan' against 'one inspector per project'. TIE-BREAK CAVEAT for the reviewing human: Raman's other surviving answer, 9ea38e55-6e78-4ec1-b41c-eb74fa6a5217 ("I would use the executive authority in the mayoralty to make sure that every department was planning for density in ways that Angelenos welcomed so that Sacramento didn't have to intervene"), carries only an editor_note finding and would make this set commensurable and arguably rankable. This pass took f7ecad4a because it is the only quote of hers here with no per-quote findings at all; the ruling flips on that tie-break, so it is surfaced rather than settled silently. This pass may not choose between them on the basis of which pairing contrasts better.
+    - fix: Two options for a human, in order: (1) resolve the set-construction tie above — if Raman's most faithful answer to THIS question is 9ea38e55 rather than f7ecad4a, this finding should be withdrawn and the set treated as rankable; (2) otherwise split into two race-local ranking questions — 'how should the city plan infrastructure capacity for growth?' and 'how should the city fix its development permitting and review process?'. The second half would be rankable on material already in the bundle (Raman f7ecad4a / df8ae173 / bdc80d45; Bass 78ba1ed3, currently attached to the housing question). Neither quote is at fault; do not drop or demote either.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - Pure record and outcome statistics: 'under my watch, it is the first time we've had a decrease in street homelessness. While it went up in the country 18%, it came down in Los Angeles 17 and a half percent.' It states nothing about how government should handle people sleeping or camping in public — the question's actual axis.
+    - fix: Replace with a forward statement on enforcement vs. services for public camping; her own 'Everybody needs to go inside. Making it illegal and arresting people is not the way to solve this problem.' row (dd5bdce9) is on-question and forward.
+- `high` · `decision-required` · **not-forward** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - The operative clause explains a past vote — 'I did vote against the structure of this particular ordinance… the way this ordinance was structured it does not keep our children safe enough' — rather than stating how public camping should be handled. On a blind card 'this particular ordinance' has no antecedent, so the reader is given a vote explanation about an unnamed measure.
+    - fix: Prefer a passage where she states her approach to public camping directly; her 'You don't get an opportunity to say no' row (27f705ef) does exactly that.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - The operative clause is the record — 'What I have done on my watch is reduced homelessness for the first time, 2 years in a row' — and the remainder ('we need a system… we're moving in the right direction… we will continue') states a direction of travel without naming a strategy.
+    - fix: Prefer a passage that names the strategy she would pursue; her interim-housing row (772c8bbc) does this and is on-question.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - Record and its claimed effects throughout: 'For the first time we've had a reduction of homelessness two years in a row because of policies that I have put in place… streets that we have cleared, crime is down, firefighters don't have to go out… Kids are able to walk to school.' The one forward clause ('we need to have an overhaul of the system') names no strategy.
+    - fix: Prefer a passage stating the strategy itself rather than the results claimed for it.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / homelessness-response [b9139e1d-824f-4670-b46c-caa624b2a83d]
+    - The question asks for the community's primary strategy for addressing homelessness. The quote answers a different question — whether anyone is auditing the spending: 'there is no one who is watching our dollars… There's no staff at the city that are making sure that every single dollar… is being spent appropriately.' Fiscal oversight is a legitimate critique of the institution, but it names no strategy, so a citizen preferring it is not rejecting the other candidate's strategy.
+    - fix: Re-home under a budget/accountability question if one exists, or prefer her strategy-bearing rows (cb878a06, c31d035f) for this cell.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - The operative clause is a list of things already done: '42,000 units are being fast-tracked… We also changed the zoning codes so we have the potential for another half million units.' The closing sentence ('I know that one of the primary drivers for the lack of affordability in our city is housing') is a truism, not a role for government.
+    - fix: Prefer a passage stating what role government should play in affordability going forward; the unit counts belong in Essentials.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - 'These projects represent the kind of innovation we are applying to break away from the status quo that has stunted L.A.'s housing production' is a self-assessment of work underway. It names no role for government in affordability and, on a blind card, 'these projects' has no antecedent.
+    - fix: Replace with a forward statement of the government role she favors, or leave the cell to a row that has one.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - The operative clause is record plus mitigation: 'We have cut red tape so you can go through much quicker… 6,000 of those units are actively under construction… some of the factors are the price of construction materials, just the general economy.' It defends current output rather than stating the role government should play.
+    - fix: Prefer a forward statement of the government role in affordability; this row reads as a defence of the record.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - 'L.A. is one of the most segregated cities in America.' states a fact about segregation and takes no position on what role government should play in housing affordability. It is also the same sentence already stored as row 97459d18 under civil-rights.
+    - fix: Retire this row for housing; her permitting shot-clock rows (bdc80d45, df8ae173) answer this question directly.
+- `high` · `decision-required` · **off-question** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - The question asks what role government should play in making housing affordable; the quote is the homelessness state-of-emergency declaration — 'Today, I am declaring a state of emergency on homelessness. This means we will move faster… to get people off the streets and into shelter, services and housing.' That is an answer to the homelessness questions in this same bundle, not to affordability.
+    - fix: Re-home under homelessness-response (where she already has rows) rather than ranking it as a housing-affordability answer.
+- `high` · `decision-required` · **misleading-verbatim** (quote) — Karen Ruth Bass / jail-capacity [c8cb521d-d7f8-4cb2-90af-0034350e1c39]
+    - Accurately transcribed but misleading as trimmed. On the blind card the reader sees '[A local jail] is the nation's most expensive mental health institution, and it is a jail. And so, I want to see us open up these facilities and begin to house people' — 'these facilities' has no antecedent inside the quote, so the natural reading against a jail-overcrowding question is 'open up more jail capacity,' the opposite of the treatment-not-incarceration stance the editor_note describes (and of the value-1 Compass position).
+    - fix: Extend the quote back to the sentence that names which facilities she means, or replace it; do not ship an excerpt whose plainest reading inverts the position.
+- `high` · `decision-required` · **not-forward** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - The operative clause is what her office already does — 'we have to do a lot of work preparing… we go in advance and make sure that traps are cleared… We do brush clearance' — a description of current district practice rather than a position on what should be done.
+    - fix: Prefer a forward statement if this passage is re-homed, or leave the cell empty.
+- `high` · `decision-required` · **off-question** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - The question asks how the community should balance new development against environmental preservation. The quote is about disaster preparedness — mudslide readiness, clearing traps, brush clearance — and says nothing about development, green space, tree canopy or environmental review. It touches 'environment' and engages an entirely different axis.
+    - fix: Re-home under a disaster-preparedness/resilience question if one exists; otherwise she is absent from this topic.
+- `high` · `decision-required` · **not-forward** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - The operative clause is a description of ICE conduct plus the speaker's own past intervention — 'I was against it. I physically went out and did everything I could to stop it' — rather than a position on how local law enforcement should relate to federal immigration enforcement. 'and will do that again' promises a repeat of the act, not a policy.
+    - fix: Prefer a passage stating the policy relationship she would set between local police and ICE; her own 'Our local law enforcement are prohibited from coordinating…' material is closer, though see the separate finding on that row.
+- `high` · `decision-required` · **not-forward** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - 'I wrote the city's sanctuary city ordinance to protect immigrants from ICE enforcement actions.' is authorship credit — pure record — and states no position on how local law enforcement should relate to federal immigration enforcement going forward.
+    - fix: Prefer a forward statement; her 'Residents must be able to trust that LAPD is not cooperating with ICE' row (efb1b277) is on-question and forward.
+- `high` · `decision-required` · **off-question** (quote) — Karen Ruth Bass / local-immigration [0c7d019d-592c-450e-bb77-b2c9bd9af7f3]
+    - The question asks how local law enforcement *should* relate to federal immigration enforcement. 'Our local law enforcement are prohibited from coordinating enforcement actions with ICE.' describes the rule that already exists and asserts no position — the editor_note itself says 'This states the actual policy.' A citizen cannot prefer a description of the status quo over another candidate's position.
+    - fix: Find a passage where she says what the relationship should be, or accept that this row states no rankable position.
+- `high` · `decision-required` · **source-summary** (quote) — Nithya Raman / local-immigration [97164eb9-9b79-482c-9f0c-414b8233a5c4]
+    - 'Ensure LAPD does not cooperate with federal immigration enforcement.' is a campaign-page bullet in the imperative with no subject — a harvested platform item, not a sentence the candidate wrote or spoke. It is also a near-duplicate in substance of row efb1b277 from the same site, which is a real sentence.
+    - fix: Prefer the first-person sentence (efb1b277) and retire the bullet.
+- `high` · `decision-required` · **not-forward** (quote) — Nithya Raman / public-safety-approach [6c92a9fc-0082-4612-8f22-7d5f97097c09]
+    - The operative clause is a rebuttal to a charge plus a critique of the incumbent's management — 'I have not argued against paying police officers what they're worth… What I am arguing against is bad fiscal management, which is what has gotten the city of Los Angeles into this moment.' It states no position on how public safety should be funded or operated; the management critique itself is legitimate policy speech but is not a forward position.
+    - fix: Prefer her call-load/unarmed-response rows (0a0542fa, 8e7f7053), which state an approach; this row answers an attack rather than the question.
+- `high` · `decision-required` · **off-question** (quote) — Karen Ruth Bass / tariffs [acff106d-3e86-424b-ae2f-c61922f135d2]
+    - The question asks how trade policy should balance domestic industry with global commerce. The quote says the port is busy, that 'the unpredictability of federal trade policy is felt deeply throughout our city,' and that the city stands with the port — an expression of concern and solidarity with no position on tariffs, protection or openness.
+    - fix: Leave her absent from this topic unless a statement of her trade-policy preference can be found; a mayor may simply have no position on the record here, and that is a legitimate absence.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / campaign-finance [30a9ab18-fce1-49b1-85a2-a63f3846983a]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - deidentified_text is byte-identical to quote_text and still carries 'I'm the only person on the stage that is being spent against because I had the courage to speak out about bad budget decisions' — an unmistakable challenger/incumbent tell in a two-way race, plus debate-stage framing.
+    - fix: If this row is kept at all, the blind version must drop the self-locating sentence entirely with an honest '…'; note that removing it leaves no position behind, which is itself the argument for retiring the row.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / city-sanitation [a6bb4672-eaf0-4f93-991c-040440c1394c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / city-sanitation [6bd26b05-af05-4f77-be7a-82d512f0fa2e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / city-sanitation [2638f09b-b695-4c5b-a29c-a3c7cb739a10]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / civil-rights [3ecab197-0265-4d87-9576-351082d214fa]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / civil-rights [97459d18-b3dd-44d4-8648-8358c18969dd]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / climate-change [f0ab8f00-9952-483e-a261-dc1ff0c9e197]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / climate-change [a417cde7-06b8-412d-93e5-80c02e26f59e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / climate-change [94abcce6-5ab9-4561-aedb-e7f3b506ad9b]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / climate-change [a417cde7-06b8-412d-93e5-80c02e26f59e]
+    - deidentified_text is identical to quote_text and reads as an incumbent's press statement — 'Los Angeles is showing what real climate leadership looks like… we're delivering results… We have taken bold steps'. Record-touting in the city's executive voice fingerprints the speaker on a blind card.
+    - fix: Any blind version would have to strip the achievement claims, which is most of the quote — a signal to drop the row rather than de-identify it.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / deportation [e17f505f-f985-4440-be4d-05043f9631f1]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / deportation [8403a778-c94c-4bd1-971d-76ae1abdaf8c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [644bc8e7-4545-4f50-b40e-0c2b6ae0a055]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [e7f20cf7-fb3f-44e8-99c1-54ba4752eff0]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [f7625f7b-634f-49d4-9155-ab38455ba400]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - The blind text was rewritten rather than marked. 'We have a strategy that is working. We are working with the downtown business associations. We are increasing public safety there. That's why I did the adaptive reuse ordinance which allows…' becomes 'There is a strategy that is working, including working with the downtown business associations, increasing public safety there. The adaptive reuse ordinance allows…' — clauses fused, voice changed from first person to impersonal, with no '…' and no [brackets] anywhere.
+    - fix: Re-derive the blind text from the canonical quote using '…' for removed spans and [brackets] for substitutions, or drop the row — the identity leak here is the incumbent's authorship claim, which is load-bearing to the sentence.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / economic-development [f7625f7b-634f-49d4-9155-ab38455ba400]
+    - The blind text names the opponent: 'Instead, what Mayor Bass has done is to dismantle our economic development department.' deidentified_text is byte-identical to quote_text, so the blind card announces that the speaker is not Bass. Naming a person in a policy critique must be depersonalized to the office on the blind card (canonical keeps the name).
+    - fix: Produce a blind version that depersonalizes the named opponent to the office, e.g. a bracketed substitution for 'Mayor Bass', keeping the policy substance and the canonical text unchanged.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - The whole quote was converted to the passive voice to hide the speaker — 'we have expedited permits' → 'permits were expedited'; 'I established one person who is a czar' → 'One person was established who is a czar'; 'We are beginning to bring the industry back' → 'The industry is beginning to come back'. That is a paraphrase, not de-identification by marking, and it also flattens an 'I did this' claim into an impersonal fact.
+    - fix: De-identify by removing the self-identifying spans with '…' or bracketing substitutions; if the record claim is the whole quote, drop the row instead of rewriting it.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / growth-and-development [55f75e21-5fc3-4c61-a400-db36fada7602]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / growth-and-development [9ea38e55-6e78-4ec1-b41c-eb74fa6a5217]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - 'I have instituted and started a comprehensive infrastructure plan' became '[The candidate] has instituted and started a comprehensive infrastructure plan' — a third-person rewrite that still identifies the speaker as the city executive who can institute a citywide plan, while the opening 'Did you know that we are the only major city that does not have a comprehensive infrastructure plan?' is left untouched. The '[The candidate]' device also reads as an editorial voice rather than the speaker's.
+    - fix: Either remove the authorship claim with an honest '…' or drop the row; '[The candidate]' does not blind a claim only the sitting executive could make.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness [ef8712c2-f45c-4905-a177-bab2285e6a89]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - deidentified_text is identical to quote_text and retains 'under my watch' — an explicit incumbent self-identification, doubled by the citywide outcome claim only the sitting mayor would make.
+    - fix: Any honest blind version has to remove the 'under my watch' framing and the ownership of the citywide result, which leaves no position behind — a signal to retire the row rather than de-identify it.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - deidentified_text is identical to quote_text and 'I did vote against the structure of this particular ordinance' identifies the speaker as a sitting council member rather than the mayor — a decisive tell in this two-way race.
+    - fix: If the row is kept, the blind version must remove the legislator's-vote framing; note that doing so removes the quote's only content.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [cb878a06-9b00-432f-8c7c-64b49d5347ff]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [c31d035f-deb2-4472-8b18-51e42d841244]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [b9139e1d-824f-4670-b46c-caa624b2a83d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [4c389a82-e480-4e6e-b4f4-fe8576ced385]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - The de-identification failed on its own terms: 'What I have done on my watch' became 'What has been done on my watch' — the incumbent tell 'on my watch' survives verbatim in the blind text, and the half-passive result is not even grammatical. 'I feel we're moving in the right direction, and under my watch, we will continue' → 'We are moving in the right direction, and we will continue' is likewise an unmarked rewrite rather than a marked removal.
+    - fix: Remove every 'my watch' framing with an honest '…' or retire the row; a partial passive conversion neither blinds the speaker nor marks the edit.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / homelessness-response [4c389a82-e480-4e6e-b4f4-fe8576ced385]
+    - deidentified_text is byte-identical to quote_text and opens 'I declared a state of emergency on day one' and then names 'Inside Safe' — an act and a program only the sitting mayor could claim. This is the clearest incumbent fingerprint in the bundle and it is on the blind card unmodified.
+    - fix: Produce a blind version that removes the emergency-declaration and named-program claims with honest '…' marks, keeping the forward 'entirely new system… independent' clause if it survives; if it does not, retire the row.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - 'because of policies that I have put in place' was silently converted to 'because of policies that have been put in place' and 'but I can tell you that streets that we have cleared' to 'but streets that we have cleared' — unmarked paraphrase, and the surviving 'streets that we have cleared' still speaks in the voice of the executive who cleared them.
+    - fix: Mark removals with '…' and substitutions with [brackets], and remove the ownership claim rather than passivizing it.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [bdc80d45-40c2-4f1d-a0ef-e5619aab2d74]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [baa16620-68a5-465e-85b9-71c9b4f5b6f0]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - Unmarked paraphrase rather than marking: 'We also changed the zoning codes' → 'The zoning codes were also changed'; 'I know that one of the primary drivers' → 'One of the primary drivers'; 'with our adaptive reuse' → 'with adaptive reuse'. No '…' and no [brackets] anywhere, and the passive conversion changes an authorship claim into an impersonal statement of fact.
+    - fix: Re-derive the blind text by marking removals and substitutions honestly, or drop the row if the authorship claims are what needed hiding.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - Unmarked rewriting and unmarked deletion: 'but there are definitely other factors that have weighed into that. And some of the factors are…' → 'Some of the factors are…' (a clause removed with no '…'), and 'we are doing everything we can to make sure that we are able to fast-track that housing' → 'everything is being done to fast-track that housing' (voice changed, no [brackets]).
+    - fix: Mark every removal with '…' and every substitution with [brackets]; do not convert first-person claims to the passive as a blinding device.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - deidentified_text is identical to quote_text and opens 'In my role as the council member for a hillside area… mudslides have been the biggest issue in my district.' That names the speaker's office and geography — the strongest possible identity leak in a mayor-vs-councilmember race — and 'my district' recurs.
+    - fix: Remove the office-and-district framing with honest marks if the row is kept; note that the whole quote is scaffolded on it.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-immigration [efb1b277-7232-48e1-8409-b814552bbaed]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - Two separate failures. (1) The blind text changes meaning: 'That is not what was going on in here' (a factual claim about what ICE was actually doing) became 'That is not what should be going on here' (a normative claim) — an edit that alters substance, which no de-identification is permitted to do. (2) 'I was against it. I physically went out and did everything I could to stop it' became '[The candidate] was against it. Physically went out and did everything possible to stop it' — a third-person rewrite that still points at the one person who physically confronted the raids.
+    - fix: Revert the meaning-changing substitution immediately, and de-identify by removing the personal-intervention claim with an honest '…' rather than recasting it in the third person.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - 'I wrote the city's sanctuary city ordinance' became 'The official wrote the city's sanctuary city ordinance' — a third-person rewrite (not a marked substitution) that de-identifies nothing: the author of the city's sanctuary ordinance is a single identifiable person, so the blind card still names the speaker in all but literal words.
+    - fix: Authorship of a specific named ordinance cannot be blinded without destroying the sentence — retire the row rather than paraphrasing it into the third person.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [41ac4890-8de7-46b3-8e85-b62a99bdf5f5]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [0a0542fa-34ae-4b67-b0ea-62f35e1c1289]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [132093b7-7acd-437f-a2fd-cee5af8f2704]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [d7490082-efcf-4820-b571-8dc9a642f782]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [6c92a9fc-0082-4612-8f22-7d5f97097c09]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [368cfab9-97e5-4ad6-afbf-477b4633e1cc]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Nithya Raman / public-safety-approach [d7490082-efcf-4820-b571-8dc9a642f782]
+    - deidentified_text is identical to quote_text and retains "It is so important to me, I'm the mother of young children." In a two-candidate race that biographical detail identifies the speaker as surely as naming her.
+    - fix: Remove the biographical clause from the blind version with an honest '…'; it is scaffolding, not part of the position, so removing it does not change the substance.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / public-safety-approach [368cfab9-97e5-4ad6-afbf-477b4633e1cc]
+    - The blind text silently deletes two substantive spans with no '…' — 'Unfortunately, I have not had the cooperation from the city council.' and 'We at least that will deal with attrition. We cannot shrink our department.' — and rewrites 'I have been fighting to hire more officers' into '[The candidate] has been fighting'. The third-person device does not blind 'What is in the current budget now is 512 officers', which only the officeholder who proposes the budget could say.
+    - fix: Mark every removal with '…' and substitutions with [brackets]; the budget-authorship claim needs removing, not passivizing.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [1bd35546-61ce-44be-944e-f5d6cd1e6ac8]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [e6e798c0-1e47-47c6-bdf2-16a966ee41f6]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [8edf4cb0-ed77-4e93-8ba0-a8dbdc04a09e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / rent-regulation [e6e798c0-1e47-47c6-bdf2-16a966ee41f6]
+    - The blind text is a paraphrase, not a marked edit: 'In partnership with the City Council, we are enacting new tenant protections and capping the rent for apartment units protected under the city's Rent Stabilization Ordinance' became 'New tenant protections are being enacted and rent is being capped for apartment units protected under the Rent Stabilization Ordinance' — an entire prepositional phrase deleted without '…', the possessive dropped, and the voice changed with no [brackets].
+    - fix: Re-derive the blind text with honest marks; if the enactment claim is what needed hiding, remove it explicitly rather than passivizing it.
+- `high` · `guided` · **deid-dishonest** (quote) — Karen Ruth Bass / rent-regulation [8edf4cb0-ed77-4e93-8ba0-a8dbdc04a09e]
+    - 'I started the Mayor's Fund that allows us to do that.' became 'A Mayor's Fund was started that allows us to do that.' — an unmarked passive rewrite that still names a mayor-specific instrument, so the blind card continues to point at the mayor while no longer marking that anything was changed.
+    - fix: Remove the founding claim (and the named fund) with an honest '…', or retire the row; passivizing an 'I started X' claim neither blinds it nor marks the edit.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / residential-zoning [d8f9bf5d-0a2b-45e4-b98f-d186f401c73c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / tariffs [acff106d-3e86-424b-ae2f-c61922f135d2]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / transportation-priorities [13a9c7e0-453f-46fe-b44a-a031bd779264]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / abortion [abortion]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / campaign-finance [campaign-finance]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / campaign-finance [30a9ab18-fce1-49b1-85a2-a63f3846983a]
+    - This live quote is lifted from a campaign platform page (nithyaforthecity.com/platform/make-city-hall-work-for-us) — curator-extracted, with nothing establishing she was answering a question. A more direct answer plausibly exists: the same candidate speaks to money in city politics in the 2026-05-06 debate, which is already ingested (draft row 01c51a86 came from it).
+    - fix: Check the debate transcript for a passage where she is actually asked about money in city politics and states a rule; if one exists, prefer it. If not, keep this row and record the weaker provenance in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / city-sanitation [city-sanitation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **non-differentiating-goal** (quote) — Nithya Raman / city-sanitation [a6bb4672-eaf0-4f93-991c-040440c1394c]
+    - 'Downtown LA needs real care. It needs regular cleanups. It needs real maintenance. It needs a strategy.' No candidate in this race would contest that downtown should be clean and maintained, and the quote names no approach — no staffing, funding, frequency, enforcement or service model.
+    - fix: Prefer a passage that says how she would deliver the cleaning (crew levels, which neighborhoods first, who pays), or leave her absent from this topic rather than ranking an uncontested goal.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / city-sanitation [6bd26b05-af05-4f77-be7a-82d512f0fa2e]
+    - Curator-extracted from a campaign neighborhood-issues page; nothing establishes the candidate was answering a question. The same candidate speaks to downtown cleanliness in the ingested 2026-05-06 debate (row a6bb4672), so a more direct answer plausibly exists.
+    - fix: Prefer the debate passage if it carries a real position, or state the weaker provenance plainly in the editor_note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / civil-rights [civil-rights]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / climate-change [climate-change]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / data-centers [data-centers]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / deportation [deportation]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Karen Ruth Bass / deportation [e17f505f-f985-4440-be4d-05043f9631f1]
+    - Curator-extracted from a mayoral executive-directive press release; nothing establishes she was answering a question. Her own YouTube interview row (c42c8d5f) is closer to an answer, so a more direct source plausibly exists for this live cell.
+    - fix: Look for an interview or debate passage where she is asked who should be deported; treat the press release as the fallback and say so in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / economic-development [economic-development]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **non-differentiating-goal** (quote) — Nithya Raman / economic-development [e7f20cf7-fb3f-44e8-99c1-54ba4752eff0]
+    - 'Small businesses are what gives a neighborhood its character. And Angelenos deserve a city that acts like it knows that.' No candidate in this race would contest either sentence, and neither names a program, incentive, fee change or process — no HOW at all.
+    - fix: Prefer a passage naming the small-business mechanism she would use. Her film-tax-credit and film-office rows (79641bcb, 644bc8e7) show she has mechanism-bearing material on this question.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / economic-development [e7f20cf7-fb3f-44e8-99c1-54ba4752eff0]
+    - Curator-extracted from the campaign homepage with nothing establishing she was answering a question, while the same candidate answers an economic-development question directly in the ingested 2026-05-06 debate (row 644bc8e7).
+    - fix: Prefer the debate answer for this cell, or record the weaker provenance in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / fossil-fuels [fossil-fuels]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / growth-and-development [growth-and-development]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **coupling-in-tension** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - The quote sits on the 'plan proactively — invest in infrastructure ahead of growth' chair (value 3), while the candidate's synthesized Compass value for this topic is 4 ('streamline permitting, reduce fees, and actively recruit development'). Comprehensive up-front planning pulls against a streamline-and-recruit reading.
+    - fix: Resolve before surfacing next to the value: either the Compass value needs re-review, or this quote is not representative of her current growth stance.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / growth-and-development [55f75e21-5fc3-4c61-a400-db36fada7602]
+    - Curator-extracted from a campaign housing page with nothing establishing she was answering a question, while she answers a growth/density question directly in the ingested 2026-05-06 debate (row 9ea38e55).
+    - fix: Prefer the debate answer for this cell, or state the weaker provenance in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / homelessness [homelessness]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / homelessness [ef8712c2-f45c-4905-a177-bab2285e6a89]
+    - Curator-extracted from an archived council-office press release of prepared remarks; nothing establishes she was answering a question, and the same candidate answers a public-camping question in the ingested 2026-05-06 debate.
+    - fix: Prefer a debate or interview answer for this cell, or record the weaker provenance in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / homelessness-response [homelessness-response]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **set-undifferentiated** (topic) —  / homelessness-response [homelessness-response]
+    - Question 0bf23ad4-4ad4-4739-b92d-f3aea17e286e — "What should be your community's primary strategy for addressing homelessness?" Set after discarding off-question (b9139e1d): 772c8bbc-0274-442c-b129-d40a2d0e48bd (Karen Ruth Bass) — "What LA needs to do in the next 4 years that I plan to accomplish is building out a more cost-effective system to deal with people when they get off the street and not put them into permanent housing immediately" — and a6eee348-a680-48ea-b67a-1837faa3b09b (Nithya Raman) — "We haven't just said, you can't be here. We've said, here's the place where you can go. That means expanding shelter, that means bringing people indoors." Shared axis (interim shelter capacity vs. immediate permanent housing as the primary strategy) with effectively no distance: both put scaled-up shelter and a rebuilt, more cost-effective services system ahead of direct placement into permanent housing. The convergence is robust across the rest of each candidate's pool here — Bass 4c389a82 ("an entirely new system... build out services once we get people off the street") and Raman c31d035f ("let's actually build out a real system that can get as many people indoors as possible... not $100,000 a year motel rooms") say the same thing. What separates them in this question's pool is record and spending-oversight rhetoric, not a policy direction. The genuine disagreement between these two on homelessness lives in question 4cc81e00 (compulsion at street camping), which is rankable and should carry the ranking.
+    - fix: Show this as convergence rather than ranking it: both candidates' primary strategy is scaled interim shelter plus a rebuilt services system, not immediate permanent housing. Do not drop the question — the agreement is a true and useful fact about this race, and it is what makes the compulsion disagreement in question 4cc81e00 legible. Do not hunt a sharper quote to manufacture a gap.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / housing [housing]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **coupling-in-tension** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - The quote's content is deregulatory supply-side — 'We have cut red tape so you can go through much quicker' plus construction-cost factors — which sits at the 'cut regulations so private developers can build more' end, while the candidate's synthesized Compass value on this topic is 2 ('rent caps, require affordable units, publicly fund new housing').
+    - fix: Resolve before surfacing next to the value: either the value needs re-review or this quote is unrepresentative of her housing stance.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - Curator-extracted from a mayoral press release announcing a site visit; nothing establishes she was answering a question, while she answers a housing-affordability question directly in the ingested 2026-05-06 debate (rows 0a1aacc9, 78ba1ed3).
+    - fix: Prefer a debate answer for this cell, or state the weaker provenance in the note.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - Curator-extracted from a 2021 news article about a council motion, five years before the election, with nothing establishing she was answering a question — and her 2026 debate answers on housing are already ingested.
+    - fix: Prefer the 2026 debate material for this cell.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - Curator-extracted from an executive-directive press release; nothing establishes she was answering a question, and debate answers on housing from the same candidate are already ingested.
+    - fix: Prefer a debate or interview answer for this cell.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / immigration [immigration]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / jail-capacity [jail-capacity]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / local-environment [local-environment]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / local-immigration [local-immigration]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **set-undifferentiated** (topic) —  / local-immigration [local-immigration]
+    - Question 2fe2e89b-f3fb-4603-93e8-0a0ea3f2e45c — "How should your community's law enforcement relate to federal immigration enforcement?" Set after discarding off-question (0c7d019d): d71232d8-c401-4caa-b3a4-260eea3bba8f (Karen Ruth Bass) — "ICE was chasing people in car washes... they majority of them over 70% had no record... I was against it. I physically went out and did everything I could to stop it and will do that again" — and efb1b277-7232-48e1-8409-b814552bbaed (Nithya Raman) — "Los Angeles should be the strongest sanctuary city in the country. Residents must be able to trust that LAPD is not cooperating with ICE." Shared axis (how far the city should go in resisting federal immigration enforcement) with no distance: both sit at maximal non-cooperation and active resistance. Bass's discarded quote 0c7d019d ("Our local law enforcement are prohibited from coordinating enforcement actions with ICE") and Raman's 97164eb9 confirm the convergence rather than breaking it. The difference between the two answers is what each describes — a personal record of opposition vs. a standing LAPD policy — not where they sit on the axis, and that is a per-quote matter (Bass's answer is flagged not-forward) rather than a comparison.
+    - fix: Show convergence: both candidates back sanctuary-city status and LAPD non-cooperation with ICE, and both opposed the 2025 raids. Do not rank, and do not drop the question — in a race where immigration enforcement is high-salience, documented agreement between the two November candidates is exactly the kind of fact citizens cannot get elsewhere. Any remaining work here is per-quote (resolving Bass's not-forward finding), not per-set.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Karen Ruth Bass / public-safety-approach [41ac4890-8de7-46b3-8e85-b62a99bdf5f5]
+    - The live quote is curator-extracted from a news article about her pushing the council to approve hiring — nothing establishes she was answering a question. Meanwhile three of her answers to a public-safety funding question from the ingested 2026-05-06 debate sit in this same topic as drafts (132093b7, 368cfab9, and the interview row 4d604ed0). This is the pattern the casebook flags: the more direct material is already in the database.
+    - fix: Re-select from the debate material for the live cell rather than sourcing anew; treat the news article as the fallback if the debate passages turn out weaker on their own merits.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / rent-regulation [rent-regulation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **non-differentiating-goal** (quote) — Karen Ruth Bass / rent-regulation [1bd35546-61ce-44be-944e-f5d6cd1e6ac8]
+    - 'No parent should have to choose between buying groceries or paying the rent.' No candidate in this race would contest it, and it names no rent-regulation mechanism — no cap, no coverage, no eviction rule. It is also a strict subset of row e6e798c0 from the same statement, which at least names the rent-stabilization action.
+    - fix: Prefer a passage that names the tenant-protection mechanism she favors; do not rank a sentiment nobody opposes.
+- `medium` · `decision-required` · **source-not-an-answer** (quote) — Karen Ruth Bass / rent-regulation [1bd35546-61ce-44be-944e-f5d6cd1e6ac8]
+    - Curator-extracted from a mayoral press release with nothing establishing she was answering a question, while the same candidate speaks to rent stabilization in the ingested 2026-05-06 debate (row 8edf4cb0).
+    - fix: Prefer the debate material for this cell, or record the weaker provenance in the note.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / residential-zoning [residential-zoning]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / tariffs [tariffs]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / transportation-priorities [transportation-priorities]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **non-differentiating-goal** (quote) — Nithya Raman / transportation-priorities [13a9c7e0-453f-46fe-b44a-a031bd779264]
+    - The live quote — 'My dream… is that we can make it safer and easier for people to be able to move around outside of their cars: have it be not just possible, but a pleasant and beautiful experience to get around this city' — states a goal no candidate would contest and names no mechanism (no bus lanes, road-diet tradeoffs, parking policy, or funding shift). This is the case the principles use as their worked example of this exact defect.
+    - fix: Prefer a passage saying how she would shift investment — dedicated bus lanes, parking requirements, road reallocation — or leave the topic to surface rather than rank.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / campaign-finance [30a9ab18-fce1-49b1-85a2-a63f3846983a]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / city-sanitation [a6bb4672-eaf0-4f93-991c-040440c1394c]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / city-sanitation [6bd26b05-af05-4f77-be7a-82d512f0fa2e]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / city-sanitation [2638f09b-b695-4c5b-a29c-a3c7cb739a10]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / civil-rights [3ecab197-0265-4d87-9576-351082d214fa]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / civil-rights [97459d18-b3dd-44d4-8648-8358c18969dd]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / climate-change [f0ab8f00-9952-483e-a261-dc1ff0c9e197]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / climate-change [a417cde7-06b8-412d-93e5-80c02e26f59e]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / climate-change [94abcce6-5ab9-4561-aedb-e7f3b506ad9b]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / deportation [e17f505f-f985-4440-be4d-05043f9631f1]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / deportation [8403a778-c94c-4bd1-971d-76ae1abdaf8c]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / economic-development [644bc8e7-4545-4f50-b40e-0c2b6ae0a055]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / economic-development [e7f20cf7-fb3f-44e8-99c1-54ba4752eff0]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / economic-development [f7625f7b-634f-49d4-9155-ab38455ba400]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / growth-and-development [55f75e21-5fc3-4c61-a400-db36fada7602]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / growth-and-development [9ea38e55-6e78-4ec1-b41c-eb74fa6a5217]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / homelessness [ef8712c2-f45c-4905-a177-bab2285e6a89]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / homelessness-response [cb878a06-9b00-432f-8c7c-64b49d5347ff]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / homelessness-response [c31d035f-deb2-4472-8b18-51e42d841244]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / homelessness-response [b9139e1d-824f-4670-b46c-caa624b2a83d]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / homelessness-response [4c389a82-e480-4e6e-b4f4-fe8576ced385]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / housing [bdc80d45-40c2-4f1d-a0ef-e5619aab2d74]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / housing [baa16620-68a5-465e-85b9-71c9b4f5b6f0]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / local-immigration [efb1b277-7232-48e1-8409-b814552bbaed]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / public-safety-approach [41ac4890-8de7-46b3-8e85-b62a99bdf5f5]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / public-safety-approach [0a0542fa-34ae-4b67-b0ea-62f35e1c1289]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / public-safety-approach [132093b7-7acd-437f-a2fd-cee5af8f2704]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / public-safety-approach [d7490082-efcf-4820-b571-8dc9a642f782]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / public-safety-approach [6c92a9fc-0082-4612-8f22-7d5f97097c09]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / public-safety-approach [368cfab9-97e5-4ad6-afbf-477b4633e1cc]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / rent-regulation [1bd35546-61ce-44be-944e-f5d6cd1e6ac8]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / rent-regulation [e6e798c0-1e47-47c6-bdf2-16a966ee41f6]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / rent-regulation [8edf4cb0-ed77-4e93-8ba0-a8dbdc04a09e]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / residential-zoning [d8f9bf5d-0a2b-45e4-b98f-d186f401c73c]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Karen Ruth Bass / tariffs [acff106d-3e86-424b-ae2f-c61922f135d2]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.
+- `medium` · `guided` · **note-not-self-contained** (quote) — Nithya Raman / transportation-priorities [13a9c7e0-453f-46fe-b44a-a031bd779264]
+    - editor_note is empty, so the row carries no justification at all: a skeptical reader is given no account of why this quote was chosen, how it relates to the candidate's current Compass stance on this topic, or whether and how the text was edited.
+    - fix: Write a short justification (one sentence on source and stance alignment, one on edits or 'verbatim, no edits') before this row is considered for live use.

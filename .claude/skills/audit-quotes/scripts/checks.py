@@ -11,7 +11,14 @@ _REP = re.compile(r"\b(Republican|Republicans|GOP)\b")
 _PARTISAN = re.compile(r"\b(Democrat|Democrats|Democratic|Republican|Republicans|GOP|MAGA)\b")
 _PARTY_PHRASE = re.compile(r"\b(?:my|our) party\b", re.I)
 _SENTENCE_END = re.compile(r"[.!?](?:\s|$)")
-CAMPAIGN_SITE = re.compile(r"(for[a-z]+\d{2,4}|20\d\d|campaign)\.(com|org)|(vote|elect)[a-z]+\.(com|org)", re.I)
+# There is deliberately NO campaign-site / "tier 4" pattern here any more. `source-tier-4` used to
+# match a campaign-site URL and call the source low-tier, but provenance is *directness of answer*,
+# not medium: a Vote411/LWV questionnaire is written and self-published and is still the most
+# directly comparable source available, while a spoken stump speech may answer nothing that was
+# asked. No URL pattern can see that, so the question moved to the judgment pass as
+# `source-not-an-answer` (CHECKS.md §3). The three checks below are orthogonal to directness —
+# they detect sources that cannot carry a candidate utterance at all.
+#
 # Secondary aggregators / encyclopedias — NOT valid sources. They only point to originals,
 # so the fix is re-attribution. Deliberately EXCLUDES ballotpedia.org: it reproduces campaign-site
 # text verbatim with footnotes to the original, and its Candidate Connection survey answers are
@@ -111,18 +118,6 @@ def check_partisan_tell_in_blind(r) -> Optional[Finding]:
                    what=f"Blind text contains a partisan/side tell: '{m.group(0)}'.",
                    suggested_fix="Drop the partisan word on the blind card (or neutralize to '[the current administration]'); draft, confirm, then apply.")
 
-def check_source_tier(r) -> Optional[Finding]:
-    url = r.get("source_url") or ""
-    if "youtube.com" in url or "youtu.be" in url:
-        return None
-    if CAMPAIGN_SITE.search(url):
-        return Finding(check_id="source-tier-4", level="quote", quote_id=r["id"], topic_key=r["topic_key"],
-                       race_id=r["race_id"], candidate=r["candidate"], principle="prefer tier 1-2 sources (questioner-independent)",
-                       severity="medium", fix_class="decision-required",
-                       what=f"Source looks like a campaign/written page (tier 4): {url}",
-                       suggested_fix="Confirm it's a verbatim first-person sentence (not a summary); prefer a tier-1 spoken quote if available.")
-    return None
-
 def check_invalid_source(r) -> Optional[Finding]:
     url = r.get("source_url") or ""
     if not AGGREGATOR_SOURCE.search(url):
@@ -188,7 +183,7 @@ def topic_min_candidates(group) -> Optional[Finding]:
                    suggested_fix="Source a second candidate's on-question quote, or drop the topic from the race.")
 
 QUOTE_CHECKS = [check_note_quality, check_deid_present, check_trailing_ellipsis,
-                check_partisan_tell_in_blind, check_source_tier, check_invalid_source,
+                check_partisan_tell_in_blind, check_invalid_source,
                 check_unquotable_source, check_scorecard_source, check_stance_label]
 TOPIC_CHECKS = [topic_live_count, topic_min_candidates]
 

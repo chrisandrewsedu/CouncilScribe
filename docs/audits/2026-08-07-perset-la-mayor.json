@@ -1,0 +1,54 @@
+[
+  {
+    "check_id": "set-incommensurable",
+    "level": "topic",
+    "principle": "commensurable — a shared axis exists",
+    "severity": "high",
+    "fix_class": "decision-required",
+    "what": "Question a1d1e930-c7b3-42cf-b54e-e3f11fb797a0 — \"How should your community approach street cleanliness and sanitation?\" Set (each candidate's best available answer after discarding off-question): 2638f09b-b695-4c5b-a29c-a3c7cb739a10 (Karen Ruth Bass) — \"We need cooperation from the governor, for example, we need the governor to support us in cleaning up our highways, doing the landscaping. It looks a mess. We need the graffiti removed.\" — and 6bd26b05-af05-4f77-be7a-82d512f0fa2e (Nithya Raman) — \"I will also fight to preserve full funding for city departments responsible for street and sidewalk repairs, tree maintenance, trash collection, and other essential services.\" Both are responsive, but they are not rival: Bass answers a jurisdictional question (the state should do its part on state-owned highways and landscaping), Raman answers a municipal budget question (protect city sanitation departments from cuts). Neither takes a position the other contradicts, and no dimension orders them — preferring one says nothing about preferring the other. (Raman's other answer here, a6bb4672, was flagged non-differentiating-goal by the per-quote pass.)",
+    "suggested_fix": "Propose splitting this into two race-local ranking questions: (a) who is responsible for cleaning the state-owned corridors that run through the city, and how should the mayor pursue that; (b) how should the city fund its own street, sidewalk and trash services under budget pressure. Note for the curator: on the material currently in the bundle each half has only one candidate, so the likely near-term outcome is two surfaced-not-rankable questions rather than two rankable ones — the split is still the correct diagnosis, and it identifies exactly what to source. Do not drop or demote either quote; neither is at fault.",
+    "quote_id": null,
+    "topic_key": "city-sanitation",
+    "race_id": "9e888818-c50b-4c61-a106-a0839ff2479d",
+    "candidate": null
+  },
+  {
+    "check_id": "set-incommensurable",
+    "level": "topic",
+    "principle": "commensurable — a shared axis exists",
+    "severity": "high",
+    "fix_class": "decision-required",
+    "what": "Question 6d31a33f-f9c6-41c5-a5cd-d52c237df308 — \"How should government manage population growth and new development?\" Set after discarding off-question (55f75e21): e294ef7e-5f85-42d6-9b89-cf018e817001 (Karen Ruth Bass) — \"we are the only major city that does not have a comprehensive infrastructure plan... I have instituted and started a comprehensive infrastructure plan and moving right away into replacing 60,000 solar lights\" — and f7ecad4a-90cf-4a8f-b7b3-d9d3151644f3 (Nithya Raman) — \"I want to make sure that we are having a single inspector look at a project from day one to finish, so that bureaucracy is not giving you two different responses...\" Bass answers about capital-infrastructure planning for growth; Raman answers about the consistency of development permitting and inspection. Both are real positions on 'managing development', but they act on different objects and no dimension orders 'a comprehensive infrastructure plan' against 'one inspector per project'. TIE-BREAK CAVEAT for the reviewing human: Raman's other surviving answer, 9ea38e55-6e78-4ec1-b41c-eb74fa6a5217 (\"I would use the executive authority in the mayoralty to make sure that every department was planning for density in ways that Angelenos welcomed so that Sacramento didn't have to intervene\"), carries only an editor_note finding and would make this set commensurable and arguably rankable. This pass took f7ecad4a because it is the only quote of hers here with no per-quote findings at all; the ruling flips on that tie-break, so it is surfaced rather than settled silently. This pass may not choose between them on the basis of which pairing contrasts better.",
+    "suggested_fix": "Two options for a human, in order: (1) resolve the set-construction tie above — if Raman's most faithful answer to THIS question is 9ea38e55 rather than f7ecad4a, this finding should be withdrawn and the set treated as rankable; (2) otherwise split into two race-local ranking questions — 'how should the city plan infrastructure capacity for growth?' and 'how should the city fix its development permitting and review process?'. The second half would be rankable on material already in the bundle (Raman f7ecad4a / df8ae173 / bdc80d45; Bass 78ba1ed3, currently attached to the housing question). Neither quote is at fault; do not drop or demote either.",
+    "quote_id": null,
+    "topic_key": "growth-and-development",
+    "race_id": "9e888818-c50b-4c61-a106-a0839ff2479d",
+    "candidate": null
+  },
+  {
+    "check_id": "set-undifferentiated",
+    "level": "topic",
+    "principle": "agreement is information",
+    "severity": "medium",
+    "fix_class": "decision-required",
+    "what": "Question 0bf23ad4-4ad4-4739-b92d-f3aea17e286e — \"What should be your community's primary strategy for addressing homelessness?\" Set after discarding off-question (b9139e1d): 772c8bbc-0274-442c-b129-d40a2d0e48bd (Karen Ruth Bass) — \"What LA needs to do in the next 4 years that I plan to accomplish is building out a more cost-effective system to deal with people when they get off the street and not put them into permanent housing immediately\" — and a6eee348-a680-48ea-b67a-1837faa3b09b (Nithya Raman) — \"We haven't just said, you can't be here. We've said, here's the place where you can go. That means expanding shelter, that means bringing people indoors.\" Shared axis (interim shelter capacity vs. immediate permanent housing as the primary strategy) with effectively no distance: both put scaled-up shelter and a rebuilt, more cost-effective services system ahead of direct placement into permanent housing. The convergence is robust across the rest of each candidate's pool here — Bass 4c389a82 (\"an entirely new system... build out services once we get people off the street\") and Raman c31d035f (\"let's actually build out a real system that can get as many people indoors as possible... not $100,000 a year motel rooms\") say the same thing. What separates them in this question's pool is record and spending-oversight rhetoric, not a policy direction. The genuine disagreement between these two on homelessness lives in question 4cc81e00 (compulsion at street camping), which is rankable and should carry the ranking.",
+    "suggested_fix": "Show this as convergence rather than ranking it: both candidates' primary strategy is scaled interim shelter plus a rebuilt services system, not immediate permanent housing. Do not drop the question — the agreement is a true and useful fact about this race, and it is what makes the compulsion disagreement in question 4cc81e00 legible. Do not hunt a sharper quote to manufacture a gap.",
+    "quote_id": null,
+    "topic_key": "homelessness-response",
+    "race_id": "9e888818-c50b-4c61-a106-a0839ff2479d",
+    "candidate": null
+  },
+  {
+    "check_id": "set-undifferentiated",
+    "level": "topic",
+    "principle": "agreement is information",
+    "severity": "medium",
+    "fix_class": "decision-required",
+    "what": "Question 2fe2e89b-f3fb-4603-93e8-0a0ea3f2e45c — \"How should your community's law enforcement relate to federal immigration enforcement?\" Set after discarding off-question (0c7d019d): d71232d8-c401-4caa-b3a4-260eea3bba8f (Karen Ruth Bass) — \"ICE was chasing people in car washes... they majority of them over 70% had no record... I was against it. I physically went out and did everything I could to stop it and will do that again\" — and efb1b277-7232-48e1-8409-b814552bbaed (Nithya Raman) — \"Los Angeles should be the strongest sanctuary city in the country. Residents must be able to trust that LAPD is not cooperating with ICE.\" Shared axis (how far the city should go in resisting federal immigration enforcement) with no distance: both sit at maximal non-cooperation and active resistance. Bass's discarded quote 0c7d019d (\"Our local law enforcement are prohibited from coordinating enforcement actions with ICE\") and Raman's 97164eb9 confirm the convergence rather than breaking it. The difference between the two answers is what each describes — a personal record of opposition vs. a standing LAPD policy — not where they sit on the axis, and that is a per-quote matter (Bass's answer is flagged not-forward) rather than a comparison.",
+    "suggested_fix": "Show convergence: both candidates back sanctuary-city status and LAPD non-cooperation with ICE, and both opposed the 2025 raids. Do not rank, and do not drop the question — in a race where immigration enforcement is high-salience, documented agreement between the two November candidates is exactly the kind of fact citizens cannot get elsewhere. Any remaining work here is per-quote (resolving Bass's not-forward finding), not per-set.",
+    "quote_id": null,
+    "topic_key": "local-immigration",
+    "race_id": "9e888818-c50b-4c61-a106-a0839ff2479d",
+    "candidate": null
+  }
+]

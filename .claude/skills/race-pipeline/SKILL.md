@@ -62,15 +62,48 @@ create minimal rows if missing. Roster is done when every ballot-listed candidat
 
 ### needs_quotes → quotes_staged
 Per candidate, work DOWN the source hierarchy (QUOTE-CURATION-PRINCIPLES §5, ranked by
-questioner independence): 1 debates, forums & town halls; 2 independent-press interviews &
-candidate questionnaires; 3 partisan-host interviews & prepared remarks; 4 candidate-bylined
-written. Tiers 3–4 need a justification note; any WRITTEN source at any tier yields verbatim
-sentences only. Tier 5 (hot-mic/gotcha) is banned. A tier-3 podcast is never excluded when it
-is a candidate's only sourceable speech — the justification note says so. Curate against
+**directness of answer** — the levels are named, not numbered, because
+`discovered_sources.source_tier_guess` is a *different* 1–4 scale):
+
+- **`answered-this-question`** — debate/forum answers, AND **candidate questionnaires**
+  (Vote411, LWV, outlet questionnaires). A questionnaire is written and self-published, yet
+  every candidate answers an identical prompt and every ballot-qualified candidate is
+  invited — the most directly comparable source there is. Prefer these.
+- **`adjacent`** — responsive, but the prompt differed: a news interview that circled the
+  subject, a narrower or broader version of the question.
+- **`curator-extracted`** — lifted from material not organised as an answer: stump speeches,
+  floor remarks, op-eds, platform pages.
+- **`excluded`** — hot-mic / secretly-recorded / "gotcha". Banned, not deprioritized.
+
+`adjacent` and `curator-extracted` need a justification note; any WRITTEN source at any level
+yields verbatim sentences only. Questioner independence breaks ties *within* a level, never
+across them — a partisan-host podcast is never excluded when it is a candidate's only
+sourceable speech, and the note says so. Curate against
 `.claude/skills/audit-quotes/CHECKS.md` UP FRONT: forward-looking operative clause, answers
 the topic's ranking question, honest de-id, no partisan tells, prefer the HOW. Stage as a
 publish-quotes `batch.json` per candidate. Goal: >= 2 candidates per topic or the topic
 doesn't ship.
+
+**Hunt shared-question moments first.** A question BOTH candidates answered — a debate or
+forum question they were each asked, or the same questionnaire item — is worth more than two
+separately sourced quotes, because it delivers three things at once: an
+`answered-this-question` source, a ready-made ranking question, and a genuine head-to-head.
+Comparability is created in the room: the casebook's MI Governor case (one common
+multi-candidate debate) yielded twice the rankable questions of AZ-01's two party-segregated
+ones, where the general-election candidates were never asked the same question in the same
+room. When you find one, record the question, its meeting/segment and its URL, and insert it
+as an `essentials.readrank_questions` row with `origin = 'moderator'` and `source_ref` set —
+neutralize the moderator's framing and name no candidate first. Questionnaires are the
+highest-yield form: same prompt, every ballot-qualified candidate invited, so they fix
+comparability and inclusion at once.
+
+**Source for faithfulness only.** Sourcing is judged twice downstream: per quote (faithful,
+responsive, direct?) and per set (do a question's answers actually let a citizen choose?).
+Never pick a quote because it contrasts. Genuine agreement between candidates is a real
+finding and is shown as convergence, so a question whose answers converge is **not** a
+sourcing failure. A ranking question may sit off the Compass axis, or carry no Compass topic
+at all, when the candidates answered something the taxonomy doesn't cover — declare it via
+`readrank_questions.origin` (QUOTE-CURATION-PRINCIPLES §7.3).
 
 **Video-ingest shortlist (always).** Sourcing doubles as ingest scouting: every debate,
 candidate forum, news-clip interview, or floor-speech video found — ESPECIALLY ones too

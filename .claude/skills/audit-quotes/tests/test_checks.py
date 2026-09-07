@@ -1,6 +1,6 @@
 from scripts.checks import (
     check_note_quality, check_deid_present, check_trailing_ellipsis,
-    check_partisan_tell_in_blind, check_source_tier, check_invalid_source,
+    check_partisan_tell_in_blind, check_invalid_source,
     check_unquotable_source, check_scorecard_source, check_stance_label,
     topic_live_count, topic_min_candidates, STANCE_LABEL_MAX_WORDS,
 )
@@ -66,9 +66,11 @@ def test_partisan_tell_symmetric_bipartisan_framing_not_flagged():
                   "Voters — Democratic, Republican and independent — must reject this."]:
         assert check_partisan_tell_in_blind(row(deidentified_text=blind)) is None, blind
 
-def test_source_tier_campaign_site_flagged():
-    f = check_source_tier(row(source_url="https://www.xavierbecerra2026.com/housing", source_name="www.xavierbecerra2026.com"))
-    assert f and f.check_id == "source-tier-4"
+# `source-tier-4` (campaign-site URL => low tier) was deleted: provenance is directness of answer,
+# not medium, and no URL pattern can see directness. It now lives in the judgment pass as
+# `source-not-an-answer` (CHECKS.md §3). Behavioural coverage of its absence — and of the three
+# bad-source checks surviving it — is in tests/test_audit_checks.py at the repo root, which is the
+# suite `pytest tests/` actually collects.
 
 def test_invalid_source_ontheissues_flagged():
     f = check_invalid_source(row(source_url="https://www.ontheissues.org/John_James.htm", source_name="www.ontheissues.org"))

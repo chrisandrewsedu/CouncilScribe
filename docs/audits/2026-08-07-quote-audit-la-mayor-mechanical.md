@@ -1,0 +1,368 @@
+# Quote Audit — LA Mayor (comparability) (mechanical only)
+
+**120 findings** — 66 high, 54 medium, 0 low
+
+## Summary by race
+- **race 9e888818-c50b-4c61-a106-a0839ff2479d** — 120 findings (66 high, 54 med, 0 low)
+
+## race 9e888818-c50b-4c61-a106-a0839ff2479d
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / civil-rights [97459d18-b3dd-44d4-8648-8358c18969dd]
+    - No distinctive phrase from the quote appears on the cited page https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=21-0972 — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / deportation [8403a778-c94c-4bd1-971d-76ae1abdaf8c]
+    - No distinctive phrase from the quote appears on the cited page https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=21-0002-S55 — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / growth-and-development [8f51a4e3-954b-48b9-acb0-71a437bf8b08]
+    - No distinctive phrase from the quote appears on the cited page https://www.nithyaforthecity.com/housing — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Karen Ruth Bass / homelessness [1a1a9e98-f428-43e0-a35d-f341e0f07510]
+    - No distinctive phrase from the quote appears on the cited page https://mayor.lacity.gov/InsideSafe — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / homelessness [ef8712c2-f45c-4905-a177-bab2285e6a89]
+    - No distinctive phrase from the quote appears on the cited page https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=25-0002-S8 — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - No distinctive phrase from the quote appears on the cited page https://mayor.lacity.gov/news/delivering-results-2024-bass-highlights-unprecedented-green-year-la — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - No distinctive phrase from the quote appears on the cited page https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=21-0972 — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Nithya Raman / immigration [3dbb0df7-1bc1-49d1-9989-7c6e7cb890c7]
+    - No distinctive phrase from the quote appears on the cited page https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=21-0002-S55 — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Karen Ruth Bass / public-safety-approach [41ac4890-8de7-46b3-8e85-b62a99bdf5f5]
+    - No distinctive phrase from the quote appears on the cited page https://lapublicpress.org/2026/04/la-budget-2026-bass/ — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Karen Ruth Bass / public-safety-approach [3975e2c3-0080-496b-9c9c-82c65696c454]
+    - No distinctive phrase from the quote appears on the cited page https://nbclosangeles.com/news/local/mayor-bass-lapd-funding-recruitment/3814358/ — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / campaign-finance [30a9ab18-fce1-49b1-85a2-a63f3846983a]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / city-sanitation [2638f09b-b695-4c5b-a29c-a3c7cb739a10]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / city-sanitation [6bd26b05-af05-4f77-be7a-82d512f0fa2e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / city-sanitation [a6bb4672-eaf0-4f93-991c-040440c1394c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / civil-rights [3ecab197-0265-4d87-9576-351082d214fa]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / civil-rights [97459d18-b3dd-44d4-8648-8358c18969dd]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / climate-change [f0ab8f00-9952-483e-a261-dc1ff0c9e197]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / climate-change [94abcce6-5ab9-4561-aedb-e7f3b506ad9b]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / climate-change [a417cde7-06b8-412d-93e5-80c02e26f59e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / deportation [e17f505f-f985-4440-be4d-05043f9631f1]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / deportation [8403a778-c94c-4bd1-971d-76ae1abdaf8c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [f7625f7b-634f-49d4-9155-ab38455ba400]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [e7f20cf7-fb3f-44e8-99c1-54ba4752eff0]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / economic-development [644bc8e7-4545-4f50-b40e-0c2b6ae0a055]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / growth-and-development [8f51a4e3-954b-48b9-acb0-71a437bf8b08]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / growth-and-development [55f75e21-5fc3-4c61-a400-db36fada7602]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / growth-and-development [9ea38e55-6e78-4ec1-b41c-eb74fa6a5217]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness [1a1a9e98-f428-43e0-a35d-f341e0f07510]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness [ef8712c2-f45c-4905-a177-bab2285e6a89]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [cb878a06-9b00-432f-8c7c-64b49d5347ff]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [4c389a82-e480-4e6e-b4f4-fe8576ced385]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [b9139e1d-824f-4670-b46c-caa624b2a83d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / homelessness-response [c31d035f-deb2-4472-8b18-51e42d841244]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [bdc80d45-40c2-4f1d-a0ef-e5619aab2d74]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [17d7f049-984a-4d36-b4dd-dab0dcab0069]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [ea35df13-e121-41e5-9a0d-fc63ffdfd06f]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / housing [baa16620-68a5-465e-85b9-71c9b4f5b6f0]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / immigration [3dbb0df7-1bc1-49d1-9989-7c6e7cb890c7]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-immigration [efb1b277-7232-48e1-8409-b814552bbaed]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [41ac4890-8de7-46b3-8e85-b62a99bdf5f5]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [0a0542fa-34ae-4b67-b0ea-62f35e1c1289]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [6c92a9fc-0082-4612-8f22-7d5f97097c09]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [3975e2c3-0080-496b-9c9c-82c65696c454]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [368cfab9-97e5-4ad6-afbf-477b4633e1cc]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / public-safety-approach [d7490082-efcf-4820-b571-8dc9a642f782]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / public-safety-approach [132093b7-7acd-437f-a2fd-cee5af8f2704]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [8edf4cb0-ed77-4e93-8ba0-a8dbdc04a09e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [1bd35546-61ce-44be-944e-f5d6cd1e6ac8]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / rent-regulation [e6e798c0-1e47-47c6-bdf2-16a966ee41f6]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / residential-zoning [d8f9bf5d-0a2b-45e4-b98f-d186f401c73c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Karen Ruth Bass / tariffs [acff106d-3e86-424b-ae2f-c61922f135d2]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Nithya Raman / transportation-priorities [13a9c7e0-453f-46fe-b44a-a031bd779264]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / abortion [abortion]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / campaign-finance [campaign-finance]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / campaign-finance [01c51a86-040c-414a-bdc4-c978d8b76c8e]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2861#seg-186
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / city-sanitation [city-sanitation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / city-sanitation [2638f09b-b695-4c5b-a29c-a3c7cb739a10]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=5293#seg-453
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / city-sanitation [a6bb4672-eaf0-4f93-991c-040440c1394c]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4521#seg-358
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / civil-rights [civil-rights]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / climate-change [climate-change]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / data-centers [data-centers]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / deportation [deportation]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / economic-development [economic-development]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / economic-development [ce9bb5b9-ac51-4eec-8765-2ebe783e316d]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4882#seg-395
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / economic-development [f7625f7b-634f-49d4-9155-ab38455ba400]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4521#seg-358
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / economic-development [644bc8e7-4545-4f50-b40e-0c2b6ae0a055]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4996#seg-400
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / economic-development [b2d1f06d-d6c2-4f6b-9b20-cba5886ba953]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4651#seg-364
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / fossil-fuels [fossil-fuels]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / growth-and-development [growth-and-development]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / growth-and-development [e294ef7e-5f85-42d6-9b89-cf018e817001]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4806#seg-391
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / growth-and-development [9ea38e55-6e78-4ec1-b41c-eb74fa6a5217]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4338#seg-354
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / homelessness [homelessness]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / homelessness [ee3427dd-f91a-459f-8712-98117e3e428c]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3092#seg-213
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / homelessness [8418a331-2eeb-418d-8473-fd36d5671276]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2074#seg-126
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / homelessness [dd5bdce9-667c-4891-955a-98ec6c49d44e]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3066#seg-207
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / homelessness-response [homelessness-response]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / homelessness-response [cb878a06-9b00-432f-8c7c-64b49d5347ff]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2738#seg-182
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / homelessness-response [4c389a82-e480-4e6e-b4f4-fe8576ced385]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3159#seg-238
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / homelessness-response [b9139e1d-824f-4670-b46c-caa624b2a83d]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3636#seg-276
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / homelessness-response [c31d035f-deb2-4472-8b18-51e42d841244]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3240#seg-241
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / homelessness-response [e0ec0298-540a-4ca7-be15-d8c07d4f1412]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3551#seg-273
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / homelessness-response [e606a5f8-ff2f-4150-8d1b-60b81a4e8652]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3880#seg-301
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / housing [housing]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / housing [bdc80d45-40c2-4f1d-a0ef-e5619aab2d74]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4006#seg-307
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / housing [78ba1ed3-e7b3-471c-911b-4e4d49d87cde]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4082#seg-321
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / housing [0a1aacc9-3044-4b79-9e7a-a6095cc05824]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3940#seg-305
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / housing [50055d68-31e4-457a-911b-d2941fded903]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://mayor.lacity.org/news/mayor-karen-bass-issues-executive-directive-1-addressing-homelessness
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / housing [baa16620-68a5-465e-85b9-71c9b4f5b6f0]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4006#seg-307
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / immigration [immigration]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / jail-capacity [jail-capacity]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / local-environment [local-environment]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / local-environment [eaaa2cdb-c56d-4be3-a798-b4e4e85c4836]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2412#seg-157
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / local-immigration [local-immigration]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / local-immigration [d71232d8-c401-4caa-b3a4-260eea3bba8f]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=5169#seg-429
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / local-immigration [0693cd89-8a4e-4a83-a933-dda50e2cece6]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://www.nithyaforthecity.com/public-safety
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / public-safety-approach [0a0542fa-34ae-4b67-b0ea-62f35e1c1289]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2960#seg-195
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / public-safety-approach [6c92a9fc-0082-4612-8f22-7d5f97097c09]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2861#seg-186
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / public-safety-approach [368cfab9-97e5-4ad6-afbf-477b4633e1cc]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2540#seg-162
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / public-safety-approach [d7490082-efcf-4820-b571-8dc9a642f782]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2918#seg-193
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / public-safety-approach [132093b7-7acd-437f-a2fd-cee5af8f2704]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=2989#seg-197
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / rent-regulation [rent-regulation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Karen Ruth Bass / rent-regulation [8edf4cb0-ed77-4e93-8ba0-a8dbdc04a09e]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=3940#seg-305
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / residential-zoning [residential-zoning]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Nithya Raman / residential-zoning [d8f9bf5d-0a2b-45e4-b98f-d186f401c73c]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://on-the-record.onrender.com/meetings/f2cf80ef-a811-4d95-990d-b9c598284eb6?t=4338#seg-354
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / tariffs [tariffs]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / transportation-priorities [transportation-priorities]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.

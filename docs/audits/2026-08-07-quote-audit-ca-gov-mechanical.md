@@ -1,0 +1,317 @@
+# Quote Audit — CA Governor (comparability) (mechanical only)
+
+**103 findings** — 71 high, 32 medium, 0 low
+
+## Summary by race
+- **race bc936a36-287c-4ffd-abd8-5e4fd798bae5** — 103 findings (71 high, 32 med, 0 low)
+
+## race bc936a36-287c-4ffd-abd8-5e4fd798bae5
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / abortion [9afd3c42-1aeb-45e6-87ac-5d98386543a1]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / abortion [ebb39e53-3e7f-4ecd-b982-a45db47242e7]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / abortion [cc555fd4-da2a-4eda-ad21-e22ecb2b91ba]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / abortion [9403fcba-bb26-425f-bf27-997a4667b05d]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / childcare [8c5d0c0d-4de5-4891-aa96-c8add3c93ea2]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / civil-rights [e4e05743-d1e8-4431-826b-1eb9f5ea557d]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / civil-rights [c3c16e55-3ac1-4ca9-8cde-33fd6f046a06]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / climate-change [598470e8-a0d2-4f01-9d55-5a8ca6a0d188]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / data-centers [69fbfa16-73c8-4bdf-b4cc-ec4f19c7a117]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / deportation [66088b79-e0dc-4ea7-84b2-d2d0f5c6d676]
+    - No distinctive phrase from the quote appears on the cited page https://www.xavierbecerra2026.com/immigration — the text may be paraphrased, from a different page, or from a superseded version.
+    - fix: Re-read the cited page: fix the quote to match it verbatim, correct source_url to the page that does carry it, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / fossil-fuels [5610336d-2bfc-4e4d-9513-7a45fad7b6c4]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / fossil-fuels [9eb66701-bd1f-4479-8d6b-c4ec1a484ffa]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Steve Hilton / healthcare [1336d1c4-59f0-4e59-bd0b-84cbf775490c]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / healthcare [89b887a0-5e7c-4eb5-bed2-30d92b51c44e]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / housing [656250f1-522a-4da1-b871-78cb96b76001]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-speaker-mismatch** (quote) — Steve Hilton / housing [579eed66-79ec-4585-b05f-da20b50caf25]
+    - Quote phrase found in the cited video but not attributed to Steve Hilton.
+    - fix: Confirm the speaker; the quote may belong to another person.
+- `high` · `decision-required` · **source-unverified** (quote) — Xavier Becerra / tariffs [e842e9d2-abcb-4fb1-8131-c8f4bd4cbbe5]
+    - No distinctive phrase from the quote appears in the cited video's transcript — likely mis-sourced.
+    - fix: Find the true source (search other transcripts) and correct source_url, or remove the quote.
+- `high` · `decision-required` · **source-speaker-mismatch** (quote) — Steve Hilton / taxes [731e3186-d2a8-443b-af93-d79177706d80]
+    - Quote phrase found in the cited video but not attributed to Steve Hilton.
+    - fix: Confirm the speaker; the quote may belong to another person.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / abortion [95f98f9c-b58e-41bc-bc50-83e2db0ea812]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / abortion [b5cfaed3-8c7d-4239-9f0a-6173180a4bce]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / abortion [28509bb0-8efa-4364-80bd-42560e2ba795]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / abortion [ebb39e53-3e7f-4ecd-b982-a45db47242e7]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / abortion [cc555fd4-da2a-4eda-ad21-e22ecb2b91ba]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / abortion [9403fcba-bb26-425f-bf27-997a4667b05d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / ai-regulation [8cf755c9-7889-4c70-90c7-bee357228fe4]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / childcare [1927f300-0970-43c2-a618-cffb8251fe52]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / childcare [bb5050ef-8b85-453c-89f3-d95fd4fd3d72]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / childcare [8c5d0c0d-4de5-4891-aa96-c8add3c93ea2]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / childcare [8899514e-d5b9-48ce-ad7b-dfaee105ba16]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / civil-rights [e4e05743-d1e8-4431-826b-1eb9f5ea557d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / civil-rights [c3c16e55-3ac1-4ca9-8cde-33fd6f046a06]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / climate-change [598470e8-a0d2-4f01-9d55-5a8ca6a0d188]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / climate-change [388f8838-3cf5-4e50-9599-90cef5f3dd67]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / data-centers [3da54c3a-41bc-4bf0-a5c9-bde3b0485177]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / data-centers [3b57c45f-985b-48e4-ad1b-5ee513f387eb]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / data-centers [69fbfa16-73c8-4bdf-b4cc-ec4f19c7a117]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / deportation [077b73af-80f5-4e7b-bdd5-43391efba309]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / deportation [feef72e2-a573-49a5-9990-2ac823874ab8]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / economic-development [759421e2-2aee-4013-88e0-c744c63a97a2]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / economic-development [85949e22-6088-4b2f-bcdc-6568c68d99a0]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / economic-development [1f74093c-1c9e-43cb-b9f3-38eada081460]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / economic-development [31a2a9e2-7a61-4e37-af86-ce374cc5185f]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / fossil-fuels [5610336d-2bfc-4e4d-9513-7a45fad7b6c4]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / fossil-fuels [95dbbc93-e7a4-4ed3-9425-c67a34487f64]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / fossil-fuels [38999641-57d9-42e4-8de0-69d55d0b2672]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / fossil-fuels [9eb66701-bd1f-4479-8d6b-c4ec1a484ffa]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / healthcare [1336d1c4-59f0-4e59-bd0b-84cbf775490c]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / healthcare [2e9fb87d-fc9b-4458-8c9e-2f7a603f4996]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / healthcare [4d8b35f5-bbd6-4e04-95fe-1c3b85324073]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / healthcare [89b887a0-5e7c-4eb5-bed2-30d92b51c44e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / housing [d80d4794-1254-435c-bbdf-78f0d3bf97be]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / housing [656250f1-522a-4da1-b871-78cb96b76001]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / housing [a0ffe119-a731-4589-be51-3eceeadded73]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / housing [9cb838ab-e156-413a-9e0e-4a83d01f8370]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / housing [579eed66-79ec-4585-b05f-da20b50caf25]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / housing [3408d816-82f3-48f2-abf8-258cd864e64d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / housing [40aa1cd3-81d1-4ad4-83ac-e1e109c9482b]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / immigration [d534173d-2362-4b09-a306-6304921a7004]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / immigration [8837425d-18d2-48a5-830f-db2639bf8e6d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / medicare/aid [587fe080-8d8d-4cb6-b987-052cded919be]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / misinformation [100562e8-9020-49f5-819f-8729c86e1723]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / rent-regulation [5edc662a-2d09-46c1-af32-601cb201eb5d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / rent-regulation [59fa6621-e78e-44a7-89a1-106989b98b8d]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / rent-regulation [fc3a5867-a568-4e1d-8cc5-c0835363202a]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / same-sex-marriage [aecf67ba-0112-4931-a467-b8ea67525e6b]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / same-sex-marriage [ff43773e-3b5f-4a78-be23-15421f4c520b]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Xavier Becerra / tariffs [e842e9d2-abcb-4fb1-8131-c8f4bd4cbbe5]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / taxes [731e3186-d2a8-443b-af93-d79177706d80]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / taxes [e9a3ef3e-b79c-4e1d-b035-1bc506872f52]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / transportation-priorities [30be3454-2e7e-4d7c-9323-139935e51ffe]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `high` · `guided` · **note-missing** (quote) — Steve Hilton / voting-rights [82cb237d-7ee8-4ed3-92e3-0d04233ec02e]
+    - editor_note is empty.
+    - fix: Write a 1-2 sentence note: why this quote + Compass-stance alignment + any edits.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / abortion [abortion]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / ai-regulation [ai-regulation]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / childcare [childcare]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / childcare [1927f300-0970-43c2-a618-cffb8251fe52]
+    - Cited source is a PDF, which this audit cannot read: https://goldentogether.com/wp-content/uploads/2024/06/GT_Home-Visiting-3.pdf
+    - fix: Open the PDF and check the quote by hand; if it holds up, no change is needed.
+- `medium` · `decision-required` · **source-midsentence-clip** (quote) — Xavier Becerra / childcare [8899514e-d5b9-48ce-ad7b-dfaee105ba16]
+    - Quote is verbatim but starts mid-sentence with no ellipsis marking the cut — the clause before it may carry the candidate's actual position.
+    - fix: Re-read the full sentence: extend the quote to carry the operative clause, or mark the cut with a leading '…'.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / civil-rights [civil-rights]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / climate-change [climate-change]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / data-centers [data-centers]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-midsentence-clip** (quote) — Xavier Becerra / data-centers [3b57c45f-985b-48e4-ad1b-5ee513f387eb]
+    - Quote is verbatim but starts mid-sentence with no ellipsis marking the cut — the clause before it may carry the candidate's actual position.
+    - fix: Re-read the full sentence: extend the quote to carry the operative clause, or mark the cut with a leading '…'.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / deportation [deportation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / economic-development [6e475503-a1c8-4bbe-bcf3-1c9243981d51]
+    - Cited source is a PDF, which this audit cannot read: https://goldentogether.com/wp-content/uploads/2024/04/GT_The-Business-Climate-3.pdf
+    - fix: Open the PDF and check the quote by hand; if it holds up, no change is needed.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / growth-and-development [growth-and-development]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / immigration [immigration]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / jail-capacity [jail-capacity]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / jail-capacity [4da9cf64-eb31-405b-bd2a-283e4cf8686c]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://stevehiltonforgovernor.com/crime
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / medicare/aid [medicare/aid]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / medicare/aid [587fe080-8d8d-4cb6-b987-052cded919be]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://stevehiltonforgovernor.com/hilton-launches-califordable-campaign-to-fix-californias-affordability-crisis-town-hall-tour/
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / misinformation [misinformation]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / redistricting [redistricting]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / rent-regulation [rent-regulation]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / rent-regulation [5edc662a-2d09-46c1-af32-601cb201eb5d]
+    - Cited source is a PDF, which this audit cannot read: https://goldentogether.com/wp-content/uploads/2024/10/GT_Sustainable-Suburbs-4.pdf
+    - fix: Open the PDF and check the quote by hand; if it holds up, no change is needed.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / rent-regulation [fc3a5867-a568-4e1d-8cc5-c0835363202a]
+    - Cited source is a PDF, which this audit cannot read: https://goldentogether.com/wp-content/uploads/2024/10/GT_Sustainable-Suburbs-4.pdf
+    - fix: Open the PDF and check the quote by hand; if it holds up, no change is needed.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / same-sex-marriage [same-sex-marriage]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-midsentence-clip** (quote) — Xavier Becerra / same-sex-marriage [aecf67ba-0112-4931-a467-b8ea67525e6b]
+    - Quote is verbatim but starts mid-sentence with no ellipsis marking the cut — the clause before it may carry the candidate's actual position.
+    - fix: Re-read the full sentence: extend the quote to carry the operative clause, or mark the cut with a leading '…'.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / tariffs [tariffs]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / trans-athletes [02d60a03-bce5-4d8c-a8c1-13baa4dfaf82]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://ontherecord.empowered.vote/meetings/76051973-b3ac-42f0-b3dc-d36bfffaa42e
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Xavier Becerra / trans-athletes [b3fcbb17-37ec-4baf-abfd-d56fb4a301b3]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://ontherecord.empowered.vote/meetings/76051973-b3ac-42f0-b3dc-d36bfffaa42e
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / transportation-priorities [transportation-priorities]
+    - Only 0 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / transportation-priorities [30be3454-2e7e-4d7c-9323-139935e51ffe]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://stevehiltonforgovernor.com/steve-hilton-pledges-to-stop-high-speed-rail-payments-on-day-one/
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `decision-required` · **not-rankable** (topic) —  / voting-rights [voting-rights]
+    - Only 1 candidate(s) live on this topic; not a valid head-to-head.
+    - fix: Source a second candidate's on-question quote, or drop the topic from the race.
+- `medium` · `decision-required` · **source-unfetchable** (quote) — Steve Hilton / voting-rights [82cb237d-7ee8-4ed3-92e3-0d04233ec02e]
+    - Cited page returned no readable prose — JS-rendered, blocked, paywalled, or all navigation: https://stevehiltonforgovernor.com/fourth-largest-economy-month-long-vote-count-hilton-calls-on-newsom-to-implement-emergency-action/
+    - fix: Open the page and check the quote by hand; if the page is gone, re-source or deselect.
+- `medium` · `guided` · **note-section-ref** (quote) — Steve Hilton / homelessness [9261a975-4f56-4c37-8b16-1de58e7737cd]
+    - editor_note cites internal section numbers / jargon.
+    - fix: Rewrite without §-refs or 'tier-N'; keep it human-readable.

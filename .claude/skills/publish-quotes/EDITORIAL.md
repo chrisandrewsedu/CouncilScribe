@@ -13,8 +13,12 @@ present options and a recommendation; never decide for them.
 
 - **Split at the speaker's own pivots** ("Secondly…", "the final piece…", "and then…"). Following
   their structure isn't editorializing; imposing your own is.
-- **One claim per quote.** A quote that makes two arguments should usually become two quotes. This
-  reads cleaner and lets each stand or fall on its own.
+- **One position per quote — but draw it fully.** Aim for roughly **2–4 sentences**: enough for a
+  citizen to grasp what the candidate would actually *do* — the goal, the mechanism, and any context
+  that makes it legible — without becoming a wall of text. A quote may run several sentences as long
+  as they develop the *same* position; still split genuinely *distinct* arguments (a different policy,
+  a different topic) into separate quotes. Err toward including the "how," not toward brevity for its
+  own sake.
 
 ## Trimming spoken text
 
