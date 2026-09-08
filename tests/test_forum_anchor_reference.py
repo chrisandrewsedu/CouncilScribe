@@ -7,8 +7,6 @@ label under test is the one that swallowed three people.
 """
 import re
 
-import pytest
-
 from bench.forum_anchor_reference import (
     LWV_AUDITOR_FORUM_END,
     LWV_AUDITOR_SPEAKERS,
@@ -58,6 +56,28 @@ def test_a_handoff_split_across_two_turns_still_anchors():
     assert anchors == [(1, "KOBIAN")]
     turns = anchor_reference_turns(segments, SPEAKERS)
     assert turns[-1] == (6.0, 40.0, "KOBIAN")
+
+
+def test_a_lookahead_anchor_is_not_anchored_a_second_time_by_the_outer_loop():
+    """DEFECT (round-1 review). The cue segment names nobody, so the lookahead
+    branch anchors its successor. But if that successor ALSO independently
+    matches HANDOFF (as well as naming a person), the outer loop's own visit to
+    that same index must not anchor it again — otherwise the reference carries
+    one span twice. Measured on the real meeting at segments 10/11 ('...opening
+    statement.' / 'ask candidate Andy Bond to start.') and 106/107 ('...' /
+    'Let's start with Miss Bond.')."""
+    segments = [
+        seg(0, 0.0, 5.0, "We will now move to her opening statement."),
+        seg(1, 5.0, 6.0, "Let's start with Miss Bond."),
+        seg(2, 6.0, 40.0, "Thank you for having me."),
+    ]
+    anchors = find_anchors(segments, SPEAKERS)
+    assert anchors == [(1, "BOND")]
+    turns = anchor_reference_turns(segments, SPEAKERS)
+    assert turns == [
+        (5.0, 6.0, "MODERATOR"),
+        (6.0, 40.0, "BOND"),
+    ]
 
 
 def test_a_surname_that_is_also_a_common_noun_does_not_anchor():

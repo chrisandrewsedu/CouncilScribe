@@ -74,22 +74,34 @@ def find_anchors(
     When the cue segment names nobody, its successor is consulted and, if that
     one names a person, becomes the anchor — the floor is yielded when the name
     is spoken, not when the cue began.
+
+    A segment claimed via that lookahead is not eligible to anchor again on its
+    own turn through the outer loop's direct-match branch: if segment N names
+    nobody but also matches HANDOFF, and segment N+1 both matches HANDOFF and
+    names a person, the lookahead from N already anchors N+1. Without tracking
+    that, the outer loop's own visit to N+1 anchors it a second time, and the
+    reference carries the same span twice.
     """
     anchors: list[tuple[int, str]] = []
+    anchored_indices: set[int] = set()
     for index, segment in enumerate(segments):
         if end_time is not None and segment["start_time"] > end_time:
             break
+        if index in anchored_indices:
+            continue
         text = segment.get("text") or ""
         if not handoff.search(text):
             continue
         person = _named(text, speakers)
         if person is not None:
             anchors.append((index, person))
+            anchored_indices.add(index)
             continue
         if index + 1 < len(segments):
             person = _named(segments[index + 1].get("text") or "", speakers)
             if person is not None:
                 anchors.append((index + 1, person))
+                anchored_indices.add(index + 1)
     return anchors
 
 
