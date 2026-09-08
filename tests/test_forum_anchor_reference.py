@@ -248,6 +248,43 @@ def test_the_window_ends_when_the_moderator_retakes_the_floor():
     assert not any(start >= 40.0 for start, _, person in turns if person == "BOND")
 
 
+CUSTOM_HANDOFF = re.compile(r"switching to you now", re.I)
+
+
+def test_is_moderator_speech_honours_a_custom_handoff_pattern():
+    """DEFECT: MODERATOR_SPEECH was built once at import time from the
+    module-level HANDOFF, so a caller passing its own `handoff` to
+    anchor_reference_windows still got mid-window moderator breaks judged
+    against the hardcoded LWV pattern — silently wrong for a meeting whose
+    moderator uses different phrasing."""
+    turn = seg(0, 0.0, 5.0, "Switching to you now, quick note.")
+    assert not is_moderator_speech(turn)  # matches neither default HANDOFF nor "?"
+    assert is_moderator_speech(turn, handoff=CUSTOM_HANDOFF)
+
+
+def test_anchor_reference_windows_threads_a_custom_handoff_to_mid_window_breaks():
+    """The same defect, exercised end to end: a moderator aside phrased in the
+    caller's OWN handoff pattern must still end a person's window, not get
+    silently absorbed into their answer."""
+    custom_speakers = {
+        "BOND": re.compile(r"\bbond\b", re.I),
+        "KOBIAN": re.compile(r"\bkobian\b", re.I),
+    }
+    segments = [
+        seg(0, 0.0, 5.0, "Switching to you now, Bond."),
+        seg(1, 5.0, 30.0, "My answer runs on."),
+        seg(2, 30.0, 35.0, "Switching to you now, folks, quick note."),
+        seg(3, 35.0, 60.0, "More speech continues for a while."),
+        seg(4, 60.0, 65.0, "Switching to you now, Kobian."),
+        seg(5, 65.0, 90.0, "Her answer."),
+    ]
+    turns = anchor_reference_windows(
+        segments, custom_speakers, handoff=CUSTOM_HANDOFF
+    )[0]
+    assert (5.0, 30.0, "BOND") in turns
+    assert not any(start >= 30.0 for start, _, person in turns if person == "BOND")
+
+
 def test_the_unbounded_final_window_is_dropped():
     """The last anchor has no next anchor to bound it, so its window would run to
     end_time and absorb whatever follows. On the real meeting that swallowed 141.9s

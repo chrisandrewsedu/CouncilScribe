@@ -35,6 +35,7 @@ from bench.forum_gate import (  # noqa: E402
     gate_verdict,
     load_turns,
     reference_half,
+    unattributed_bucket_share,
 )
 from bench.forum_recluster import UNCLUSTERED_LABEL  # noqa: E402
 from bench.identity_score import identity_report  # noqa: E402
@@ -87,6 +88,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  unmapped labels (reference gap, not an error): "
                   f"{', '.join(report.unmapped_labels)}")
         if floor == GATE_MIN_FRACTION:
+            bucket_seconds, bucket_share = unattributed_bucket_share(
+                report, UNCLUSTERED_LABEL
+            )
+            print(f"  unattributed bucket: {bucket_seconds:.1f}s "
+                  f"({bucket_share:.1%} of scored reference speech)")
             print(f"  VERDICT: {'PASS' if passed else 'FAIL'}")
             for reason in reasons:
                 print(f"    - {reason}")

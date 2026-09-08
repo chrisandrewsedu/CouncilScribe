@@ -141,3 +141,15 @@ def test_folding_is_by_total_speech_not_by_turn_count():
 def test_a_zero_floor_folds_nothing():
     labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
     assert fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=0.0) == labels
+
+
+def test_fold_slivers_honours_a_custom_unclustered_label():
+    """cluster_turns accepts unclustered_label=; fold_slivers must fold into
+    the SAME bucket name, or a custom label produces two buckets — one the
+    gate excludes by name, one it does not — and the second reads as a
+    spurious conflated identity."""
+    labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+    folded = fold_slivers(
+        labels, FOLD_SEGMENTS, floor_seconds=20.0, unclustered_label="CUSTOM_BUCKET"
+    )
+    assert folded == ["SPEAKER_00", "CUSTOM_BUCKET", "SPEAKER_02"]

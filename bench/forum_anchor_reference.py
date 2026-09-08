@@ -59,12 +59,27 @@ LWV_AUDITOR_FORUM_END = 2650.0
 #: moderator makes procedural asides mid-window ("we will move on to our next
 #: question"). Attributing question-asking to the person answering is wrong by ROLE,
 #: independent of any score.
+#:
+#: This is the module default's own handoff pattern baked in. It is used
+#: whenever a caller does not need `is_moderator_speech` to see a different
+#: pattern than the one it anchored on.
 MODERATOR_SPEECH = re.compile(HANDOFF.pattern + r"|\?\s*$", re.I)
 
 
-def is_moderator_speech(segment: dict) -> bool:
-    """True if this turn reads as the moderator asking or managing the floor."""
-    return bool(MODERATOR_SPEECH.search((segment.get("text") or "").strip()))
+def is_moderator_speech(segment: dict, *, handoff: re.Pattern = HANDOFF) -> bool:
+    """True if this turn reads as the moderator asking or managing the floor.
+
+    `handoff` must be the SAME pattern the caller anchored windows with. The
+    combined moderator-speech test was originally built once, at import time,
+    from the module-level `HANDOFF` — so a caller passing its own `handoff`
+    pattern to `anchor_reference_windows`/`find_anchors` still got mid-window
+    moderator breaks judged against the hardcoded LWV pattern, silently wrong
+    for any meeting whose handoff phrasing differs.
+    """
+    combined = MODERATOR_SPEECH if handoff is HANDOFF else re.compile(
+        handoff.pattern + r"|\?\s*$", re.I
+    )
+    return bool(combined.search((segment.get("text") or "").strip()))
 
 
 def _named(text: str, speakers: dict[str, re.Pattern]) -> str | None:
@@ -140,6 +155,20 @@ def anchor_reference_windows(
     moderator is the label this repair exists to break apart. Dropping whole
     anchors instead would be worse: a window runs until the NEXT anchor, so
     removing anchors silently doubles the surviving windows' extent.
+
+    ASYMMETRY, recorded rather than fixed: the anchor turn is TRUSTED as the
+    moderator's because it matched `handoff` and named exactly one person
+    (`find_anchors`); a MID-window turn that matches that identical pattern
+    (`is_moderator_speech`, below) is instead DISCARDED from the person's
+    window rather than being labelled MODERATOR itself. Both readings are
+    defensible, but only one is taken, and it is the permissive one: it can
+    only shrink a person's attributed window, never mislabel the moderator's
+    speech as the person's. MEASURED alternative: re-labelling those turns
+    MODERATOR instead of dropping them is a STRONGER reference (+16% coverage
+    on the real meeting) and the landed clustering still passes against it —
+    so this is not a close call being punted on for lack of evidence, it is a
+    deliberate one-sided choice that the next user of this module should know
+    they inherited.
     """
     anchors = find_anchors(
         segments, speakers, handoff=handoff, end_time=end_time
@@ -160,7 +189,7 @@ def anchor_reference_windows(
             segment = segments[following]
             if end_time is not None and segment["start_time"] > end_time:
                 break
-            if is_moderator_speech(segment):
+            if is_moderator_speech(segment, handoff=handoff):
                 if started:
                     break        # the moderator retook the floor; stop attributing
                 continue         # still the moderator's question preamble

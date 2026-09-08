@@ -45,6 +45,19 @@ from src.event_kinds import EVENT_KINDS, INTERVIEW_KINDS, validate_event_kind
 from src.crec_identify import parse_crec_arg
 from src.house_cdn import resolve_session
 
+#: Diarizer backends Stage 2.5's centroid merge must never run against.
+#: `api`/`vibevoice` produce their own well-separated clustering; `api-recluster`
+#: exists SPECIFICALLY to carry a hand-repaired clustering forward unchanged —
+#: running the same merge-by-similarity over it risks silently re-merging the
+#: very people that repair pulled apart, while keeping the "+recluster"
+#: provenance stamp as if nothing had touched it.
+_MERGE_UNSUPPORTED_DIARIZERS = ("api", "vibevoice", "api-recluster")
+
+
+def _merge_stage_skipped(diarizer: str) -> bool:
+    """True when Stage 2.5's centroid merge must not run for this backend."""
+    return diarizer in _MERGE_UNSUPPORTED_DIARIZERS
+
 
 def _resolve_chunk_minutes(args, event_kind) -> int:
     """Chunk size for this run, after the meeting-kind gate.
@@ -104,6 +117,61 @@ def should_run_llm(skip_llm: bool, crec_request, event_kind=None) -> bool:
 def _validate_diarizer_compute(args) -> None:
     if args.diarizer == "vibevoice" and args.compute != "modal":
         raise ValueError("--diarizer vibevoice requires --compute modal")
+    if args.diarizer == "api-recluster":
+        _validate_recluster_provenance(args)
+
+
+def _recluster_meeting_id(args) -> str | None:
+    """Best-effort meeting id for an `api-recluster` run, before the normal
+    --resume / metadata-resolve dance has run (this validation happens first,
+    at argparse time). `api-recluster` only ever makes sense against an
+    already-existing meeting, so --resume or an explicit --meeting-id is what
+    every real invocation supplies; a date+meeting-type pair is included too
+    since that is how a fresh id would otherwise be spelled."""
+    meeting_id = getattr(args, "resume", None) or getattr(args, "meeting_id", None)
+    if meeting_id:
+        return meeting_id
+    date = getattr(args, "date", None)
+    meeting_type = getattr(args, "meeting_type", None)
+    if date and meeting_type:
+        return f"{date}-{meeting_type.lower().replace(' ', '-')}"
+    return None
+
+
+def _validate_recluster_provenance(args) -> None:
+    """Refuse `--diarizer api-recluster` unless diarization is already on disk.
+
+    `api-recluster` is provenance-only (see its --diarizer help text): it
+    stamps `diarization_model = "pyannote/ai-precision-2+recluster"` without
+    ever running Precision-2 itself, on the assumption that diarization.json/
+    embeddings.json were already hand-replaced by an offline re-clustering. If
+    they are not there, the Stage 2 diarizer dispatch falls through to plain
+    OSS pyannote 3.1 and the run still stamps the recluster provenance string
+    — a false claim about how the shipped labels were produced, exactly the
+    error this value exists to prevent.
+    """
+    meeting_id = _recluster_meeting_id(args)
+    if not meeting_id:
+        raise ValueError(
+            "--diarizer api-recluster requires an existing meeting "
+            "(--resume MEETING_ID, or --meeting-id/--date+--meeting-type "
+            "naming one) with diarization.json and embeddings.json already "
+            "on disk — it replaces clustering only, never runs diarization "
+            "from scratch."
+        )
+    meeting_dir = config.MEETINGS_DIR / meeting_id
+    missing = [
+        name for name in ("diarization.json", "embeddings.json")
+        if not (meeting_dir / name).exists()
+    ]
+    if missing:
+        raise ValueError(
+            f"--diarizer api-recluster requires diarization.json and "
+            f"embeddings.json to already exist for meeting {meeting_id!r} "
+            f"(missing {', '.join(missing)} under {meeting_dir}). "
+            "api-recluster is provenance-only: it never runs diarization "
+            "from scratch."
+        )
 
 
 def _diarization_model_name(diarizer: str) -> str:
@@ -1187,7 +1255,7 @@ def run_pipeline(args: argparse.Namespace) -> None:
     # ======================================================================
     # Stage 2.5: Auto-merge fragmented speakers (opt-in via --merge)
     # ======================================================================
-    if args.merge and getattr(args, "diarizer", "oss") in ("api", "vibevoice"):
+    if args.merge and _merge_stage_skipped(getattr(args, "diarizer", "oss")):
         backend = getattr(args, "diarizer", "oss")
         print(
             f"  ! --merge requested with --diarizer {backend}: skipping merge stage. "

@@ -7,6 +7,17 @@ needs redoing.
 
 Pure: no env loading, no Modal, no torch. The Modal fetch and the CLI live in
 `scripts/recluster_forum_turns.py`.
+
+HAZARD — `SPEAKER_UNCLUSTERED` (aliased below as `UNCLUSTERED_LABEL`) is a
+known-multi-person bucket BY CONSTRUCTION: it holds turns with no embedding
+(`cluster_turns`) and labels whose total speech falls below `fold_slivers`'
+floor, both folded from many different speakers into one shared label. It
+must never be handed a person's name in review — doing so would misattribute
+every voice pooled under it, the same defect this repair exists to fix. It is
+deliberately absent from `embeddings.json` (no centroid is ever computed for
+it) so `src/identify.py` can never auto-name it from a voice-profile match.
+Review UI changes to make this hazard visible to a human reviewer are
+out of scope for this module.
 """
 
 from __future__ import annotations
@@ -95,7 +106,11 @@ def cluster_turns(
 
 
 def fold_slivers(
-    labels: list[str], segments: list[dict], floor_seconds: float
+    labels: list[str],
+    segments: list[dict],
+    floor_seconds: float,
+    *,
+    unclustered_label: str = UNCLUSTERED_LABEL,
 ) -> list[str]:
     """Move labels holding less than `floor_seconds` of speech into the bucket.
 
@@ -104,6 +119,12 @@ def fold_slivers(
     94% of the speech. Those slivers carry too little voice evidence to attribute —
     the same reason unembeddable turns go to the bucket — and 104 phantom speakers
     would wreck a label-level review.
+
+    `unclustered_label` mirrors `cluster_turns`' keyword of the same name and
+    MUST be passed the same value when the caller used a non-default one there
+    — otherwise unembeddable turns and folded slivers land in two different
+    buckets, and the gate (which excludes only one bucket by name) fails on
+    the other as if it were a real conflated identity.
     """
     if floor_seconds <= 0:
         return list(labels)
@@ -113,7 +134,7 @@ def fold_slivers(
             segment["end_time"] - segment["start_time"]
         )
     return [
-        UNCLUSTERED_LABEL if totals[label] < floor_seconds else label
+        unclustered_label if totals[label] < floor_seconds else label
         for label in labels
     ]
 
@@ -149,6 +170,15 @@ def calibrate(
     the 100+ phantom slivers it produces were never going to be merged away,
     and the bucket itself (which holds slivers from many people BY
     CONSTRUCTION) would be scored as a conflated identity.
+
+    That exclusion is not unconditional: `gate_verdict` (which supplies
+    `conflated`, below) also bounds the bucket's SIZE against `GATE_MIN_FRACTION`
+    of scored reference speech, so raising `sliver_floor` past the point where
+    the bucket has absorbed too much speech makes `conflated` rise again rather
+    than fall to 0 forever — without that bound, `conflated` would fall
+    monotonically as `sliver_floor` rises and the tie-break below would always
+    pick the highest floor offered, which is exactly the failure mode this
+    bound exists to close.
 
     Ties break toward the HIGHER threshold: conflation misattributes quotes
     silently, fragmentation surfaces as an extra unnamed speaker the reviewer
