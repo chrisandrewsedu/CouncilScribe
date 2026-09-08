@@ -22,6 +22,33 @@ GATE_MIN_FRACTION = 0.05
 COMPARABLE_MIN_FRACTION = 0.02
 
 
+def GATE_MAX_UNATTRIBUTED_SHARE(reference_people: int) -> float:
+    """Cap on the unattributed bucket's share of ALL scored reference speech.
+
+    NOT interchangeable with `GATE_MIN_FRACTION`, even though both are
+    fractions fed to the same gate and it is tempting to reuse one for the
+    other (see the threshold-reuse hazard documented at `src/config.py:294-301`
+    — this is that exact hazard). `GATE_MIN_FRACTION` is a contamination
+    noise floor measured INSIDE one label's own overlap: it was calibrated
+    from 3-14s bleeds against 500-1700s dominant speakers, a signal about how
+    much stray voice a single confident label can tolerate before it counts
+    as conflation. This bound answers a different question over a different
+    denominator: how much of the ENTIRE scored reference — not one label's
+    overlap — can the bucket absorb before its own abstention becomes the
+    failure mode. The bucket is exempt from the conflation check by
+    construction, so an unbounded exclusion is gameable to a guaranteed PASS
+    (fold every turn into the bucket and there is nothing left to conflate).
+
+    Self-scaling, so it needs no per-meeting calibration: the bucket may not
+    hold more scored reference speech than an average real speaker would,
+    i.e. `1 / (reference_people + 1)` — 25% for this 3-person forum. It still
+    fails the degenerate case it exists to block: fold EVERYTHING into the
+    bucket and its share is 100%, over this bound for any
+    `reference_people >= 0`.
+    """
+    return 1.0 / (reference_people + 1)
+
+
 def load_turns(path: Path) -> Turns:
     """Read a JSON list of segment dicts into scoring turns."""
     segments = json.loads(Path(path).read_text())
@@ -84,18 +111,26 @@ def unattributed_bucket_share(report, unattributed_label: str) -> tuple[float, f
 
 
 def gate_verdict(
-    report, max_minority: float, *, unattributed_label: str | None = None
+    report,
+    *,
+    unattributed_label: str | None = None,
+    max_unattributed_share: float | None = None,
 ) -> tuple[bool, list[str]]:
     """Pass unless some IDENTIFIED label holds two reference people above the
-    floor, or the excluded unattributed bucket has grown past its own bound.
+    floor `identity_report` was built with, or the excluded unattributed
+    bucket has grown past its own bound.
 
-    `max_minority` does double duty, by design: it is the floor the caller
-    already passed to `identity_report` for the conflation check (accepted
-    here so the verdict line can state the bar it applied), AND it is the
-    bound this function enforces on the unattributed bucket's share of scored
-    reference speech, below. One knob for both keeps them visibly the same
-    policy choice instead of two independent ones that could silently drift
-    apart.
+    This function used to take a `max_minority` parameter whose docstring
+    claimed it did double duty: "the floor the caller already passed to
+    `identity_report`" AND the unattributed-bucket bound below. That was
+    false — the per-label conflation list in `report.conflation` is
+    precomputed entirely inside `identity_report` before this function ever
+    runs, so `max_minority` had ZERO effect on the conflation check; it only
+    ever fed the bucket bound, under a name that implied otherwise. The
+    parameter has been removed rather than patched, since it had nothing
+    honest left to describe once the bucket bound got its own name. Pass
+    that bound as `max_unattributed_share` — see `GATE_MAX_UNATTRIBUTED_SHARE`
+    for what it measures and why it is not `GATE_MIN_FRACTION`.
 
     `unattributed_label` names the bucket where turns with too little voice
     evidence are parked. That bucket holds slivers from many people by
@@ -110,8 +145,8 @@ def gate_verdict(
     exclusion makes `conflated` fall monotonically as the sliver floor rises
     and the tie-break then picks the highest floor: the knob and the verdict
     would point the same way. So the bucket is exempt from being scored as an
-    identity, but not from a SIZE bound: past `max_minority` of scored
-    reference speech, it is reported and the gate fails.
+    identity, but not from a SIZE bound: past `max_unattributed_share` of
+    scored reference speech, it is reported and the gate fails.
     """
     reasons = [
         f"label {c.label} holds {len(c.people)} people: "
@@ -120,11 +155,15 @@ def gate_verdict(
         if unattributed_label is None or c.label != unattributed_label
     ]
     if unattributed_label is not None:
+        if max_unattributed_share is None:
+            raise ValueError(
+                "max_unattributed_share is required when unattributed_label is set"
+            )
         bucket_seconds, share = unattributed_bucket_share(report, unattributed_label)
-        if share > max_minority:
+        if share > max_unattributed_share:
             reasons.append(
                 f"unattributed bucket {unattributed_label} holds {bucket_seconds:.1f}s "
                 f"({share:.1%}) of scored reference speech, over the "
-                f"{max_minority:.1%} bound"
+                f"{max_unattributed_share:.1%} bound"
             )
     return (not reasons), reasons

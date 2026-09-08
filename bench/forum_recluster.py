@@ -172,19 +172,23 @@ def calibrate(
     CONSTRUCTION) would be scored as a conflated identity.
 
     That exclusion is not unconditional: `gate_verdict` (which supplies
-    `conflated`, below) also bounds the bucket's SIZE against `GATE_MIN_FRACTION`
-    of scored reference speech, so raising `sliver_floor` past the point where
-    the bucket has absorbed too much speech makes `conflated` rise again rather
-    than fall to 0 forever — without that bound, `conflated` would fall
-    monotonically as `sliver_floor` rises and the tie-break below would always
-    pick the highest floor offered, which is exactly the failure mode this
-    bound exists to close.
+    `conflated`, below) also bounds the bucket's SIZE against
+    `GATE_MAX_UNATTRIBUTED_SHARE` of scored reference speech — a self-scaling
+    cap (`1 / (reference_people + 1)`), not `GATE_MIN_FRACTION` itself, which
+    measures a different signal (a per-label contamination floor, not a
+    bucket-wide abstention cap; see `forum_gate.GATE_MAX_UNATTRIBUTED_SHARE`).
+    So raising `sliver_floor` past the point where the bucket has absorbed
+    too much speech makes `conflated` rise again rather than fall to 0
+    forever — without that bound, `conflated` would fall monotonically as
+    `sliver_floor` rises and the tie-break below would always pick the
+    highest floor offered, which is exactly the failure mode this bound
+    exists to close.
 
     Ties break toward the HIGHER threshold: conflation misattributes quotes
     silently, fragmentation surfaces as an extra unnamed speaker the reviewer
     clears in seconds.
     """
-    from .forum_gate import GATE_MIN_FRACTION, gate_verdict
+    from .forum_gate import GATE_MAX_UNATTRIBUTED_SHARE, GATE_MIN_FRACTION, gate_verdict
     from .identity_score import identity_report
 
     people = sorted({p for _, _, p in tune_reference})
@@ -201,8 +205,8 @@ def calibrate(
             hypothesis, tune_reference, min_fraction=GATE_MIN_FRACTION
         )
         _, reasons = gate_verdict(
-            report, max_minority=GATE_MIN_FRACTION,
-            unattributed_label=UNCLUSTERED_LABEL,
+            report, unattributed_label=UNCLUSTERED_LABEL,
+            max_unattributed_share=GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people),
         )
         grid.append({
             "threshold": threshold,

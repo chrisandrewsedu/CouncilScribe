@@ -31,6 +31,7 @@ from bench.forum_anchor_reference import (  # noqa: E402
 )
 from bench.forum_gate import (  # noqa: E402
     COMPARABLE_MIN_FRACTION,
+    GATE_MAX_UNATTRIBUTED_SHARE,
     GATE_MIN_FRACTION,
     gate_verdict,
     load_turns,
@@ -77,8 +78,10 @@ def main(argv: list[str] | None = None) -> int:
 
     for floor in (COMPARABLE_MIN_FRACTION, GATE_MIN_FRACTION):
         report = identity_report(hypothesis, reference, min_fraction=floor)
+        bucket_bound = GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people)
         passed, reasons = gate_verdict(
-            report, max_minority=floor, unattributed_label=UNCLUSTERED_LABEL
+            report, unattributed_label=UNCLUSTERED_LABEL,
+            max_unattributed_share=bucket_bound,
         )
         tag = "GATE" if floor == GATE_MIN_FRACTION else "comparable"
         print(f"\n-- min_fraction {floor:.2f} ({tag}) --")
@@ -92,7 +95,8 @@ def main(argv: list[str] | None = None) -> int:
                 report, UNCLUSTERED_LABEL
             )
             print(f"  unattributed bucket: {bucket_seconds:.1f}s "
-                  f"({bucket_share:.1%} of scored reference speech)")
+                  f"({bucket_share:.1%} of scored reference speech, "
+                  f"bound {bucket_bound:.1%})")
             print(f"  VERDICT: {'PASS' if passed else 'FAIL'}")
             for reason in reasons:
                 print(f"    - {reason}")

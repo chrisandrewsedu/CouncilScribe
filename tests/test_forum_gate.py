@@ -2,7 +2,12 @@
 import json
 
 from bench.identity_score import identity_report
-from bench.forum_gate import gate_verdict, load_turns, reference_half
+from bench.forum_gate import (
+    GATE_MAX_UNATTRIBUTED_SHARE,
+    gate_verdict,
+    load_turns,
+    reference_half,
+)
 
 REFERENCE = [
     (0.0, 30.0, "BOND"),
@@ -23,7 +28,7 @@ def test_load_turns_reads_segment_dicts(tmp_path):
 def test_one_label_per_person_passes_the_gate():
     hypothesis = [(0.0, 30.0, "S0"), (30.0, 60.0, "S1"), (60.0, 90.0, "S2")]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.05)
+    passed, reasons = gate_verdict(report)
     assert passed
     assert reasons == []
 
@@ -32,7 +37,7 @@ def test_a_label_holding_two_people_fails_the_gate():
     """The incumbent's shape: one label swallows two of the three people."""
     hypothesis = [(0.0, 60.0, "S0"), (60.0, 90.0, "S1")]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.05)
+    passed, reasons = gate_verdict(report)
     assert not passed
     assert any("S0" in reason for reason in reasons)
 
@@ -58,7 +63,7 @@ def test_fragmentation_alone_does_not_fail_the_gate():
     hypothesis = [(0.0, 15.0, "S0"), (15.0, 30.0, "S3"),
                   (30.0, 60.0, "S1"), (60.0, 90.0, "S2")]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.05)
+    passed, reasons = gate_verdict(report)
     assert passed
     assert [f.person for f in report.fragmentation] == ["BOND"]
 
@@ -71,37 +76,43 @@ def test_the_unattributed_bucket_does_not_count_as_conflation_within_bound():
     slivers from many people BY CONSTRUCTION, so scoring it as a speaker identity
     would guarantee a failure and punish the design for being honest.
 
-    Here the bucket holds 30s of the 90s scored reference (33%): a generous
-    max_minority (0.5) is used deliberately, since this test is about the
-    EXCLUSION-from-conflation behaviour, not about picking this repair's real
-    production bound — see test_an_oversized_unattributed_bucket_fails_the_gate
-    for the same bucket judged against a bound it exceeds."""
+    The bound is self-scaling: GATE_MAX_UNATTRIBUTED_SHARE(3 people) = 1/4 =
+    25%. Here the bucket holds only the back half of MODERATOR's last window
+    (15s of the 90s scored reference, 16.7%) — under that bound — so this
+    tests the EXCLUSION-from-conflation behaviour under the real production
+    bound, not an inflated one. See
+    test_an_oversized_unattributed_bucket_fails_the_gate for the same shape
+    of bucket judged against a bound it exceeds."""
     hypothesis = [(0.0, 30.0, "S0"), (30.0, 60.0, "S1"),
-                  (60.0, 75.0, UNCLUSTERED_LABEL), (75.0, 90.0, UNCLUSTERED_LABEL)]
+                  (60.0, 75.0, "S2"), (75.0, 90.0, UNCLUSTERED_LABEL)]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.5,
-                                   unattributed_label=UNCLUSTERED_LABEL)
+    bound = GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people)
+    assert bound == 0.25
+    passed, reasons = gate_verdict(report, unattributed_label=UNCLUSTERED_LABEL,
+                                   max_unattributed_share=bound)
     assert passed, reasons
 
 
 def test_a_real_label_still_counts_as_conflation():
     hypothesis = [(0.0, 60.0, "S0"), (60.0, 90.0, "S1")]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, _ = gate_verdict(report, max_minority=0.05,
-                             unattributed_label=UNCLUSTERED_LABEL)
+    bound = GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people)
+    passed, _ = gate_verdict(report, unattributed_label=UNCLUSTERED_LABEL,
+                             max_unattributed_share=bound)
     assert not passed
 
 
 def test_an_oversized_unattributed_bucket_fails_the_gate():
-    """Same shape as the passing case above, but judged against the real
-    max_minority=0.05 bound this repair uses: 30s of 90s scored reference
-    (33%) is far past a 5% bound, so the bucket itself must now fail the gate
-    even though it holds no single conflated label."""
+    """Same shape as the old passing case, but 30s of 90s scored reference
+    (33%) is still past the self-scaling bound for this 3-person reference
+    (GATE_MAX_UNATTRIBUTED_SHARE(3) = 25%), so the bucket itself must fail
+    the gate even though it holds no single conflated label."""
     hypothesis = [(0.0, 30.0, "S0"), (30.0, 60.0, "S1"),
                   (60.0, 75.0, UNCLUSTERED_LABEL), (75.0, 90.0, UNCLUSTERED_LABEL)]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.05,
-                                   unattributed_label=UNCLUSTERED_LABEL)
+    bound = GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people)
+    passed, reasons = gate_verdict(report, unattributed_label=UNCLUSTERED_LABEL,
+                                   max_unattributed_share=bound)
     assert not passed
     assert any(UNCLUSTERED_LABEL in reason for reason in reasons)
 
@@ -110,11 +121,13 @@ def test_folding_everything_into_the_bucket_fails_the_gate():
     """The gameable case this bound exists to close: fold every turn into the
     unattributed bucket — one label over the entire reference, a WORSE form
     of the defect this repair exists to fix — and the old exclusion-with-no-
-    bound logic returned PASS with zero reasons. Share is 100%, over any
-    max_minority below 1.0, so this must always fail."""
+    bound logic returned PASS with zero reasons. Share is 100%, over the
+    self-scaling bound for any reference_people >= 0, so this must always
+    fail."""
     hypothesis = [(0.0, 90.0, UNCLUSTERED_LABEL)]
     report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
-    passed, reasons = gate_verdict(report, max_minority=0.05,
-                                   unattributed_label=UNCLUSTERED_LABEL)
+    bound = GATE_MAX_UNATTRIBUTED_SHARE(report.reference_people)
+    passed, reasons = gate_verdict(report, unattributed_label=UNCLUSTERED_LABEL,
+                                   max_unattributed_share=bound)
     assert not passed
     assert reasons
