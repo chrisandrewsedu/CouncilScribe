@@ -904,20 +904,32 @@ def test_the_local_person_panel_asks_for_a_name_and_a_role(
 
 def test_a_marked_card_does_not_prefill_its_placeholders_as_a_local_person(
         tagged_meeting_dir, tmp_meetings_dir):
-    """Under an 'unidentified' mark, local_slug is the synthetic
-    unidentified-<meeting>-<label> handle (a voice-profile key) and speaker_name
-    is 'Unidentified Speaker'. Offering either as the local-person default would
-    invite the reviewer to publish a private handle or a status word as a
-    person's public name."""
+    """A marked speaker has nothing honest to prefill. local_slug is the synthetic
+    unidentified-<meeting>-<label> handle (a voice-profile key); speaker_name is
+    the status word 'Unidentified Speaker'; and default_slug, derived from that
+    same placeholder, is 'unidentified-speaker' — worse still, because it carries
+    no meeting or label and would collide two unrelated strangers from different
+    meetings onto one local_people row. Both fields render blank and required.
+
+    The two slugs are asserted by VALUE, taken from the real helpers rather than
+    typed by hand: make_unidentified_slug replaces the underscore in SPEAKER_01
+    with a hyphen, so a hand-written 'speaker_01' would make this negative
+    assertion pass while testing nothing."""
+    from src.review import default_local_slug, make_unidentified_slug
+
     mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
     _write_meeting(mdir)
     apply_mark_unidentified("2026-02-04-council", "SPEAKER_01")
     body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
     card = _card_html(body, "SPEAKER_01")
 
-    assert 'name="slug" value="unidentified-2026-02-04-council-speaker_01"' not in card
-    assert 'name="name" value="Unidentified Speaker" required' not in card
-    assert 'name="name" value="" required' in card       # blank, reviewer must type one
+    handle = make_unidentified_slug("2026-02-04-council", "SPEAKER_01")
+    assert handle == "unidentified-2026-02-04-council-speaker-01"   # guards the guard
+    assert f'value="{handle}"' not in card
+    assert f'value="{default_local_slug("Unidentified Speaker", "SPEAKER_01")}"' not in card
+
+    assert 'name="name" value="" required' in card
+    assert 'name="slug" value="" required' in card
 
 
 def test_the_identity_pill_renders(tagged_meeting_dir, tmp_meetings_dir):
@@ -1073,12 +1085,20 @@ Replace the entire contents of `gui/templates/panels/_macros.html` with:
          required and blank because resolve_local_role('') silently returns
          local_roles_for(kind)[0] — 'candidate' for a news_clip, which is wrong
          for an anchor and was accepted without a word. #}
-      {# Neither prefill may carry a marked speaker's placeholders across. Under an
-         'unidentified' mark, local_slug is the synthetic
-         unidentified-<meeting>-<label> handle and speaker_name is 'Unidentified
-         Speaker'; under 'non_speaker' the name is 'Non-speaker'. Offering either
-         as the default would invite the reviewer to publish a voice-profile key
-         or a status word as a person. So both fall back for any marked state. #}
+      {# Neither prefill may carry a marked speaker's placeholders across, and for
+         a marked speaker there is nothing honest to prefill at all:
+
+         - local_slug is the synthetic unidentified-<meeting>-<label> handle, a
+           voice-profile key that must never become a local_people slug.
+         - speaker_name is 'Unidentified Speaker' or 'Non-speaker', a status word,
+           not a person.
+         - default_slug is derived from that same placeholder name, so it comes out
+           as 'unidentified-speaker' — WORSE than the handle, because it carries no
+           meeting or label and would collide two unrelated strangers from
+           different meetings onto one local_people row.
+
+         So a marked card renders both fields blank and required: the reviewer
+         states who this is, or saves nothing. #}
       {% set is_marked = c.identity_kind in ('unidentified', 'non_speaker') %}
       <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/local-person"
             class="local-person">
@@ -1086,7 +1106,7 @@ Replace the entire contents of `gui/templates/panels/_macros.html` with:
           <input type="text" name="name" value="{{ '' if is_marked else (c.name or '') }}" required
                  autocomplete="off" placeholder="Brian Sterling"></label>
         <label>Slug
-          <input type="text" name="slug" value="{{ c.local_slug if c.identity_kind == 'local' else c.default_slug }}" required
+          <input type="text" name="slug" value="{{ '' if is_marked else (c.local_slug if c.identity_kind == 'local' else c.default_slug) }}" required
                  pattern="[a-z0-9][a-z0-9_-]{0,99}"
                  title="lowercase letters, digits, hyphen or underscore"></label>
         <label>Role
