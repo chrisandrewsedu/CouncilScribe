@@ -1670,6 +1670,58 @@ def test_apply_writers_unchanged_without_a_name(tagged_meeting_dir, tmp_meetings
     assert _card_for("2026-02-04-council", "SPEAKER_00").name == "Mayor Johnson"
 
 
+def test_apply_make_local_person_name_survives_a_roster_fuzzy_match_verbatim(
+        fake_roster_cache, tagged_meeting_dir, tmp_meetings_dir):
+    """Regression guard for the fuzzy-surname hazard: _reset_and_rename must call
+    rename_speaker with roster=None, never the meeting's roster, because
+    correct_speaker_name's fuzzy strategy (allow_fuzzy=True by default) can
+    reassign a name to a DIFFERENT roster member whose surname merely resembles
+    it (its own docstring's example: "Smithey" -> "...-Smith" at 0.83). The
+    local-person Name field is precisely where a curator declares "this person
+    is not on any roster", and publish._upsert_local_people writes it as that
+    person's PUBLIC name — so a name here must never be silently rewritten onto
+    a roster politician.
+
+    Uses a real, loadable roster (unlike the rest of this file's body_slug="x",
+    which load_roster fails to find, so _load_roster_for is always None and the
+    roster branch of rename_speaker is never actually exercised there)."""
+    from src.roster import correct_speaker_name, load_roster
+    from gui.review_api import _load_roster_for
+
+    slug = "west-lafayette-council"
+    cache_path = fake_roster_cache(slug)
+    # fake_roster_cache's fixed payload has no "aliases" key, so correct_speaker_name's
+    # alias-based strategies never fire for it; add one so a fuzzy surname match is
+    # actually reachable, matching the hazard the docstring describes.
+    payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    payload["politicians"][0]["aliases"] = ["Piedmont-Smith"]
+    cache_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    mdir = tagged_meeting_dir(slug, meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+
+    # Confirm the roster actually loads for this meeting — otherwise this test
+    # would prove nothing.
+    roster = _load_roster_for(mdir)
+    assert roster is not None
+    assert load_roster(body_slug=slug) is not None
+
+    curator_name = "Frank Piedmont-Smithy"
+    # Sanity check that this name WOULD be rewritten if the roster were passed:
+    # a curator naming an unrelated person "Frank Piedmont-Smithy" gets fuzzy-
+    # matched (surname similarity > 0.80) onto the councilmember below.
+    assert correct_speaker_name(curator_name, roster) == "Councilmember Piedmont-Smith"
+
+    assert apply_make_local_person("2026-02-04-council", "SPEAKER_01",
+                                   "frank-piedmont-smithy", "public_comment",
+                                   name=curator_name) is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    # Must survive VERBATIM — not rewritten onto the roster politician.
+    assert card.name == curator_name
+    assert card.identity_kind == "local"
+    assert card.local_slug == "frank-piedmont-smithy"
+
+
 def test_apply_clear_speaker_status_and_its_guards(tagged_meeting_dir, tmp_meetings_dir):
     mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
     _write_meeting(mdir)
@@ -1818,6 +1870,26 @@ def test_a_local_person_card_warns_what_the_roster_panel_would_drop(
     assert "drops the local person" in body
 
 
+def test_the_also_rename_box_warns_only_when_an_identity_would_be_dropped(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """The Also block's Display name box posts to /name -> apply_rename ->
+    rename_speaker, which on a CHANGED name nulls local_slug/local_role/
+    politician_slug/politician_id. Unlike every other destructive transition on
+    this card, it used to carry no warning at all. It also must not prefill the
+    current name — prefilling would put a real identity one typo-fix away from
+    silent deletion with a value= box that looks like a safe edit."""
+    body = _linked_body(tagged_meeting_dir)
+
+    linked = _card_html(body, "SPEAKER_00")  # roster-linked: has an identity
+    assert "Saving a different name here drops the current identity." in linked
+    # The rename box itself must not prefill the current name.
+    assert 'name="name" value=""' in linked
+
+    plain = _card_html(body, "SPEAKER_01")  # no identity at all
+    assert "Saving a different name here drops the current identity." not in plain
+    assert 'name="name" value=""' in plain
+
+
 def test_a_marked_card_offers_an_undo(tagged_meeting_dir, tmp_meetings_dir):
     mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
     _write_meeting(mdir)
@@ -1828,12 +1900,24 @@ def test_a_marked_card_offers_an_undo(tagged_meeting_dir, tmp_meetings_dir):
 
 def test_the_local_person_panel_asks_for_a_name_and_a_role(
         tagged_meeting_dir, tmp_meetings_dir):
-    """The role field must NOT prefill. local_roles_for('council')[0] is
+    """The role field must NOT prefill for a speaker with no local-person
+    identity yet (none, roster, or marked). local_roles_for('council')[0] is
     'public_comment' and for a news_clip it is 'candidate' — a silent wrong
-    default on a person published to readers."""
+    default on a person published to readers.
+
+    But role IS published (meetings.local_people.role), so re-saving an
+    EXISTING local person to fix a name typo must not force the role to be
+    retyped from memory: it prefills, exactly as Name and Slug already do."""
     body = _linked_body(tagged_meeting_dir)
     assert 'name="name" value="Mayor Johnson" required' in body   # prefilled from the card
-    assert 'name="role" value="" required' in body                # blank, explicit
+    assert 'name="role" value="" required' in body                # blank: no identity yet (roster)
+
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-05-council", completed_stage=4)
+    _write_meeting_local_person_states(mdir)
+    local_body = TestClient(create_app()).get("/meetings/2026-02-05-council/review").text
+    # SPEAKER_01 in _write_meeting_local_person_states is an EXISTING local
+    # person with local_role="staff" — its role input must prefill that value.
+    assert 'name="role" value="staff" required' in _card_html(local_body, "SPEAKER_01")
 
 
 def test_a_marked_card_does_not_prefill_its_placeholders_as_a_local_person(

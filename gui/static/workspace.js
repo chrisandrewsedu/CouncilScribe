@@ -185,8 +185,13 @@
           '<input type="hidden" name="politician_slug" value="' + esc(r.politician_slug) + '">' +
           '<input type="hidden" name="politician_id" value="' + esc(r.politician_id) + '">' +
           // Carry the name the reviewer just clicked, so the transcript's
-          // speaker_name cannot disagree with the person linked.
-          '<input type="hidden" name="name" value="' + esc(r.full_name || r.display) + '">' +
+          // speaker_name cannot disagree with the person linked. Must NOT fall
+          // back to r.display: that's politician_display(rec), a decorated
+          // "Name · Office · District · Government" line, never a bare name —
+          // if full_name is empty (the no-DB HTTP fallback can omit it), an
+          // empty name is correct (apply_link/_reset_and_rename just skips the
+          // rename), never the whole decorated line landing in speaker_name.
+          '<input type="hidden" name="name" value="' + esc(r.full_name || "") + '">' +
           '<button type="submit" class="link-result">' + inner + "</button></form>"
         );
       }).join("");

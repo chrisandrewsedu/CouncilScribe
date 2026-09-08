@@ -49,8 +49,17 @@ a.mlink:hover { text-decoration: underline; }
 .actions .accept { background: #e6f5ea; border: 1px solid #2ea56a; color: #1b7a3d; border-radius: 0.4rem; padding: 0.2rem 0.6rem; cursor: pointer; font-size: 0.85rem; }
 .actions input[type=text] { padding: 0.2rem 0.4rem; border: 1px solid #ccc; border-radius: 0.4rem; font-size: 0.85rem; }
 .actions .rename button { padding: 0.2rem 0.6rem; border: 1px solid #bbb; border-radius: 0.4rem; background: #f6f6f8; cursor: pointer; font-size: 0.85rem; }
-.linked { font-size: 0.85rem; color: #1b7a3d; margin-top: 0.4rem; }
-.linked .pslug { font-family: ui-monospace, monospace; }
+/* The rename form now carries an .ident-cost line (Finding 2) alongside its
+   label and button; let that row wrap onto its own line instead of forcing
+   the card wider. */
+.actions .rename { flex-wrap: wrap; }
+/* No replacement rule for .pslug: it's a bare <code> element (roster panel's
+   "Currently: ... <code class="pslug">"), monospace from the <code> tag
+   itself with no help from CSS, and its size already comes from the
+   surrounding .ident-now paragraph (font-size: 0.85rem). The old .linked
+   .pslug rule this section used to carry set font-family only — redundant
+   with <code>'s own UA default — so there is nothing left for .pslug to
+   need on its own. */
 .link-search { position: relative; }
 .link-search input { padding: 0.2rem 0.4rem; border: 1px solid #ccc; border-radius: 0.4rem; font-size: 0.85rem; min-width: 16rem; }
 .link-results { display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.3rem; }
@@ -70,9 +79,6 @@ button.link-result:hover { background: #e6edfa; }
 .link-results .pr-dupe { display: block; font-size: 0.78rem; font-weight: 600; }
 button.unlink { padding: 0.2rem 0.6rem; border: 1px solid #d0a0a0; border-radius: 0.4rem; background: #fdeaea; color: #b32020; cursor: pointer; font-size: 0.85rem; }
 .link-msg { font-size: 0.8rem; color: #999; }
-.statusbadge { font-size: 0.75rem; padding: 0.05rem 0.4rem; border-radius: 0.4rem; margin-left: 0.4rem; }
-.statusbadge.unident { background: #eef; color: #445; }
-.statusbadge.nonspk { background: #eee; color: #777; }
 .actions select { font-size: 0.85rem; padding: 0.2rem; border: 1px solid #ccc; border-radius: 0.4rem; }
 .actions .mark { padding: 0.2rem 0.6rem; border: 1px solid #bbb; border-radius: 0.4rem; background: #f6f6f8; cursor: pointer; font-size: 0.85rem; }
 button.enroll { padding: 0.2rem 0.6rem; border: 1px solid #7aa0d0; border-radius: 0.4rem; background: #eef4fc; color: #24507f; cursor: pointer; font-size: 0.85rem; }
@@ -209,3 +215,9 @@ table.library .ctx { font-size: 0.8rem; color: #667; margin: 0.1rem 0; }
                                   letter-spacing: 0.04em; }
 .ident-panel label input, .also label input, .also label select { text-transform: none;
                                   letter-spacing: normal; font-size: 0.85rem; color: #222; }
+/* The two "Mark as…" buttons and the local-person Name/Slug/Role inputs used to
+   live in .actions and picked up .actions .mark / .actions input[type=text].
+   They moved into .ident-panel with this card's rewrite, so give them the same
+   look here — same border/radius/padding/font-size as before, nothing new. */
+.ident-panel input[type=text] { padding: 0.2rem 0.4rem; border: 1px solid #ccc; border-radius: 0.4rem; }
+.ident-panel .mark { padding: 0.2rem 0.6rem; border: 1px solid #bbb; border-radius: 0.4rem; background: #f6f6f8; cursor: pointer; font-size: 0.85rem; }

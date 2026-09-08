@@ -222,7 +222,7 @@ def _search_politicians_http(q: str, *, limit: int = 10) -> dict:
     return {"results": results, "error": None}
 
 
-def _reset_and_rename(meeting, label: str, name: str, roster) -> None:
+def _reset_and_rename(meeting, label: str, name: str) -> None:
     """Prepare a label to take a real identity: drop any unidentified/non-speaker
     mark, then apply an optional reviewer-supplied name.
 
@@ -237,13 +237,28 @@ def _reset_and_rename(meeting, label: str, name: str, roster) -> None:
 
     Hence: clear status -> rename -> assign. Both steps here no-op when there is
     nothing to do, so a plain link with no name behaves exactly as before.
+
+    Deliberately calls rename_speaker with roster=None, never the meeting's
+    roster. rename_speaker's correct_speaker_name normalisation (allow_fuzzy=
+    True by default) can reassign a name to a DIFFERENT roster member whose
+    surname merely resembles it — its own docstring's example is "Smithey" ->
+    "...-Smith" at a 0.83 fuzzy ratio. Both callers below overwrite
+    politician_* right after this returns (link_speaker sets it, assign_local_
+    person clears it), so a roster-derived link here is immediately discarded
+    anyway — the ONLY live effect of passing a roster would be silently
+    rewriting the curator's typed name onto a roster member. That is
+    especially dangerous for the local-person path, where this name is
+    precisely the curator's declaration "this person is NOT on any roster",
+    and where publish._upsert_local_people writes it as that person's PUBLIC
+    name. So the name stored here must be exactly what the curator picked or
+    typed, never a roster-normalised substitute.
     """
     from src import review
 
     review.clear_speaker_status(meeting.speakers, meeting.segments, label)
     if (name or "").strip():
         review.rename_speaker(meeting.speakers, meeting.segments, label,
-                              name.strip(), roster=roster)
+                              name.strip(), roster=None)
 
 
 def apply_link(meeting_id: str, label: str, politician_slug: str, politician_id: str,
@@ -263,12 +278,12 @@ def apply_link(meeting_id: str, label: str, politician_slug: str, politician_id:
     ctx = _load_meeting_ctx(meeting_id)
     if ctx is None:
         return False
-    meeting, meeting_dir, roster = ctx
+    meeting, meeting_dir, _roster = ctx
     known = {s.speaker_label for s in meeting.segments} | set(meeting.speakers)
     if label not in known:
         return False
     from src import review
-    _reset_and_rename(meeting, label, name, roster)
+    _reset_and_rename(meeting, label, name)
     review.link_speaker(meeting.speakers, label, slug or None, pid or None)
     persist_review(meeting, meeting_dir)
     return True
@@ -306,7 +321,7 @@ def apply_make_local_person(meeting_id: str, label: str, slug: str, role_raw: st
     ctx = _load_meeting_ctx(meeting_id)
     if ctx is None:
         return False
-    meeting, meeting_dir, roster = ctx
+    meeting, meeting_dir, _roster = ctx
     known = {s.speaker_label for s in meeting.segments} | set(meeting.speakers)
     if label not in known:
         return False
@@ -314,7 +329,7 @@ def apply_make_local_person(meeting_id: str, label: str, slug: str, role_raw: st
     from src.event_kinds import resolve_local_role
 
     role = resolve_local_role(role_raw, meeting.event_kind)
-    _reset_and_rename(meeting, label, name, roster)
+    _reset_and_rename(meeting, label, name)
     review.assign_local_person(meeting.speakers, label, slug, role)   # may raise ValueError
     persist_review(meeting, meeting_dir)
     return True

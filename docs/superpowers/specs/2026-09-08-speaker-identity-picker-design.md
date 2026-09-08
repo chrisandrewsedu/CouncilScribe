@@ -145,12 +145,28 @@ The `name` form field stays **optional** on both routes. When it is absent the
 routes behave exactly as they do today, so existing callers and tests are
 unaffected.
 
-The **Display name** box in the *Also* block stays, and writes the same
-`speaker_name` the local-person panel's Name field writes. It is the general
-escape hatch — the only way to name a roster-linked or marked speaker — so the
-two are one field reached from two places, not two competing values. The
-local-person panel labels its input `Name` and says it is the name readers will
-see, because for a local person that name is the published one.
+The **Display name** box in the *Also* block stays. It is the general escape
+hatch — the only way to name a roster-linked or marked speaker. But it is
+**not** the same field reached from a second place: it posts to `/name` ->
+`apply_rename` -> `rename_speaker`, which on a CHANGED name nulls
+`local_slug`/`local_role`/`politician_slug`/`politician_id` — a human-assigned
+name is treated as authoritative over any prior link. The local-person panel's
+Name field posts to `/local-person` -> `apply_make_local_person`, which
+*assigns* the local identity together with the name in the same write, via
+`_reset_and_rename` (clear status -> rename -> assign) — so that path cannot
+lose the identity it is in the middle of setting. Fixing a typo through the
+Also box, by contrast, can silently delete a local person or a roster link with
+no chance to reconsider, because the box carries no warning of what the save
+will drop.
+
+The fix: the box's input no longer prefills the current name (it is
+placeholder-only, as it was before the four-outcome picker), so using it stays
+a conscious act of typing a fresh name rather than editing what looks like the
+current one. It also carries an `.ident-cost`-styled line, shown whenever
+`identity_kind != 'none'`: "Saving a different name here drops the current
+identity." The local-person panel labels its input `Name` and says it is the
+name readers will see, because for a local person that name is the published
+one.
 
 ### Current state, in one place
 

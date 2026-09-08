@@ -122,11 +122,15 @@
       {{ ident_cost(c, 'local') }}
       {# name is required because publish writes `speaker_name or slug` as a local
          person's PUBLIC name: without it a reader sees the raw slug. role is
-         required and blank because resolve_local_role('') silently returns
-         local_roles_for(kind)[0] — 'candidate' for a news_clip, which is wrong
-         for an anchor and was accepted without a word. #}
-      {# Neither prefill may carry a marked speaker's placeholders across, and for
-         a marked speaker there is nothing honest to prefill at all:
+         required so a blank submission can't silently store
+         resolve_local_role('')'s default (local_roles_for(kind)[0] — 'candidate'
+         for a news_clip, wrong for an anchor). That requirement is about a NEW
+         local person only: role is also published (meetings.local_people.role),
+         so re-saving an EXISTING local person to fix a name typo must not force
+         the role to be retyped from memory — it prefills from c.local_role,
+         same as Name and Slug do. #}
+      {# Neither Name nor Slug may carry a marked speaker's placeholders across,
+         and for a marked speaker there is nothing honest to prefill at all:
 
          - local_slug is the synthetic unidentified-<meeting>-<label> handle, a
            voice-profile key that must never become a local_people slug.
@@ -137,8 +141,11 @@
            meeting or label and would collide two unrelated strangers from
            different meetings onto one local_people row.
 
-         So a marked card renders both fields blank and required: the reviewer
-         states who this is, or saves nothing. #}
+         So a marked card renders all three fields blank and required: the
+         reviewer states who this is (and what role), or saves nothing. Role is
+         blank for a brand-new speaker (identity_kind == 'none') for the same
+         reason — there is no established role to echo back — and prefilled only
+         when identity_kind == 'local'. #}
       {% set is_marked = c.identity_kind in ('unidentified', 'non_speaker') %}
       <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/local-person"
             class="local-person">
@@ -150,7 +157,7 @@
                  pattern="[a-z0-9][a-z0-9_-]{0,99}"
                  title="lowercase letters, digits, hyphen or underscore"></label>
         <label>Role
-          <input type="text" name="role" value="" required
+          <input type="text" name="role" value="{{ '' if is_marked or c.identity_kind != 'local' else (c.local_role or '') }}" required
                  list="roles-{{ c.label }}" autocomplete="off" placeholder="choose or type…"></label>
         <datalist id="roles-{{ c.label }}">
           {% for r in local_role_options %}<option value="{{ r }}"></option>{% endfor %}
@@ -203,8 +210,21 @@
       {% endif %}
       <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/name" class="rename">
         <label>Display name
-          <input type="text" name="name" value="{{ c.name or '' }}"
+          {# No value= prefill, deliberately. This posts to /name -> apply_rename
+             -> rename_speaker, which on a CHANGED name nulls local_slug/
+             local_role/politician_slug/politician_id (see rename_speaker's
+             "a human-assigned name is authoritative" comment in src/review.py).
+             Prefilling the current name here would put a local person's or a
+             roster link's identity one typo-fix away from silent deletion, with
+             no warning below it — every other destructive transition on this
+             card carries an ident_cost line; this box didn't. A blank box
+             keeps "type a name here" a conscious act, as it was before this
+             card was rewritten. #}
+          <input type="text" name="name" value=""
                  placeholder="Type a name…" autocomplete="off"></label>
+        {% if c.identity_kind != 'none' %}
+        <p class="ident-cost">Saving a different name here drops the current identity.</p>
+        {% endif %}
         <button type="submit">Save</button>
       </form>
       {% if all_cards|length > 1 %}
