@@ -1671,3 +1671,48 @@ def test_apply_clear_speaker_status_and_its_guards(tagged_meeting_dir, tmp_meeti
     assert apply_clear_speaker_status("2026-02-04-council", "SPEAKER_99") is False
     assert apply_clear_speaker_status("ghost", "SPEAKER_01") is False
     assert apply_clear_speaker_status("../x", "SPEAKER_01") is False
+
+
+def test_clear_status_route(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    client = TestClient(create_app())
+    client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/not-speaker",
+                data={"display_label": "Pledge"}, follow_redirects=False)
+
+    r = client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/clear-status",
+                    follow_redirects=False)
+    assert r.status_code == 303
+    # Second clear is a no-op -> 404, not a silent success.
+    assert client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/clear-status",
+                       follow_redirects=False).status_code == 404
+    assert client.post("/meetings/2026-02-04-council/speakers/SPEAKER_99/clear-status",
+                       follow_redirects=False).status_code == 404
+    assert client.post("/meetings/ghost/speakers/SPEAKER_01/clear-status",
+                       follow_redirects=False).status_code == 404
+
+
+def test_link_route_accepts_a_name(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    client = TestClient(create_app())
+    r = client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/link",
+                    data={"politician_slug": "", "politician_id": "uuid-becerra",
+                          "name": "Xavier Becerra"},
+                    follow_redirects=False)
+    assert r.status_code == 303
+    assert _card_for("2026-02-04-council", "SPEAKER_01").name == "Xavier Becerra"
+
+
+def test_local_person_route_accepts_a_name(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    client = TestClient(create_app())
+    r = client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/local-person",
+                    data={"slug": "brian-sterling", "role": "official",
+                          "name": "Brian Sterling"},
+                    follow_redirects=False)
+    assert r.status_code == 303
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.name == "Brian Sterling"
+    assert card.local_slug == "brian-sterling"
