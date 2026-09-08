@@ -40,11 +40,11 @@ sys.path.insert(0, str(ROOT))
 from src import config
 from src.atomic_io import atomic_write_json
 from src.mismerge import load_meeting_segments
-from src.models import SpeakerMapping
 from src.relabel import (
     apply_plan,
     next_free_label,
     plan_relabel,
+    relabel_payload,
     spans_for_raw_label,
 )
 
@@ -146,51 +146,25 @@ def main() -> int:
         return 0
 
     # --- write path -------------------------------------------------------
-    import backfill_segment_merge as bsm
-
-    segments = apply_plan(named_segments, plan)
-    if to_label not in speakers:
-        mapping = SpeakerMapping(speaker_label=to_label)
-        mapping.needs_review = True
-        if args.name:
-            mapping.speaker_name = args.name
-            mapping.id_method = "human_review"
-            mapping.confidence = 1.0
-            mapping.needs_review = False
-        speakers[to_label] = mapping.to_dict()
-    elif args.name:
-        speakers[to_label]["speaker_name"] = args.name
-        speakers[to_label]["id_method"] = "human_review"
-        speakers[to_label]["confidence"] = 1.0
-        speakers[to_label]["needs_review"] = False
-    name_of = (speakers.get(to_label) or {}).get("speaker_name")
-    for segment in segments:
-        if segment.speaker_label == to_label:
-            segment.speaker_name = name_of
-
-    class _Meeting:
-        pass
-
-    meeting = _Meeting()
-    meeting.segments = segments
-    meeting.summary = None
-    before, after, reindexed = bsm.remerge_meeting(meeting)
-    segments = meeting.segments
-
-    for label in sorted(left_behind):
-        speakers.pop(label, None)
-        print(f"Dropped empty label {label} from speakers.")
-
+    result = relabel_payload(payload, spans, to_label, name=args.name)
     backup = named_path.with_suffix(".json.prerelabel.bak")
     if not backup.exists():
         shutil.copy2(named_path, backup)
-    payload["segments"] = [s.to_dict() for s in segments]
-    payload["speakers"] = speakers
-    atomic_write_json(named_path, payload)
+    atomic_write_json(named_path, result["payload"])
+
+    import backfill_segment_merge as bsm
+    from src.models import Segment
+
+    segments = [Segment.from_dict(s) for s in result["payload"]["segments"]]
     resynced = bsm.resync_summary_json(directory, segments)
-    print(f"\nWrote {named_path} (backup: {backup.name}); "
-          f"re-merge {before}->{after}, {reindexed} section(s) reindexed, "
-          f"summary.json {resynced if resynced is not None else 'n/a'}.")
+
+    for label in result["emptied"]:
+        print(f"Dropped empty label {label} from speakers.")
+    print(f"\nWrote {named_path} (backup: {backup.name})")
+    print(f"  segments {result['before']} -> {result['after_cuts']} after cuts "
+          f"-> {result['after_merge']} after adjacent re-merge")
+    print(f"  embedded summary sections reindexed: {result['sections_reindexed']}; "
+          f"summary.json: {resynced if resynced is not None else 'n/a'}")
     print("Embeddings are NOT recomputed: the new label has no centroid, which "
           "reads as unmeasurable everywhere and never as a mismatch. Re-run "
           "review to name/enrol it, then REPUBLISH if this meeting is live.")
