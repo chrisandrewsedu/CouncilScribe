@@ -24,8 +24,8 @@ def _read_json(path: Path):
 def _speaker_count(meeting_dir: Path, named: Optional[dict]) -> Optional[int]:
     """Prefer identified/merged speakers (transcript_named 'speakers'); else unique
     raw diarization labels; else None."""
-    if isinstance(named, dict) and isinstance(named.get("speakers"), list):
-        return len(named["speakers"])
+    if isinstance(named, dict) and isinstance(named.get("speakers"), dict) and named["speakers"]:
+        return len(named["speakers"])  # Meeting.to_dict() keys speakers BY LABEL (a dict)
     diar = _read_json(meeting_dir / "diarization.json")
     if isinstance(diar, list):
         labels = {s.get("speaker_label") for s in diar if isinstance(s, dict)}
