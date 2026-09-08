@@ -282,8 +282,8 @@ def test_scan_meetings_reads_named_speaker_count_and_duration(tagged_meeting_dir
     (mdir / "transcript_named.json").write_text(json.dumps({
         "title": "Council",
         "duration_seconds": 10325.26,
-        "speakers": [{"speaker_label": "SPEAKER_00"}, {"speaker_label": "SPEAKER_01"},
-                     {"speaker_label": "SPEAKER_02"}],
+        # Meeting.to_dict() writes speakers as a dict keyed by speaker_label.
+        "speakers": {"SPEAKER_00": {}, "SPEAKER_01": {}, "SPEAKER_02": {}},
     }))
     # gate fields come from state.
     state = mdir / "pipeline_state.json"
@@ -387,7 +387,7 @@ def test_library_route_renders_enrichment_columns(tagged_meeting_dir, tmp_meetin
     mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=5)
     (mdir / "transcript_named.json").write_text(json.dumps({
         "title": "Council", "duration_seconds": 10325.26,
-        "speakers": [{"speaker_label": "A"}, {"speaker_label": "B"}, {"speaker_label": "C"}],
+        "speakers": {"A": {}, "B": {}, "C": {}},
     }))
     (mdir / "thumbnail.jpg").write_bytes(b"\xff\xd8\xff\xe0j")
     state = mdir / "pipeline_state.json"
@@ -685,3 +685,45 @@ def test_speakers_label_is_a_bare_dash_when_neither_count_is_known():
                        date=None, event_kind=None, completed_stage=7,
                        speaker_count=None, live_speaker_count=None)
     assert s.speakers_label == "—"
+# --- _speaker_count: transcript_named 'speakers' is a DICT, not a list ---------
+
+from gui.library import _speaker_count
+
+
+def _write_diarization(mdir, labels):
+    (mdir / "diarization.json").write_text(
+        json.dumps([{"speaker_label": l} for l in labels]), encoding="utf-8")
+
+
+def test_speaker_count_prefers_named_speakers_dict(tmp_path):
+    mdir = tmp_path / "m"
+    mdir.mkdir()
+    # Real transcript_named.json keys 'speakers' by label -> dict (src/models.py).
+    named = {"speakers": {"Mayor Thomson": {}, "SPEAKER_01": {}, "Clerk": {}}}
+    _write_diarization(mdir, ["SPEAKER_00", "SPEAKER_01"])  # raw count differs
+
+    assert _speaker_count(mdir, named) == 3  # identified speakers win over raw
+
+
+def test_speaker_count_falls_back_when_named_speakers_absent(tmp_path):
+    mdir = tmp_path / "m"
+    mdir.mkdir()
+    _write_diarization(mdir, ["SPEAKER_00", "SPEAKER_00", "SPEAKER_01"])
+
+    assert _speaker_count(mdir, {"title": "Council"}) == 2  # unique raw labels
+
+
+def test_speaker_count_falls_back_when_named_speakers_empty(tmp_path):
+    mdir = tmp_path / "m"
+    mdir.mkdir()
+    _write_diarization(mdir, ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"])
+
+    assert _speaker_count(mdir, {"speakers": {}}) == 3  # not 0
+
+
+def test_speaker_count_none_when_neither_source_exists(tmp_path):
+    mdir = tmp_path / "m"
+    mdir.mkdir()
+
+    assert _speaker_count(mdir, None) is None
+    assert _speaker_count(mdir, {"speakers": {}}) is None
