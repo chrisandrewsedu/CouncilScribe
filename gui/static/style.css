@@ -173,7 +173,23 @@ table.library .ctx { font-size: 0.8rem; color: #667; margin: 0.1rem 0; }
               font-size: 0.85rem; padding: 0.2rem 0.55rem; border: 1px solid #d3d9e3;
               border-radius: 999px; background: #fafbfd; }
 .ident-chip:hover { background: #f1f4fa; }
-.ident-chip.current { border-color: #2a4a8a; background: #e8eefc; font-weight: 600; }
+/* Selection must be the LOUD state and `current` (the saved identity) only a
+   QUIET annotation — never the reverse. `current` is server-rendered from
+   identity_kind and never moves once the page loads; the checked radio is
+   what the reviewer is about to save. Styling `.current` with the same
+   border/background/weight as selection means the moment someone picks a
+   different chip, the loud emphasis sits on the chip they did NOT pick and
+   the only sign of their actual choice is the small radio dot — exactly the
+   "which one did I choose" confusion this chooser exists to fix. `:has()`
+   keys the loud style off the live `checked` state (works for both the
+   server-rendered initial paint and workspace.js's later switching, no JS
+   change needed), and `current` keeps a separate, quieter marker below so a
+   future edit doesn't "simplify" these back into one style. */
+.ident-chip:has(input:checked) { border-color: #2a4a8a; background: #e8eefc; font-weight: 600; }
+.ident-chip.current { position: relative; }
+.ident-chip.current::after { content: "saved"; margin-left: 0.35rem; font-size: 0.62rem;
+              font-weight: 400; text-transform: uppercase; letter-spacing: 0.03em;
+              color: #8a94a6; }
 
 .ident-panel { margin-top: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid #e3e7ee;
                border-radius: 0.5rem; background: #fbfcfe;

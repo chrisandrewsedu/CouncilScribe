@@ -1895,3 +1895,76 @@ def test_ident_panel_hidden_attribute_actually_hides_it():
         "without it, .ident-panel's own `display: flex` defeats the [hidden] "
         "attribute and workspace.js's panel-toggle has no visible effect"
     )
+
+
+def _css_rule(css, selector):
+    """The declaration block for an exact selector, e.g. '.ident-chip.current'.
+    Returns None if the selector isn't found. Selector text is escaped for
+    regex use (it contains literal dots and parens like `:has(...)`)."""
+    import re
+    m = re.search(re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    return m.group(1) if m else None
+
+
+def test_selection_not_current_carries_the_loud_chip_style():
+    """FINDING: `current` is server-rendered from identity_kind and never
+    moves once the page loads, but `checked` changes the instant the curator
+    clicks a different chip. The strong emphasis (border colour, background,
+    font-weight) must sit on the CHECKED chip -- the one about to be saved --
+    not on `current`, or picking a new outcome leaves the loud styling on the
+    chip the curator did NOT pick, reproducing the exact "which one did I
+    choose" complaint this chooser exists to fix."""
+    import re
+
+    css = Path("gui/static/style.css").read_text()
+
+    checked_rule = _css_rule(css, ".ident-chip:has(input:checked)")
+    assert checked_rule is not None, (
+        "style.css must style `.ident-chip:has(input:checked)` -- the chip "
+        "the curator is about to save -- as the loud state"
+    )
+    assert "border-color" in checked_rule
+    assert "background" in checked_rule
+    assert re.search(r"font-weight\s*:\s*600", checked_rule)
+
+    # `.current` (the saved-but-not-necessarily-checked chip) must NOT carry
+    # any of that same loud styling -- it is a quiet annotation, not a rival
+    # selected-look.
+    current_rule = _css_rule(css, ".ident-chip.current") or ""
+    assert "border-color" not in current_rule
+    assert "background" not in current_rule
+    assert "font-weight" not in current_rule
+
+
+def test_current_renders_as_a_quiet_annotation_not_a_second_state():
+    """The 'this is saved' fact still needs to show -- just not as a rival
+    selected-look. A muted text hint (or dot) on `.current` satisfies that
+    without competing with the checked chip's border/background/weight."""
+    import re
+
+    css = Path("gui/static/style.css").read_text()
+    current_after = _css_rule(css, ".ident-chip.current::after")
+    assert current_after is not None, (
+        "expected a quiet annotation rule (e.g. `.ident-chip.current::after`) "
+        "marking the saved identity without reusing the selected chip's style"
+    )
+    assert "border" not in current_after
+    assert not re.search(r"font-weight\s*:\s*600", current_after)
+
+
+def test_the_common_case_checked_and_current_on_the_same_chip_is_not_doubled():
+    """Every unedited card has `current` and `checked` on the SAME chip. The
+    loud selected style and the quiet 'saved' annotation must be free to
+    coexist there without either rule re-adding the other's emphasis --
+    i.e. the two rules stay visually distinct (one styles the chip itself,
+    the other only adds a small text hint), so the common case looks like
+    'selected, and it happens to be saved', not doubly decorated."""
+    css = Path("gui/static/style.css").read_text()
+    checked_rule = _css_rule(css, ".ident-chip:has(input:checked)")
+    current_after = _css_rule(css, ".ident-chip.current::after")
+    assert checked_rule and current_after
+    # The quiet annotation must not itself draw a border/background/weight
+    # that would stack with the checked chip's loud style into something
+    # garish when both land on the same chip.
+    for loud in ("border-color", "background", "font-weight: 600"):
+        assert loud not in current_after
