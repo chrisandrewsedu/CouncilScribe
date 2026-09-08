@@ -13,7 +13,8 @@
 ## Global Constraints
 
 - Python is `~/Documents/GitHub/on-the-record/.venv/bin/python`. Never system `python3` (3.14, missing project deps).
-- Scripts under `scripts/` load env with `from gui.env import load_env_local` then `load_env_local()`. This is the house pattern (`scripts/sweep_chunk_thresholds.py:36`). Do NOT hand-roll dotenv loading and do NOT tell the operator to `set -a; . ./.env.local`.
+- A script that needs `.env.local` loads it with `from gui.env import load_env_local` then `load_env_local()` — the house pattern (`scripts/sweep_chunk_thresholds.py:36`). Never hand-roll dotenv loading, and never tell the operator to `set -a; . ./.env.local`.
+- **Neither script in this plan needs env, so neither calls that loader.** Scoring touches no service; Modal authenticates from `~/.modal.toml` and the worker receives `HF_TOKEN` from a Modal secret. Adding `load_env_local()` at module scope would make these importable modules `os.environ.setdefault` every key in `.env.local`, `DATABASE_URL` included — the leak `tests/conftest.py:26` documents. Do not add it.
 - Meeting id is `2026-04-03-lwv-brown-county-candidate-forum-auditor`, living at `~/CouncilScribe/meetings/<id>/`. Quote it in shell commands.
 - `transcript_raw.json` is the trustworthy record of original diarized labels. `diarization.json` currently holds post-review merged segments, rewritten by `gui.review_api._persist_after_review`.
 - The meeting is NOT live. Nothing publishes. Work stops at the quality gate.
