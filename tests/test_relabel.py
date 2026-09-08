@@ -485,3 +485,100 @@ def test_apply_plan_keeps_every_word_across_several_cuts():
     result = apply_plan(segments, plan)
 
     assert [w.word for s in result for w in s.words] == original
+
+
+# --- the write path: the embedded summary must not be left stale ------------
+
+def _payload_with_summary():
+    """A transcript_named.json shaped payload whose summary indexes its segments.
+
+    Shaped so a cut in the middle of segment 1 genuinely shifts the section's
+    indices: the two SPEAKER_00 pieces either side of the moved span cannot
+    re-merge across it, but the tail piece CAN merge with segment 2, so the
+    section that pointed at index 2 ends up at index 3.
+    """
+    segments = [
+        _seg(0, 0.0, 10.0, "SPEAKER_09", words=[("intro", 0.0, 1.0)], name="Z"),
+        _seg(1, 10.0, 30.0, "SPEAKER_00", words=[
+            ("mine", 10.0, 11.0), ("theirs", 15.0, 16.0), ("again", 25.0, 26.0),
+        ], name="A"),
+        _seg(2, 30.0, 40.0, "SPEAKER_00", words=[("last", 30.0, 31.0)], name="A"),
+    ]
+    return {
+        "meeting_id": "m1",
+        "city": None,
+        "date": "2026-01-01",
+        "segments": [s.to_dict() for s in segments],
+        "speakers": {
+            "SPEAKER_09": {"speaker_label": "SPEAKER_09", "speaker_name": "Z"},
+            "SPEAKER_00": {"speaker_label": "SPEAKER_00", "speaker_name": "A"},
+        },
+        "summary": {
+            "executive_summary": "x",
+            "sections": [{
+                "section_type": "discussion", "title": "T", "content": "c",
+                "start_time": 30.0, "end_time": 40.0,
+                "start_segment": 2, "end_segment": 2,
+            }],
+        },
+    }
+
+
+def test_relabel_payload_reindexes_the_embedded_summary_after_a_cut():
+    from src.relabel import relabel_payload
+
+    # Cutting segment 1 adds rows, so the section that pointed at index 2 now
+    # points at the wrong segment. Leaving it is exactly the staleness trap
+    # that has made valid summaries look broken before — and editing the raw
+    # dict instead of going through Meeting would skip this silently.
+    result = relabel_payload(_payload_with_summary(), [(14.0, 20.0)], "SPEAKER_01")
+
+    section = result["payload"]["summary"]["sections"][0]
+    assert (section["start_segment"], section["end_segment"]) == (3, 3)
+    assert result["sections_reindexed"] == 1
+
+
+def test_relabel_payload_moves_the_span_and_names_the_new_label():
+    from src.relabel import relabel_payload
+
+    result = relabel_payload(_payload_with_summary(), [(14.0, 20.0)], "SPEAKER_01",
+                             name="B")
+
+    labels = [s["speaker_label"] for s in result["payload"]["segments"]]
+    assert labels == ["SPEAKER_09", "SPEAKER_00", "SPEAKER_01", "SPEAKER_00"]
+    assert result["payload"]["speakers"]["SPEAKER_01"]["speaker_name"] == "B"
+    moved = result["payload"]["segments"][2]
+    assert moved["speaker_name"] == "B"
+    assert moved["text"] == "theirs"
+
+
+def test_relabel_payload_flags_an_unnamed_new_label_for_review():
+    from src.relabel import relabel_payload
+
+    result = relabel_payload(_payload_with_summary(), [(14.0, 20.0)], "SPEAKER_01")
+
+    assert result["payload"]["speakers"]["SPEAKER_01"]["needs_review"] is True
+    assert result["payload"]["speakers"]["SPEAKER_01"].get("speaker_name") is None
+
+
+def test_relabel_payload_drops_a_label_left_with_no_segments():
+    from src.relabel import relabel_payload
+
+    payload = _payload_with_summary()
+    result = relabel_payload(payload, [(0.0, 40.0)], "SPEAKER_01", name="B")
+
+    assert "SPEAKER_00" not in result["payload"]["speakers"]
+    assert result["emptied"] == ["SPEAKER_00", "SPEAKER_09"]
+
+
+def test_relabel_payload_preserves_keys_it_does_not_touch():
+    from src.relabel import relabel_payload
+
+    payload = _payload_with_summary()
+    payload["event_kind"] = "debate"
+    payload["race_id"] = "r1"
+
+    result = relabel_payload(payload, [(14.0, 20.0)], "SPEAKER_01")
+
+    assert result["payload"]["event_kind"] == "debate"
+    assert result["payload"]["race_id"] == "r1"

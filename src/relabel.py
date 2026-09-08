@@ -305,3 +305,64 @@ def next_free_label(segments, speakers, *, reserved=None) -> str:
     while f"SPEAKER_{number:02d}" in used:
         number += 1
     return f"SPEAKER_{number:02d}"
+
+
+def relabel_payload(payload: dict, spans, to_label: str, *, name: str | None = None) -> dict:
+    """Apply a relabel to a transcript_named.json payload. Returns a report dict
+    with the new ``payload``, the ``plan``, the segment counts and any label
+    ``emptied`` by the move.
+
+    Routed through ``Meeting.from_dict`` / ``to_dict`` deliberately, rather than
+    editing the raw dict: that is what carries the EMBEDDED summary into
+    ``remerge_meeting``, which reindexes its section boundaries. A cut adds a
+    segment row, so every stored ``start_segment`` / ``end_segment`` after it
+    shifts — leaving them is the staleness trap that has made valid summaries
+    look broken before. Editing the dict by hand would silently skip it.
+
+    The caller writes the file; nothing here touches disk.
+    """
+    import copy
+
+    from backfill_segment_merge import remerge_meeting
+
+    from .models import Meeting, SpeakerMapping
+
+    meeting = Meeting.from_dict(copy.deepcopy(payload))
+    plan = plan_relabel(meeting.segments, spans, to_label)
+    before_cuts = len(meeting.segments)
+    meeting.segments = apply_plan(meeting.segments, plan)
+    after_cuts = len(meeting.segments)
+
+    mapping = meeting.speakers.get(to_label) or SpeakerMapping(speaker_label=to_label)
+    if name:
+        mapping.speaker_name = name
+        mapping.id_method = "human_review"
+        mapping.confidence = 1.0
+        mapping.needs_review = False
+    elif not getattr(mapping, "speaker_name", None):
+        # An unnamed split-out voice is exactly what needs_review is for: a
+        # person nobody has identified yet, not a person with no name.
+        mapping.needs_review = True
+    meeting.speakers[to_label] = mapping
+    for segment in meeting.segments:
+        if segment.speaker_label == to_label:
+            segment.speaker_name = mapping.speaker_name
+
+    live_labels = {s.speaker_label for s in meeting.segments}
+    emptied = sorted(
+        label for label in list(meeting.speakers)
+        if label not in live_labels and label != to_label
+    )
+    for label in emptied:
+        meeting.speakers.pop(label, None)
+
+    _, after_merge, reindexed = remerge_meeting(meeting)
+    return {
+        "payload": meeting.to_dict(),
+        "plan": plan,
+        "before": before_cuts,
+        "after_cuts": after_cuts,
+        "after_merge": after_merge,
+        "sections_reindexed": reindexed,
+        "emptied": emptied,
+    }
