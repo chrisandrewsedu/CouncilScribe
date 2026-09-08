@@ -1581,6 +1581,313 @@ Hand over with, explicitly: the meeting is not live and nothing published; the l
 
 ---
 
+---
+
+### Task 5b: Correct the reference, then re-calibrate
+
+Task 5 produced a FAIL, and the controller investigation showed the failure was in the
+REFERENCE, not the clustering. Every turn behind the verdict is verifiably the moderator,
+read from transcript text: closing housekeeping at 2581-2676 ("verify your voter
+registration", "absentee ballot"), turn 329 ("Seeing no further questions... we will now
+move to closing remarks"), turn 216 ("encourage our audience members to submit any
+questions"), and read-aloud questions at turns 142/177/278/281. The clustering filed all of
+them with the moderator, correctly.
+
+**Root cause, structural.** `anchor_reference_windows` attributes EVERY turn between an
+anchor and the next anchor to the named candidate. The moderator speaks inside answer
+windows — reading the question out after naming the candidate, making procedural asides,
+and closing the forum — and the reference calls all of it the candidate. The worst case is
+the final window: anchor 337 is "Ms. Bond, you've got 2 minutes for closing remarks", and
+with no next anchor to bound it, it runs to `LWV_AUDITOR_FORUM_END` and absorbs 141.9s
+including the moderator's entire closing script.
+
+**Evidence the corrections are right rather than merely permissive.** Both candidates had
+identical timed slots, so their speech totals should be near-equal — a prediction made by
+the forum's format, not by any measurement. The Bond/Kobian ratio moved 2.0 (naive) -> 1.32
+(Task 1 as built) -> 1.10 (final window dropped, questions excluded) -> **0.99** (the rule
+below). A permissive reference would drift; this one converged on an independently
+predicted value. Coverage falls from 92% to 74%, which is the honest price of refusing to
+attribute ambiguous turns.
+
+**Files:**
+- Modify: `bench/forum_anchor_reference.py` (add `MODERATOR_SPEECH`, `is_moderator_speech`; rewrite `anchor_reference_windows`)
+- Modify: `bench/forum_gate.py` (exclude the unattributed bucket from the verdict)
+- Modify: `bench/forum_recluster.py` (add `fold_slivers`)
+- Modify: `scripts/recluster_forum_turns.py` (add `--sliver-floor`, apply folding)
+- Modify: `tests/test_forum_anchor_reference.py`, `tests/test_forum_gate.py`, `tests/test_forum_recluster.py`
+
+**Interfaces produced:**
+- `is_moderator_speech(segment: dict) -> bool`
+- `fold_slivers(labels: list[str], segments: list[dict], floor_seconds: float) -> list[str]`
+- `gate_verdict` gains keyword-only `unattributed_label: str | None = None`
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/test_forum_anchor_reference.py`:
+
+```python
+from bench.forum_anchor_reference import is_moderator_speech
+
+
+def test_a_read_aloud_question_is_moderator_speech():
+    """The moderator names the candidate, THEN reads the question out. Turn 142 of
+    the real meeting is 'How would you make county financial information more
+    understandable and accessible to residents?' — moderator, not candidate."""
+    assert is_moderator_speech(seg(0, 0.0, 5.0,
+        "How would you make county financial information more accessible to residents?"))
+
+
+def test_a_procedural_aside_is_moderator_speech():
+    assert is_moderator_speech(seg(0, 0.0, 5.0,
+        "Seeing no further questions from the audience, we will now move to closing remarks."))
+
+
+def test_an_answer_is_not_moderator_speech():
+    assert not is_moderator_speech(seg(0, 0.0, 5.0,
+        "So I think my experience with the Treasurer's office will help me transition."))
+
+
+def test_the_question_preamble_after_an_anchor_is_not_given_to_the_candidate():
+    """Anchor names the candidate; the next turn is still the moderator reading the
+    question. Only the answer belongs to the candidate."""
+    segments = [
+        seg(0, 0.0, 5.0, "Ms. Bond, this next question is for you."),
+        seg(1, 5.0, 11.0, "How will you ensure accurate financial reporting?"),
+        seg(2, 11.0, 60.0, "I would start by reconciling the ledgers every month."),
+        seg(3, 60.0, 65.0, "Miss Cobian, same question."),
+        seg(4, 65.0, 110.0, "I would begin with the payroll system."),
+    ]
+    turns = anchor_reference_windows(segments, SPEAKERS)[0]
+    assert (5.0, 11.0, "BOND") not in turns
+    assert (11.0, 60.0, "BOND") in turns
+
+
+def test_the_window_ends_when_the_moderator_retakes_the_floor():
+    segments = [
+        seg(0, 0.0, 5.0, "Ms. Bond, same question."),
+        seg(1, 5.0, 40.0, "My answer runs for a while."),
+        seg(2, 40.0, 50.0, "And we will move on to our next question."),
+        seg(3, 50.0, 80.0, "More speech that we cannot attribute."),
+        seg(4, 80.0, 85.0, "Miss Cobian, same question."),
+        seg(5, 85.0, 120.0, "Her answer."),
+    ]
+    turns = anchor_reference_windows(segments, SPEAKERS)[0]
+    assert (5.0, 40.0, "BOND") in turns
+    assert not any(start >= 40.0 for start, _, person in turns if person == "BOND")
+
+
+def test_the_unbounded_final_window_is_dropped():
+    """The last anchor has no next anchor to bound it, so its window would run to
+    end_time and absorb whatever follows. On the real meeting that swallowed 141.9s
+    of the moderator's closing script and called it BOND."""
+    segments = [
+        seg(0, 0.0, 5.0, "Ms. Bond, same question."),
+        seg(1, 5.0, 30.0, "My answer."),
+        seg(2, 30.0, 35.0, "Miss Cobian, same question."),
+        seg(3, 35.0, 60.0, "Her answer."),
+        seg(4, 60.0, 200.0, "Thank you all for coming, please verify your voter registration."),
+    ]
+    windows = anchor_reference_windows(segments, SPEAKERS)
+    assert len(windows) == 1
+    assert not any(person == "KOBIAN" for _, _, person in windows[0])
+```
+
+Append to `tests/test_forum_gate.py`:
+
+```python
+from bench.forum_recluster import UNCLUSTERED_LABEL
+
+
+def test_the_unattributed_bucket_does_not_count_as_conflation():
+    """The bucket is where turns with too little voice evidence are parked. It holds
+    slivers from many people BY CONSTRUCTION, so scoring it as a speaker identity
+    would guarantee a failure and punish the design for being honest."""
+    hypothesis = [(0.0, 30.0, "S0"), (30.0, 60.0, "S1"),
+                  (60.0, 75.0, UNCLUSTERED_LABEL), (75.0, 90.0, UNCLUSTERED_LABEL)]
+    report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
+    passed, reasons = gate_verdict(report, max_minority=0.05,
+                                   unattributed_label=UNCLUSTERED_LABEL)
+    assert passed, reasons
+
+
+def test_a_real_label_still_counts_as_conflation():
+    hypothesis = [(0.0, 60.0, "S0"), (60.0, 90.0, "S1")]
+    report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
+    passed, _ = gate_verdict(report, max_minority=0.05,
+                             unattributed_label=UNCLUSTERED_LABEL)
+    assert not passed
+```
+
+Append to `tests/test_forum_recluster.py`:
+
+```python
+from bench.forum_recluster import UNCLUSTERED_LABEL, fold_slivers
+
+FOLD_SEGMENTS = [
+    {"segment_id": 0, "start_time": 0.0, "end_time": 40.0, "speaker_label": "x"},
+    {"segment_id": 1, "start_time": 40.0, "end_time": 45.0, "speaker_label": "x"},
+    {"segment_id": 2, "start_time": 45.0, "end_time": 90.0, "speaker_label": "x"},
+]
+
+
+def test_labels_below_the_floor_are_folded_into_the_bucket():
+    labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+    folded = fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=20.0)
+    assert folded == ["SPEAKER_00", UNCLUSTERED_LABEL, "SPEAKER_02"]
+
+
+def test_folding_is_by_total_speech_not_by_turn_count():
+    labels = ["SPEAKER_00", "SPEAKER_00", "SPEAKER_02"]
+    folded = fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=20.0)
+    assert folded == ["SPEAKER_00", "SPEAKER_00", "SPEAKER_02"]
+
+
+def test_a_zero_floor_folds_nothing():
+    labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+    assert fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=0.0) == labels
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `.venv/bin/python -m pytest tests/test_forum_anchor_reference.py tests/test_forum_gate.py tests/test_forum_recluster.py -v`
+Expected: FAIL on the new imports (`is_moderator_speech`, `fold_slivers`).
+
+- [ ] **Step 3: Implement**
+
+In `bench/forum_anchor_reference.py`, add after `HANDOFF`:
+
+```python
+#: A turn is the moderator's, wherever it falls, if it carries a handoff cue or is
+#: interrogative. MEASURED: the moderator names the candidate and THEN reads the
+#: question out, so the turn after an anchor is usually still the moderator; and the
+#: moderator makes procedural asides mid-window ("we will move on to our next
+#: question"). Attributing question-asking to the person answering is wrong by ROLE,
+#: independent of any score.
+MODERATOR_SPEECH = re.compile(HANDOFF.pattern + r"|\?\s*$", re.I)
+
+
+def is_moderator_speech(segment: dict) -> bool:
+    """True if this turn reads as the moderator asking or managing the floor."""
+    return bool(MODERATOR_SPEECH.search((segment.get("text") or "").strip()))
+```
+
+Replace the body of `anchor_reference_windows`'s loop with the contiguous-run rule:
+
+```python
+    anchors = find_anchors(
+        segments, speakers, handoff=handoff, end_time=end_time
+    )
+    windows: list[Turns] = []
+    for position, (index, person) in enumerate(anchors):
+        # The FINAL window has no next anchor to bound it, so it would run to
+        # end_time and absorb everything after the last handoff. On the real
+        # meeting that swallowed 141.9s of the moderator's closing script. An
+        # unbounded window is unattributable by construction — drop it.
+        if position + 1 >= len(anchors):
+            break
+        stop = anchors[position + 1][0]
+        segment = segments[index]
+        window: Turns = [(segment["start_time"], segment["end_time"], moderator)]
+        started = False
+        for following in range(index + 1, stop):
+            segment = segments[following]
+            if end_time is not None and segment["start_time"] > end_time:
+                break
+            if is_moderator_speech(segment):
+                if started:
+                    break        # the moderator retook the floor; stop attributing
+                continue         # still the moderator's question preamble
+            started = True
+            window.append((segment["start_time"], segment["end_time"], person))
+        if len(window) > 1:
+            windows.append(window)
+    return windows
+```
+
+In `bench/forum_gate.py`, change `gate_verdict`:
+
+```python
+def gate_verdict(
+    report, max_minority: float, *, unattributed_label: str | None = None
+) -> tuple[bool, list[str]]:
+    """Pass unless some IDENTIFIED label holds two reference people above the floor.
+
+    `unattributed_label` names the bucket where turns with too little voice evidence
+    are parked. That bucket holds slivers from many people by construction, so
+    scoring it as a speaker identity would guarantee a failure and punish the design
+    for being honest about what it does not know. It is excluded for the same reason
+    `IdentityReport.unmapped_labels` is not an error: neither is a claim about who
+    spoke.
+    """
+    reasons = [
+        f"label {c.label} holds {len(c.people)} people: "
+        + ", ".join(f"{p} {c.seconds[p]:.1f}s" for p in c.people)
+        for c in report.conflation
+        if unattributed_label is None or c.label != unattributed_label
+    ]
+    return (not reasons), reasons
+```
+
+In `bench/forum_recluster.py`, add:
+
+```python
+def fold_slivers(
+    labels: list[str], segments: list[dict], floor_seconds: float
+) -> list[str]:
+    """Move labels holding less than `floor_seconds` of speech into the bucket.
+
+    Agglomerative clustering over per-turn embeddings leaves a long tail: on the real
+    meeting at threshold 0.50, 104 of 114 labels hold 1.5s each while the top 9 hold
+    94% of the speech. Those slivers carry too little voice evidence to attribute —
+    the same reason unembeddable turns go to the bucket — and 104 phantom speakers
+    would wreck a label-level review.
+    """
+    if floor_seconds <= 0:
+        return list(labels)
+    totals: dict[str, float] = {}
+    for segment, label in zip(segments, labels):
+        totals[label] = totals.get(label, 0.0) + (
+            segment["end_time"] - segment["start_time"]
+        )
+    return [
+        UNCLUSTERED_LABEL if totals[label] < floor_seconds else label
+        for label in labels
+    ]
+```
+
+Wire both through: `scripts/recluster_forum_turns.py` gains `--sliver-floor` (default
+`20.0`), applies `fold_slivers` after `cluster_turns` and before writing `--out`;
+`calibrate` applies the same folding before scoring so the grid reflects what ships;
+and every `gate_verdict` call in `scripts/score_forum_diarization.py` and `calibrate`
+passes `unattributed_label=UNCLUSTERED_LABEL`.
+
+- [ ] **Step 4: Run the tests**
+
+Run: `.venv/bin/python -m pytest tests/ -q`
+Expected: all pass, no regressions against the prior 2221-passing baseline.
+
+- [ ] **Step 5: Verify the corrected reference on the real meeting**
+
+Expected, and these are the numbers to hold it to: **31 windows, 282 turns, 74% coverage,
+MODERATOR 196.7s, BOND 728.6s, KOBIAN 733.6s, ratio 0.99.** A ratio far from 1.00 means a
+correction regressed.
+
+- [ ] **Step 6: Re-calibrate and re-score**
+
+Run the calibration, then score with `--half holdout`. Expected: threshold **0.50**,
+**10 labels** at a 20s sliver floor, holdout **PASS**.
+
+KNOWN RESIDUAL, do not chase it: turn 216 ("Okay, I'll just uh encourage our audience
+members again to submit any questions...") is moderator speech that neither carries a
+handoff cue nor ends in a question mark, so the reference still calls it KOBIAN. It is 6.7s
+in the whole meeting and it makes the TUNING half read one conflation. Record it; do not
+add a pattern to catch one turn, which is how a measurement gets fitted to its answer.
+
+- [ ] **Step 7: Record and commit**
+
+Append the corrected-reference numbers, the new grid, and the held-out verdict to the
+Results section. Commit code and plan together.
+
 ## Results
 
 _Filled in by Tasks 3, 5, 6 and 7._
