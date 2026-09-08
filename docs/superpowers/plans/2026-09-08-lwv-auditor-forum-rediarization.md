@@ -1588,6 +1588,24 @@ _Filled in by Tasks 3, 5, 6 and 7._
 | Run | Labels | Conflation (gate, 0.05) | Verdict |
 | --- | --- | --- | --- |
 | incumbent (Precision-2) | | | |
-| experiment A (OSS pyannote 3.1) | | | |
+| experiment A (OSS pyannote 3.1) | 7 labels, 1199 turns | 48.0% (BOND holds 8.6s of 17.9s under label SPEAKER_00) | **FAIL** — `SPEAKER_04` holds BOND 965.8s + KOBIAN 749.4s + MODERATOR 189.7s |
 | experiment B (re-clustered) | | | |
 | shipped | | | |
+
+### Experiment A (OSS pyannote 3.1, single-pass) — FAIL
+
+Ran on Modal (L4 GPU, `chunk_minutes=0`, `use_merge=False`, no `--num-speakers`),
+scored against the full handoff-derived reference (no `--half`: this run has no
+tuned threshold, so it is entitled to be judged on all of it, unlike Experiment
+B which must be scored on the holdout). The OSS diarization produced 7 labels
+over 1199 turns (versus the incumbent's 10 labels over 479 turns — roughly 2.5x
+more turns from the same audio). It failed the gate the same way the incumbent
+did: one label, `SPEAKER_04`, swallows all three reference people (BOND 965.8s +
+KOBIAN 749.4s + MODERATOR 189.7s = 1904.9s of the reference's 2068s), plus a
+small secondary conflation where `SPEAKER_00` holds both BOND (8.6s) and KOBIAN
+(9.3s). This is the predicted outcome: `src/config.py:248` documents that
+pyannote's own clustering merges speakers when many voices each hold little
+speech and turns are short, which is exactly this meeting's shape. A different
+pyannote pipeline (OSS 3.1 vs. Precision-2) reproduced the same conflation
+mechanism rather than avoiding it. Continuing to Task 4 (Experiment B:
+re-cluster Precision-2's existing turn boundaries over per-turn embeddings).
