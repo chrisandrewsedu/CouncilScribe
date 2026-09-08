@@ -67,6 +67,11 @@ class MeetingSummary:
     # Live-site status from the DB: True = live, False = queried but not live,
     # None = not checked (no DB configured) so no badge is shown.
     is_live: Optional[bool] = None
+    # prod's meetings.meetings.speaker_count. None = not published, or no DB.
+    # Shown only when it disagrees with the local count: an orphan speaker row
+    # (a label the transcript no longer has) inflates prod's, and nothing else
+    # in the GUI compares the two.
+    live_speaker_count: Optional[int] = None
     # Slice 3: library context. All optional so older/partial meetings still build.
     event_orgs: list = field(default_factory=list)
     body_slug: Optional[str] = None
@@ -105,7 +110,15 @@ class MeetingSummary:
 
     @property
     def speakers_label(self) -> str:
-        return str(self.speaker_count) if self.speaker_count is not None else "—"
+        local = "—" if self.speaker_count is None else str(self.speaker_count)
+        # Any disagreement means prod is out of date, so none is special-cased:
+        # too high is usually an orphan speaker row, too low a publish that
+        # predates later review, and an unknown local count is the
+        # not-judgeable case where prod's number is the only one there is.
+        if (self.live_speaker_count is not None
+                and self.live_speaker_count != self.speaker_count):
+            return f"{local} (live: {self.live_speaker_count})"
+        return local
 
     @property
     def duration_label(self) -> str:

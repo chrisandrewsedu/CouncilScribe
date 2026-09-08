@@ -5,6 +5,9 @@ Flags:
   - Meeting on disk but missing from DB ("not published")
   - Meeting in DB but segment count differs from disk ("segment mismatch")
   - Meeting in DB but summary JSONB is null while summary.json exists on disk
+  - Orphan speaker rows: a meetings.speakers label the local transcript no longer
+    has ("orphan speaker"), flagged AMBIGUOUS when it collides with another
+    speaker's last name and can make memo_reconcile skip a vote record
 
 Exit code: 0 if all clean, 1 if any drift detected.
 """
@@ -29,13 +32,28 @@ if _env_file.exists():
                 os.environ.setdefault(_key.strip(), _val.strip())
 
 from src import config  # noqa: E402 — must follow .env.local load
+from src.speaker_orphans import (  # noqa: E402
+    audit_meeting,
+    audit_query,
+    orphan_details,
+    rows_by_meeting,
+)
 
 
-def _count_segments(named_path: Path) -> int:
-    """Return segment count from transcript_named.json."""
+def _read_named(named_path: Path) -> tuple[int, dict]:
+    """(text-bearing segment count, {"speakers": ...}) from transcript_named.json.
+
+    One read for both: these files run to 5 MB, and the orphan check needs the
+    speakers dict that the segment count is already opening the file for. Blank
+    segments are excluded because publish drops them, so the DB count is only
+    comparable against the same subset.
+    """
     with open(named_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    return sum(1 for s in data.get("segments", []) if s.get("text", "").strip())
+    segments = sum(
+        1 for s in data.get("segments", []) if s.get("text", "").strip()
+    )
+    return segments, {"speakers": data.get("speakers") or {}}
 
 
 def main() -> int:
@@ -58,12 +76,13 @@ def main() -> int:
         named = mdir / "transcript_named.json"
         if not named.exists():
             continue
-        seg_count = _count_segments(named)
+        seg_count, meeting_data = _read_named(named)
         has_summary_file = (mdir / "summary.json").exists()
         disk_meetings[mdir.name] = {
             "dir": mdir,
             "segments": seg_count,
             "has_summary_file": has_summary_file,
+            "meeting_data": meeting_data,
         }
 
     if not disk_meetings:
@@ -85,8 +104,21 @@ def main() -> int:
                 list(disk_meetings.keys()),
             )
             db_rows = {row[0]: {"segments": row[1], "has_summary": row[2]} for row in cur.fetchall()}
+
+            # Orphan speaker rows: labels live in prod that the local transcript
+            # no longer has. Nothing else counts these — a full republish is the
+            # only thing that removes them, as a side effect.
+            cur.execute(audit_query(by_slug=True), [list(disk_meetings.keys())])
+            speaker_rows = rows_by_meeting(cur.fetchall())
     finally:
         conn.close()
+
+    orphans = orphan_details(
+        audit_meeting(slug, rows, disk_meetings[slug]["meeting_data"],
+                      stored_speaker_count=stored)
+        for slug, (stored, rows) in sorted(speaker_rows.items())
+        if slug in disk_meetings
+    )
 
     issues: list[str] = []
     ok_count = 0
@@ -106,6 +138,9 @@ def main() -> int:
 
         if disk["has_summary_file"] and not db["has_summary"]:
             row_issues.append("summary.json exists on disk but DB summary is null")
+
+        if slug in orphans:
+            row_issues.append(orphans[slug])
 
         if row_issues:
             issues.append(f"  MISMATCH       {slug}  — {'; '.join(row_issues)}")

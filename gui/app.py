@@ -58,8 +58,12 @@ def create_app() -> FastAPI:
         # Read MEETINGS_DIR via the module at request time so tests that
         # monkeypatch src.config.MEETINGS_DIR are honored.
         # One batch query for live-site status; None (no DB) => no live badge.
-        live_slugs = publish_api.live_published_slugs()
-        meetings = scan_meetings(config.MEETINGS_DIR, live_slugs=live_slugs)
+        # One query gives both the live badge and prod's speaker_count, so the
+        # Speakers column can show a divergence from the local transcript.
+        live_counts = publish_api.live_meeting_speaker_counts()
+        live_slugs = None if live_counts is None else set(live_counts)
+        meetings = scan_meetings(config.MEETINGS_DIR, live_slugs=live_slugs,
+                                 live_speaker_counts=live_counts)
         from gui import races
         race_ids = {m.race_id for m in meetings if m.race_id}
         labels = races.race_labels(race_ids) if race_ids else {}
@@ -644,6 +648,13 @@ def create_app() -> FastAPI:
         if result.get("ok"):
             msg = (f"✓ Published · {result.get('segments', 0)} segments · "
                    f"{result.get('speakers', 0)} speakers")
+            # Say so when the publish swept away rows for labels the transcript
+            # no longer has — src.publish only prints this, and that print goes
+            # to the uvicorn terminal, not to the reviewer's browser.
+            removed = result.get("removed_speakers") or 0
+            if removed:
+                msg += (f" · removed {removed} stale speaker row"
+                        f"{'s' if removed != 1 else ''}")
             body = f'<div class="publish-ok">{msg}</div>'
         else:
             body = (f'<div class="error-banner">Publish failed '

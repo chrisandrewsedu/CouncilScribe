@@ -473,7 +473,8 @@ def test_library_route_shows_live_badge(tagged_meeting_dir, tmp_meetings_dir, mo
     tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=7)
     tagged_meeting_dir("x", meeting_id="2026-03-04-council", completed_stage=7)
     import gui.publish_api as pub
-    monkeypatch.setattr(pub, "live_published_slugs", lambda: {"2026-02-04-council"})
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts",
+                        lambda: {"2026-02-04-council": None})
     body = TestClient(create_app()).get("/").text
     assert "Live" in body and "Not live" in body
     assert "Exported" in body            # stage 7 no longer mislabeled "Published"
@@ -482,7 +483,7 @@ def test_library_route_shows_live_badge(tagged_meeting_dir, tmp_meetings_dir, mo
 def test_library_route_no_live_badge_without_db(tagged_meeting_dir, tmp_meetings_dir, monkeypatch):
     tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=7)
     import gui.publish_api as pub
-    monkeypatch.setattr(pub, "live_published_slugs", lambda: None)  # DB not configured
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts", lambda: None)  # DB not configured
     body = TestClient(create_app()).get("/").text
     assert "live-badge" not in body      # no Live/Not-live badge rendered (only the "—" placeholder)
 
@@ -590,3 +591,97 @@ def test_library_js_polls_batch_status(tmp_meetings_dir):
     from pathlib import Path
     js = Path("gui/static/library.js").read_text()
     assert "/batch/status" in js and "status-cell" in js
+
+
+# --- prod speaker_count beside the local one: an orphan row inflates prod's ---
+
+def test_speakers_label_is_just_the_local_count_when_prod_agrees():
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=6, live_speaker_count=6)
+    assert s.speakers_label == "6"
+
+
+def test_speakers_label_shows_prods_count_when_it_is_higher():
+    # The orphan symptom: prod says 7 because a merged-away label still has a
+    # meetings.speakers row. Invisible until the two counts sit side by side.
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=6, live_speaker_count=7)
+    assert s.speakers_label == "6 (live: 7)"
+
+
+def test_speakers_label_shows_a_lower_prod_count_too():
+    # Drift in either direction means prod is out of date; do not special-case
+    # only the inflating one.
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=6, live_speaker_count=4)
+    assert s.speakers_label == "6 (live: 4)"
+
+
+def test_speakers_label_ignores_an_unknown_prod_count():
+    # None = not published, or no DB. Neither is drift.
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=6, live_speaker_count=None)
+    assert s.speakers_label == "6"
+
+
+def test_library_route_shows_the_live_speaker_count_when_it_differs(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=7)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts",
+                        lambda: {"2026-02-04-council": 99})
+    body = TestClient(create_app()).get("/").text
+    assert "live: 99" in body
+    assert "Live" in body            # the live badge still derives from the same query
+
+
+def test_library_route_without_a_db_shows_no_live_speaker_count(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=7)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts", lambda: None)
+    body = TestClient(create_app()).get("/").text
+    assert "live:" not in body
+    assert "live-badge" not in body
+
+
+def test_live_published_slugs_still_returns_a_set_of_slugs(monkeypatch):
+    # Kept as the published touchpoint; it now derives from the count query.
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts", lambda: {"a": 3, "b": None})
+    assert pub.live_published_slugs() == {"a", "b"}
+
+
+def test_live_published_slugs_still_reports_unknown_as_none(monkeypatch):
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "live_meeting_speaker_counts", lambda: None)
+    assert pub.live_published_slugs() is None
+
+
+def test_speakers_label_shows_prods_count_when_there_is_no_local_one():
+    # No local transcript to count, but prod has speakers. That is the
+    # not-judgeable case the orphan audit reports separately, and showing prod's
+    # number is informative rather than misleading — a bare "—" hides it.
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=None, live_speaker_count=7)
+    assert s.speakers_label == "— (live: 7)"
+
+
+def test_speakers_label_is_a_bare_dash_when_neither_count_is_known():
+    from gui.models import MeetingSummary
+    s = MeetingSummary(meeting_id="m", title=None, city=None, meeting_type=None,
+                       date=None, event_kind=None, completed_stage=7,
+                       speaker_count=None, live_speaker_count=None)
+    assert s.speakers_label == "—"

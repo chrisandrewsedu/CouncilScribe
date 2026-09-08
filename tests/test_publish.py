@@ -780,3 +780,43 @@ def test_publish_deletes_vanished_speakers_after_replacing_segments():
 
     src = inspect.getsource(publish.publish_meeting)
     assert src.index("_replace_segments") < src.index("_delete_vanished_speakers")
+
+
+def test_publish_result_reports_how_many_stale_speaker_rows_it_removed(monkeypatch):
+    """The count was only ever printed. In the GUI, publish_meeting runs in-process
+    and that print goes to the uvicorn terminal, never to the browser — so the one
+    signal that a stale row existed was invisible to a GUI reviewer."""
+    from src import publish
+
+    class _Cur:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def execute(self, *a, **k): pass
+        def fetchone(self): return ("muid",)
+        def fetchall(self): return []
+    class _Conn:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def cursor(self): return _Cur()
+        def close(self): pass
+    monkeypatch.setattr(publish, "_require_db_url", lambda: "postgresql://x")
+    monkeypatch.setattr(publish.psycopg2, "connect", lambda *a, **k: _Conn())
+    for fn in ("_upsert_meeting", "_upsert_event_orgs", "_upsert_local_people",
+               "_reconcile_event_races", "_replace_topics"):
+        monkeypatch.setattr(publish, fn, lambda *a, **k: "muid")
+    monkeypatch.setattr(publish, "_upsert_speakers", lambda *a, **k: {})
+    monkeypatch.setattr(publish, "_replace_segments", lambda *a, **k: 0)
+    monkeypatch.setattr(publish, "_delete_vanished_speakers", lambda *a, **k: 2)
+
+    from src.models import Meeting
+    result = publish.publish_meeting(
+        Meeting(meeting_id="m1", city="X", date="2026-04-01"), None,
+        trigger_deploy=False,
+    )
+    assert result.removed_speakers == 2
+
+
+def test_publish_result_removed_speakers_defaults_to_zero():
+    # Existing callers build PublishResult positionally with three fields.
+    from src.publish import PublishResult
+    assert PublishResult("m1", 12, 3).removed_speakers == 0

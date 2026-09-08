@@ -40,11 +40,38 @@ class _FakeCursorAll(_FakeCursor):
 
 
 def test_live_published_slugs_returns_set(monkeypatch):
+    # One query now returns (slug, speaker_count); the slug set derives from it.
     conn = _FakeConn([])
-    conn.cursor_obj = _FakeCursorAll([("2026-02-04-council",), ("2026-03-04-council",)])
+    conn.cursor_obj = _FakeCursorAll([("2026-02-04-council", 6),
+                                      ("2026-03-04-council", None)])
     monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
     monkeypatch.setattr(pub.psycopg2, "connect", lambda url: conn)
     assert pub.live_published_slugs() == {"2026-02-04-council", "2026-03-04-council"}
+
+
+def test_live_meeting_speaker_counts_returns_prods_counts(monkeypatch):
+    # The count rides along so the library can show prod's speaker_count beside
+    # the local one — an orphan speaker row inflates prod's.
+    conn = _FakeConn([])
+    conn.cursor_obj = _FakeCursorAll([("2026-02-04-council", 6),
+                                      ("2026-03-04-council", None)])
+    monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
+    monkeypatch.setattr(pub.psycopg2, "connect", lambda url: conn)
+    assert pub.live_meeting_speaker_counts() == {"2026-02-04-council": 6,
+                                                "2026-03-04-council": None}
+
+
+def test_live_meeting_speaker_counts_none_without_db(monkeypatch):
+    monkeypatch.setattr(pub, "_db_url", lambda: None)
+    assert pub.live_meeting_speaker_counts() is None
+
+
+def test_live_meeting_speaker_counts_none_on_error(monkeypatch):
+    monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
+    def boom(url):
+        raise RuntimeError("db down")
+    monkeypatch.setattr(pub.psycopg2, "connect", boom)
+    assert pub.live_meeting_speaker_counts() is None
 
 
 def test_live_published_slugs_none_without_db(monkeypatch):
@@ -305,3 +332,48 @@ def test_post_publish_gate_blocked_shown(tagged_meeting_dir, tmp_meetings_dir, m
     assert resp.status_code == 200
     assert "error-banner" in resp.text
     assert "gate" in resp.text.lower()
+
+
+def test_apply_publish_surfaces_the_removed_stale_row_count(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    _publish_meeting_ctx(tagged_meeting_dir, review_status="pass")
+    monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
+    import src.publish as sp
+    from src.publish import PublishResult
+    monkeypatch.setattr(sp, "publish_meeting",
+                        lambda meeting, body_slug=None:
+                        PublishResult(meeting.meeting_id, 5, 2, removed_speakers=1))
+    res = pub.apply_publish("2026-02-04-council", force=False)
+    assert res["removed_speakers"] == 1
+
+
+def test_publish_route_reports_stale_rows_it_removed(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    from fastapi.testclient import TestClient
+    from gui.app import create_app
+    _publish_meeting_ctx(tagged_meeting_dir, review_status="pass")
+    monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
+    import src.publish as sp
+    from src.publish import PublishResult
+    monkeypatch.setattr(sp, "publish_meeting",
+                        lambda meeting, body_slug=None:
+                        PublishResult(meeting.meeting_id, 5, 2, removed_speakers=1))
+    body = TestClient(create_app()).post("/meetings/2026-02-04-council/publish").text
+    assert "1 stale speaker row" in body
+
+
+def test_publish_route_says_nothing_about_stale_rows_when_none_were_removed(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    from fastapi.testclient import TestClient
+    from gui.app import create_app
+    _publish_meeting_ctx(tagged_meeting_dir, review_status="pass")
+    monkeypatch.setattr(pub, "_db_url", lambda: "postgres://fake")
+    import src.publish as sp
+    from src.publish import PublishResult
+    monkeypatch.setattr(sp, "publish_meeting",
+                        lambda meeting, body_slug=None: PublishResult(meeting.meeting_id, 5, 2))
+    body = TestClient(create_app()).post("/meetings/2026-02-04-council/publish").text
+    assert "stale speaker row" not in body

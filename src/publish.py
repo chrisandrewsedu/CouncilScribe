@@ -116,6 +116,11 @@ class PublishResult:
     meeting_id: str
     segments: int
     speakers: int
+    # Stale meetings.speakers rows this publish swept away (labels the transcript
+    # no longer has). Returned rather than only printed: in the GUI publish runs
+    # in-process, so the print lands in the uvicorn terminal and the reviewer
+    # never learns a stale row existed. Defaults to 0 for positional callers.
+    removed_speakers: int = 0
 
 
 def _require_db_url() -> str:
@@ -1310,4 +1315,5 @@ def publish_meeting(
         meeting_id=meeting.meeting_id,
         segments=segment_count,
         speakers=speaker_count,
+        removed_speakers=vanished,
     )
