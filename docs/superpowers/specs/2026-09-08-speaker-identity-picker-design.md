@@ -1,7 +1,7 @@
 # Speaker identity picker — GUI review page
 
 Date: 2026-09-08
-Status: design approved, not yet implemented
+Status: implemented — see docs/superpowers/plans/2026-09-08-speaker-identity-picker.md
 
 ## Problem
 
