@@ -178,6 +178,11 @@ table.library .ctx { font-size: 0.8rem; color: #667; margin: 0.1rem 0; }
 .ident-panel { margin-top: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid #e3e7ee;
                border-radius: 0.5rem; background: #fbfcfe;
                display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+/* An author-origin `display` (above) always wins over the UA [hidden] rule,
+   even though [hidden] is more specific — same-origin cascade order, not
+   specificity, decides. Without this override, workspace.js's `p.hidden = …`
+   toggle is inert and every panel renders at once. */
+.ident-panel[hidden] { display: none; }
 .ident-help { margin: 0; font-size: 0.8rem; color: #667; }
 .ident-now { margin: 0; font-size: 0.85rem; }
 .ident-cost { margin: 0; font-size: 0.8rem; color: #8a5a1a; background: #fdf3e6;

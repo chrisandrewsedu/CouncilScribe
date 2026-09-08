@@ -1877,3 +1877,21 @@ def test_workspace_js_reveals_the_chosen_panel(tmp_meetings_dir):
     js = Path("gui/static/workspace.js").read_text()
     assert "ident-panel" in js
     assert 'data-ident' in js
+
+
+def test_ident_panel_hidden_attribute_actually_hides_it():
+    """.ident-panel carries an author-origin `display: flex`, and an author-
+    origin `display` always wins the cascade over the browser's UA-origin
+    `[hidden] { display: none }` rule regardless of selector specificity —
+    so without an explicit `.ident-panel[hidden]` override, setting the
+    `hidden` attribute in workspace.js does nothing and every panel renders
+    at once. Assert the override rule exists (mirrors the .fieldwrap[hidden]
+    precedent already in this file)."""
+    import re
+
+    css = Path("gui/static/style.css").read_text()
+    assert re.search(r"\.ident-panel\[hidden\]\s*\{[^}]*display\s*:\s*none", css), (
+        "style.css is missing a `.ident-panel[hidden] { display: none; }` rule; "
+        "without it, .ident-panel's own `display: flex` defeats the [hidden] "
+        "attribute and workspace.js's panel-toggle has no visible effect"
+    )
