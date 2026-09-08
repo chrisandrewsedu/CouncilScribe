@@ -358,3 +358,61 @@ def stale_publish_warnings(audit: MeetingAudit) -> list[dict]:
             "detail": detail,
         })
     return warns
+
+
+def empty_published_labels(meeting_data: Mapping) -> list[str]:
+    """Labels present in ``speakers`` that no PUBLISHED segment would carry.
+
+    A blind spot of the orphan check, not a duplicate of it. ``keep_labels``
+    reads the speakers dict, so a label that is present — merely empty — is not
+    stale and ``audit_meeting`` is right to pass it. But publish writes the
+    speaker ROW from that dict while dropping the segments
+    (``if not seg.text: continue``), so the live site ends up with a row that
+    has a NULL ``display_name`` and serves nothing, and ``speaker_count``
+    claims a speaker who is not there. Measured on prod: two press conferences
+    each reported 2 speakers where there was 1, and the orphan audit reported
+    zero problems in both.
+
+    Reads ``mapping.speaker_label`` rather than the dict key, the same rule
+    ``keep_labels`` follows, because that is the field publish writes; reading
+    the key would invent phantom findings.
+
+    Whitespace-only text counts as empty. Publish's own test is ``not
+    seg.text``, so such a segment IS published — but it serves nothing a reader
+    can see, which is the same defect from the site's point of view.
+    """
+    carried = {
+        segment.get("speaker_label")
+        for segment in (meeting_data or {}).get("segments") or []
+        if (segment.get("text") or "").strip()
+    }
+    return sorted(keep_labels(meeting_data) - carried)
+
+
+def drop_empty_labels(meeting_data: Mapping) -> tuple[dict, list[str]]:
+    """Remove every present-but-empty label, and only those labels' segments.
+
+    Returns ``(new_data, dropped)`` and does NOT mutate the input. A dropped
+    label's segments carry no published text by definition, so removing them
+    loses nothing — and leaving the label costs a live speaker row that serves
+    nothing plus a ``speaker_count`` that overstates the participants.
+
+    An empty stub belonging to a SURVIVING speaker is left alone: that is
+    publish's business, not a reason to rewrite a real person's turns.
+    """
+    import copy
+
+    dropped = empty_published_labels(meeting_data)
+    if not dropped:
+        return dict(meeting_data), []
+    gone = set(dropped)
+    new_data = copy.deepcopy(dict(meeting_data))
+    new_data["speakers"] = {
+        key: mapping for key, mapping in (new_data.get("speakers") or {}).items()
+        if (mapping.get("speaker_label") or key) not in gone
+    }
+    new_data["segments"] = [
+        segment for segment in (new_data.get("segments") or [])
+        if segment.get("speaker_label") not in gone
+    ]
+    return new_data, dropped

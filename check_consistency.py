@@ -33,6 +33,7 @@ if _env_file.exists():
 
 from src import config  # noqa: E402 — must follow .env.local load
 from src.speaker_orphans import (  # noqa: E402
+    empty_published_labels,
     audit_meeting,
     audit_query,
     orphan_details,
@@ -54,6 +55,26 @@ def _read_named(named_path: Path) -> tuple[int, dict]:
         1 for s in data.get("segments", []) if s.get("text", "").strip()
     )
     return segments, {"speakers": data.get("speakers") or {}}
+
+
+def empty_label_details(disk_meetings) -> dict[str, str]:
+    """{slug: one-line description of its present-but-empty labels}.
+
+    Separate from orphan_details on purpose: an orphan is a prod row the local
+    transcript no longer names, while this is a label the transcript DOES name
+    but no published segment carries. The orphan check passes these, so without
+    their own line they stay invisible — prod carried three of them while the
+    orphan audit reported zero problems.
+    """
+    details: dict[str, str] = {}
+    for slug, disk in disk_meetings.items():
+        labels = empty_published_labels(disk.get("meeting_data") or {})
+        if labels:
+            details[slug] = (
+                f"{len(labels)} label(s) with no published text "
+                f"({', '.join(labels)}) — publishes a speaker row serving nothing"
+            )
+    return details
 
 
 def main() -> int:
@@ -113,6 +134,8 @@ def main() -> int:
     finally:
         conn.close()
 
+    empties = empty_label_details(disk_meetings)
+
     orphans = orphan_details(
         audit_meeting(slug, rows, disk_meetings[slug]["meeting_data"],
                       stored_speaker_count=stored)
@@ -141,6 +164,9 @@ def main() -> int:
 
         if slug in orphans:
             row_issues.append(orphans[slug])
+
+        if slug in empties:
+            row_issues.append(empties[slug])
 
         if row_issues:
             issues.append(f"  MISMATCH       {slug}  — {'; '.join(row_issues)}")

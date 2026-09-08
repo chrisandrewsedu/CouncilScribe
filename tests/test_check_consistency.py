@@ -45,3 +45,33 @@ def test_read_named_survives_a_transcript_with_no_speakers_key(tmp_path):
     segs, meeting_data = _read_named(path)
     assert segs == 1
     assert meeting_data == {"speakers": {}}
+
+
+def test_empty_label_is_reported_as_its_own_issue():
+    """A present-but-empty label must surface here, not hide behind the orphan check.
+
+    The orphan check passes it (the label is in speakers, so it is not stale),
+    yet publish writes a speaker row for it that serves nothing. Prod had three
+    such rows while the orphan audit reported zero problems.
+    """
+    from check_consistency import empty_label_details
+
+    disk = {
+        "a": {"meeting_data": {
+            "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"},
+                         "SPEAKER_01": {"speaker_label": "SPEAKER_01"}},
+            "segments": [
+                {"speaker_label": "SPEAKER_00", "text": "hi"},
+                {"speaker_label": "SPEAKER_01", "text": ""},
+            ],
+        }},
+        "b": {"meeting_data": {
+            "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"}},
+            "segments": [{"speaker_label": "SPEAKER_00", "text": "hi"}],
+        }},
+    }
+
+    details = empty_label_details(disk)
+
+    assert "b" not in details
+    assert "SPEAKER_01" in details["a"]
