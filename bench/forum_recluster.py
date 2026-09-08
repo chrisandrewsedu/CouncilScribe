@@ -94,6 +94,30 @@ def cluster_turns(
     return labels
 
 
+def fold_slivers(
+    labels: list[str], segments: list[dict], floor_seconds: float
+) -> list[str]:
+    """Move labels holding less than `floor_seconds` of speech into the bucket.
+
+    Agglomerative clustering over per-turn embeddings leaves a long tail: on the real
+    meeting at threshold 0.50, 104 of 114 labels hold 1.5s each while the top 9 hold
+    94% of the speech. Those slivers carry too little voice evidence to attribute —
+    the same reason unembeddable turns go to the bucket — and 104 phantom speakers
+    would wreck a label-level review.
+    """
+    if floor_seconds <= 0:
+        return list(labels)
+    totals: dict[str, float] = {}
+    for segment, label in zip(segments, labels):
+        totals[label] = totals.get(label, 0.0) + (
+            segment["end_time"] - segment["start_time"]
+        )
+    return [
+        UNCLUSTERED_LABEL if totals[label] < floor_seconds else label
+        for label in labels
+    ]
+
+
 def relabel_segments(segments: list[dict], labels: list[str]) -> list[dict]:
     """Copy `segments` with new speaker labels, spans untouched."""
     out = []
@@ -109,6 +133,8 @@ def calibrate(
     vectors: dict[int, list[float]],
     tune_reference: list[tuple[float, float, str]],
     thresholds: list[float],
+    *,
+    sliver_floor: float = 20.0,
 ) -> tuple[float, list[dict]]:
     """Pick a threshold against the TUNING half of the reference.
 
@@ -117,11 +143,18 @@ def calibrate(
     drift between the calibrator and the scorer. Calibrating and reporting on
     the same 32 anchors would prove nothing.
 
+    `sliver_floor` folds labels holding less than that many seconds into the
+    shared bucket before scoring, the same way the shipped output will be
+    folded — otherwise the grid would report a threshold's conflation as if
+    the 100+ phantom slivers it produces were never going to be merged away,
+    and the bucket itself (which holds slivers from many people BY
+    CONSTRUCTION) would be scored as a conflated identity.
+
     Ties break toward the HIGHER threshold: conflation misattributes quotes
     silently, fragmentation surfaces as an extra unnamed speaker the reviewer
     clears in seconds.
     """
-    from .forum_gate import GATE_MIN_FRACTION
+    from .forum_gate import GATE_MIN_FRACTION, gate_verdict
     from .identity_score import identity_report
 
     people = sorted({p for _, _, p in tune_reference})
@@ -129,6 +162,7 @@ def calibrate(
     grid: list[dict] = []
     for threshold in thresholds:
         labels = cluster_turns(vectors, len(segments), threshold)
+        labels = fold_slivers(labels, segments, sliver_floor)
         hypothesis = [
             (s["start_time"], s["end_time"], l)
             for s, l in zip(segments, labels)
@@ -136,10 +170,14 @@ def calibrate(
         report = identity_report(
             hypothesis, tune_reference, min_fraction=GATE_MIN_FRACTION
         )
+        _, reasons = gate_verdict(
+            report, max_minority=GATE_MIN_FRACTION,
+            unattributed_label=UNCLUSTERED_LABEL,
+        )
         grid.append({
             "threshold": threshold,
             "labels": len(set(labels)),
-            "conflated": len(report.conflation),
+            "conflated": len(reasons),
             "fragmented": len(report.fragmentation),
             "people": len(people),
         })

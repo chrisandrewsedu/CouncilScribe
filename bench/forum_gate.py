@@ -50,15 +50,25 @@ def reference_half(windows: list[Turns], half: str) -> Turns:
     return [turn for window in chosen for turn in window]
 
 
-def gate_verdict(report, max_minority: float) -> tuple[bool, list[str]]:
-    """Pass unless some label holds two reference people above the floor.
+def gate_verdict(
+    report, max_minority: float, *, unattributed_label: str | None = None
+) -> tuple[bool, list[str]]:
+    """Pass unless some IDENTIFIED label holds two reference people above the floor.
 
     `max_minority` is the floor the caller already passed to `identity_report`;
     it is accepted here so the verdict line can state the bar it applied.
+
+    `unattributed_label` names the bucket where turns with too little voice evidence
+    are parked. That bucket holds slivers from many people by construction, so
+    scoring it as a speaker identity would guarantee a failure and punish the design
+    for being honest about what it does not know. It is excluded for the same reason
+    `IdentityReport.unmapped_labels` is not an error: neither is a claim about who
+    spoke.
     """
     reasons = [
         f"label {c.label} holds {len(c.people)} people: "
         + ", ".join(f"{p} {c.seconds[p]:.1f}s" for p in c.people)
         for c in report.conflation
+        if unattributed_label is None or c.label != unattributed_label
     ]
     return (not reasons), reasons

@@ -36,6 +36,7 @@ from bench.forum_gate import (  # noqa: E402
     load_turns,
     reference_half,
 )
+from bench.forum_recluster import UNCLUSTERED_LABEL  # noqa: E402
 from bench.identity_score import identity_report  # noqa: E402
 
 
@@ -75,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for floor in (COMPARABLE_MIN_FRACTION, GATE_MIN_FRACTION):
         report = identity_report(hypothesis, reference, min_fraction=floor)
-        passed, reasons = gate_verdict(report, max_minority=floor)
+        passed, reasons = gate_verdict(
+            report, max_minority=floor, unattributed_label=UNCLUSTERED_LABEL
+        )
         tag = "GATE" if floor == GATE_MIN_FRACTION else "comparable"
         print(f"\n-- min_fraction {floor:.2f} ({tag}) --")
         print(f"  conflation:    {report.conflation_summary}")

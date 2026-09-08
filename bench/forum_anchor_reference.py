@@ -53,6 +53,19 @@ LWV_AUDITOR_SPEAKERS: dict[str, re.Pattern] = {
 #: therefore no reference. Stocksdale opens it at t=2696.5.
 LWV_AUDITOR_FORUM_END = 2650.0
 
+#: A turn is the moderator's, wherever it falls, if it carries a handoff cue or is
+#: interrogative. MEASURED: the moderator names the candidate and THEN reads the
+#: question out, so the turn after an anchor is usually still the moderator; and the
+#: moderator makes procedural asides mid-window ("we will move on to our next
+#: question"). Attributing question-asking to the person answering is wrong by ROLE,
+#: independent of any score.
+MODERATOR_SPEECH = re.compile(HANDOFF.pattern + r"|\?\s*$", re.I)
+
+
+def is_moderator_speech(segment: dict) -> bool:
+    """True if this turn reads as the moderator asking or managing the floor."""
+    return bool(MODERATOR_SPEECH.search((segment.get("text") or "").strip()))
+
 
 def _named(text: str, speakers: dict[str, re.Pattern]) -> str | None:
     """The one person this text names, or None if it names none or several."""
@@ -133,15 +146,28 @@ def anchor_reference_windows(
     )
     windows: list[Turns] = []
     for position, (index, person) in enumerate(anchors):
+        # The FINAL window has no next anchor to bound it, so it would run to
+        # end_time and absorb everything after the last handoff. On the real
+        # meeting that swallowed 141.9s of the moderator's closing script. An
+        # unbounded window is unattributable by construction — drop it.
+        if position + 1 >= len(anchors):
+            break
+        stop = anchors[position + 1][0]
         segment = segments[index]
         window: Turns = [(segment["start_time"], segment["end_time"], moderator)]
-        stop = anchors[position + 1][0] if position + 1 < len(anchors) else len(segments)
+        started = False
         for following in range(index + 1, stop):
             segment = segments[following]
             if end_time is not None and segment["start_time"] > end_time:
                 break
+            if is_moderator_speech(segment):
+                if started:
+                    break        # the moderator retook the floor; stop attributing
+                continue         # still the moderator's question preamble
+            started = True
             window.append((segment["start_time"], segment["end_time"], person))
-        windows.append(window)
+        if len(window) > 1:
+            windows.append(window)
     return windows
 
 

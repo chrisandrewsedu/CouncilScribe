@@ -59,7 +59,12 @@ def main(argv: list[str] | None = None) -> int:
         anchor_reference_windows,
     )
     from bench.forum_gate import reference_half
-    from bench.forum_recluster import calibrate, cluster_turns, relabel_segments
+    from bench.forum_recluster import (
+        calibrate,
+        cluster_turns,
+        fold_slivers,
+        relabel_segments,
+    )
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("meeting_id")
@@ -68,6 +73,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="Cached turn-embeddings JSON. Fetched from Modal if absent.")
     parser.add_argument("--thresholds", type=float, nargs="+",
                         default=[0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60])
+    parser.add_argument("--sliver-floor", type=float, default=20.0,
+                        help="Fold labels holding less than this many seconds of "
+                             "speech into the shared unclustered bucket.")
     args = parser.parse_args(argv)
 
     from src import config
@@ -90,17 +98,21 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(windows)} anchor windows; calibrating on the {len(tune)}-turn "
           f"tuning half, scoring later on the holdout half")
 
-    best, grid = calibrate(segments, vectors, tune, args.thresholds)
-    print("\nthreshold  labels  conflated  fragmented   (tuning half only)")
+    best, grid = calibrate(
+        segments, vectors, tune, args.thresholds, sliver_floor=args.sliver_floor
+    )
+    print(f"\nthreshold  labels  conflated  fragmented   (tuning half only, "
+          f"{args.sliver_floor:.0f}s sliver floor)")
     for row in grid:
         mark = " <-- chosen" if row["threshold"] == best else ""
         print(f"  {row['threshold']:.2f}      {row['labels']:3d}       "
               f"{row['conflated']:2d}         {row['fragmented']:2d}{mark}")
 
     labels = cluster_turns(vectors, len(segments), best)
+    labels = fold_slivers(labels, segments, args.sliver_floor)
     args.out.write_text(json.dumps(relabel_segments(segments, labels)))
     print(f"\nwrote {args.out} at threshold {best:.2f} "
-          f"({len(set(labels))} labels)")
+          f"({len(set(labels))} labels, {args.sliver_floor:.0f}s sliver floor)")
     print("Now score it on the held-out half:")
     print(f"  .venv/bin/python scripts/score_forum_diarization.py {args.out} \\")
     print(f"      --raw-json {meeting_dir / 'transcript_raw.json'} \\")

@@ -61,3 +61,26 @@ def test_fragmentation_alone_does_not_fail_the_gate():
     passed, reasons = gate_verdict(report, max_minority=0.05)
     assert passed
     assert [f.person for f in report.fragmentation] == ["BOND"]
+
+
+from bench.forum_recluster import UNCLUSTERED_LABEL
+
+
+def test_the_unattributed_bucket_does_not_count_as_conflation():
+    """The bucket is where turns with too little voice evidence are parked. It holds
+    slivers from many people BY CONSTRUCTION, so scoring it as a speaker identity
+    would guarantee a failure and punish the design for being honest."""
+    hypothesis = [(0.0, 30.0, "S0"), (30.0, 60.0, "S1"),
+                  (60.0, 75.0, UNCLUSTERED_LABEL), (75.0, 90.0, UNCLUSTERED_LABEL)]
+    report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
+    passed, reasons = gate_verdict(report, max_minority=0.05,
+                                   unattributed_label=UNCLUSTERED_LABEL)
+    assert passed, reasons
+
+
+def test_a_real_label_still_counts_as_conflation():
+    hypothesis = [(0.0, 60.0, "S0"), (60.0, 90.0, "S1")]
+    report = identity_report(hypothesis, REFERENCE, min_fraction=0.05)
+    passed, _ = gate_verdict(report, max_minority=0.05,
+                             unattributed_label=UNCLUSTERED_LABEL)
+    assert not passed

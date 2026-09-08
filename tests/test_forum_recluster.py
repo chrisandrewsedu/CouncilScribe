@@ -115,3 +115,29 @@ def test_calibrate_returns_a_grid_over_the_tuning_half():
     assert isinstance(best, float)
     assert len(grid) == 3
     assert {"threshold", "labels", "conflated", "fragmented"} <= set(grid[0])
+
+
+from bench.forum_recluster import UNCLUSTERED_LABEL, fold_slivers
+
+FOLD_SEGMENTS = [
+    {"segment_id": 0, "start_time": 0.0, "end_time": 40.0, "speaker_label": "x"},
+    {"segment_id": 1, "start_time": 40.0, "end_time": 45.0, "speaker_label": "x"},
+    {"segment_id": 2, "start_time": 45.0, "end_time": 90.0, "speaker_label": "x"},
+]
+
+
+def test_labels_below_the_floor_are_folded_into_the_bucket():
+    labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+    folded = fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=20.0)
+    assert folded == ["SPEAKER_00", UNCLUSTERED_LABEL, "SPEAKER_02"]
+
+
+def test_folding_is_by_total_speech_not_by_turn_count():
+    labels = ["SPEAKER_00", "SPEAKER_00", "SPEAKER_02"]
+    folded = fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=20.0)
+    assert folded == ["SPEAKER_00", "SPEAKER_00", "SPEAKER_02"]
+
+
+def test_a_zero_floor_folds_nothing():
+    labels = ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+    assert fold_slivers(labels, FOLD_SEGMENTS, floor_seconds=0.0) == labels
