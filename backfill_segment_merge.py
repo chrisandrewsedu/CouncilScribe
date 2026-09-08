@@ -132,6 +132,30 @@ def resync_summary_json(meeting_dir: Path, segments) -> int | None:
     return changed
 
 
+def republish_notice(touched, live) -> str:
+    """What to tell the user about re-publishing the meetings this run changed.
+
+    ``live`` is the set of live slugs, or None when it could not be determined —
+    live_published_slugs() is best-effort and swallows any DB failure. That third
+    case MUST read as a warning, never as silence: an unreachable DB once left a
+    backlog of 13 changed meetings, every one of them live, stale on the public
+    site because the run said nothing at all. Note the DB is unreachable by
+    default here, since this script does not load .env.local.
+    """
+    if live is None:
+        return ("\n⚠ Could not determine which changed meetings are live — no DB access, so "
+                "this is UNKNOWN, not 'nothing to re-publish'. Any that are live are now "
+                "stale on the site.\n"
+                "  This script does not load .env.local; re-run as:\n"
+                "      set -a; . ./.env.local; set +a\n"
+                "  or check by hand with gui.publish_api.live_published_slugs().")
+    to_republish = [s for s in touched if s in live]
+    if to_republish:
+        return ("\nRe-publish these (they are live and were changed here):\n"
+                + "\n".join(f"    - {slug}" for slug in to_republish))
+    return "\nNone of the changed meetings are live — nothing to re-publish."
+
+
 def _load(meeting_dir: Path):
     named = meeting_dir / "transcript_named.json"
     if not named.exists():
@@ -215,14 +239,7 @@ def backfill(*, dry_run: bool = False, sections_only: bool = False) -> int:
             live = live_published_slugs()
         except Exception:
             live = None
-        if live:
-            to_republish = [s for s in touched if s in live]
-            if to_republish:
-                print("\nRe-publish these (they are live and were changed here):")
-                for slug in to_republish:
-                    print(f"    - {slug}")
-            else:
-                print("\nNone of the changed meetings are live — nothing to re-publish.")
+        print(republish_notice(touched, live))
     print(f"\nDone — {changed} meeting(s) changed.")
     return changed
 

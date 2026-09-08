@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from src.models import Meeting, Segment, SpeakerMapping, MeetingSummary, SummarySection
+from backfill_segment_merge import republish_notice
 from backfill_segment_merge import (
     backfill,
     merge_would_change,
@@ -219,3 +220,36 @@ def test_sections_only_defers_meetings_that_still_need_merging(
     assert backfill(dry_run=False, sections_only=True) == 0
     assert (mdir / "transcript_named.json").read_text() == original
     assert "needs the segment merge" in capsys.readouterr().out
+
+
+# --- republish notice --------------------------------------------------------
+# The live check is best-effort: live_published_slugs() swallows any DB failure
+# and returns None. That "unknown" case used to print NOTHING, and silence there
+# reads as "nothing to re-publish" — which is how a backlog of 13 meetings, ALL
+# of them live, stayed stale on the public site.
+
+def test_republish_notice_names_the_live_meetings():
+    out = republish_notice(["a", "b", "c"], {"b", "c", "z"})
+    listed = [l.strip(" -") for l in out.splitlines() if l.startswith("    - ")]
+    assert listed == ["b", "c"]        # only the changed AND live ones
+    assert "z" not in listed           # live but not changed here
+
+
+def test_republish_notice_says_so_when_none_are_live():
+    out = republish_notice(["a", "b"], set())
+    assert "none" in out.lower()
+    assert "re-publish" in out.lower()
+
+
+def test_republish_notice_warns_when_live_status_is_unknown():
+    """The bug this closes: an unreachable DB must not render as reassurance."""
+    out = republish_notice(["a", "b"], None)
+    assert out.strip(), "an unknown live status must still say something"
+    low = out.lower()
+    assert "could not determine" in low or "unknown" in low
+    assert "none of the changed meetings are live" not in low   # never claim safety
+    assert ".env.local" in out    # the actual cause, and the fix
+
+
+def test_republish_notice_unknown_is_visually_distinct_from_all_clear():
+    assert republish_notice(["a"], None) != republish_notice(["a"], set())
