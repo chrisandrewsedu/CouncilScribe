@@ -422,6 +422,53 @@ def clear_local_person(mappings, label):
     return mapping
 
 
+def clear_speaker_status(mappings, segments, label):
+    """Drop 'unidentified' / 'non_speaker' so a label can hold a real identity again.
+
+    Returns None (no mutation) when the label is unknown or its status is already
+    clear. A no-op is not success: the GUI route maps None to 404, so an Undo
+    button on a speaker that was never marked cannot report that it acted.
+
+    mark_unidentified and mark_non_speaker are otherwise one-way doors — nothing
+    else in src/ or gui/ ever clears speaker_status — which left a mis-clicked
+    "Not a speaker" unrecoverable and permanently hid the local-person path.
+
+    Three groups of fields go with the mark and must not outlive it:
+
+    - `local_slug` after an 'unidentified' mark is the synthetic
+      unidentified-<meeting>-<label> handle from make_unidentified_slug, whose
+      only job is keeping two distinct unknowns out of one voice-profile
+      enrollment key. It is not a site-local person and must not be presented as
+      one. A 'non_speaker' mark clears local_slug outright, so clearing it again
+      is a harmless no-op — hence no branch on the status value.
+    - `speaker_name` is 'Unidentified Speaker', 'Non-speaker', or a reviewer's
+      display_label FOR THE MARK. It names the status, not a person.
+    - confidence 1.0 / id_method 'human_review' asserted human certainty about
+      the mark. With the mark gone the speaker has no identity, so it returns to
+      needs-review rather than staying falsely confirmed.
+
+    A politician link is deliberately left alone: clearing a stale mark is not an
+    unlink.
+    """
+    mapping = mappings.get(label)
+    if mapping is None or getattr(mapping, "speaker_status", None) is None:
+        return None
+
+    mapping.speaker_status = None
+    mapping.local_slug = None
+    mapping.local_role = None
+    mapping.speaker_name = None
+    mapping.confidence = 0.0
+    mapping.id_method = None
+    mapping.needs_review = True
+
+    for seg in segments:
+        if seg.speaker_label == label:
+            seg.speaker_name = None
+
+    return mapping
+
+
 def mark_unidentified(mappings, segments, label, meeting_id, display_label=None):
     """Mark a speaker as a distinct-but-unnamed person: unique handle, enrolled."""
     from src.models import SpeakerMapping

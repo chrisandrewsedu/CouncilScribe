@@ -184,10 +184,33 @@
           '<form method="post" action="' + action + '">' +
           '<input type="hidden" name="politician_slug" value="' + esc(r.politician_slug) + '">' +
           '<input type="hidden" name="politician_id" value="' + esc(r.politician_id) + '">' +
+          // Carry the name the reviewer just clicked, so the transcript's
+          // speaker_name cannot disagree with the person linked. Must NOT fall
+          // back to r.display: that's politician_display(rec), a decorated
+          // "Name · Office · District · Government" line, never a bare name —
+          // if full_name is empty (the no-DB HTTP fallback can omit it), an
+          // empty name is correct (apply_link/_reset_and_rename just skips the
+          // rename), never the whole decorated line landing in speaker_name.
+          '<input type="hidden" name="name" value="' + esc(r.full_name || "") + '">' +
           '<button type="submit" class="link-result">' + inner + "</button></form>"
         );
       }).join("");
     }, DEBOUNCE);
+  });
+
+  // Identity chooser: reveal the panel for the chosen outcome. Delegated on
+  // document, so it survives a panel re-fetch with no re-init — the server
+  // already rendered the current outcome checked and its panel un-hidden, so
+  // this only handles switching.
+  document.addEventListener("change", (e) => {
+    const radio = e.target;
+    if (!(radio instanceof HTMLInputElement) || radio.type !== "radio") return;
+    if (!radio.name.startsWith("ident-")) return;
+    const block = radio.closest(".ident");
+    if (!block) return;
+    block.querySelectorAll(".ident-panel").forEach((p) => {
+      p.hidden = p.getAttribute("data-ident") !== radio.value;
+    });
   });
 
   // HLS attach: <video id="player" data-hls="..."> with no src. Prefer hls.js

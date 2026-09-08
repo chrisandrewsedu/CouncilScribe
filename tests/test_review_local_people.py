@@ -187,3 +187,93 @@ def test_unlinking_leaves_a_local_person_alone():
     assert m.politician_slug is None
     assert m.local_slug == "jo-doe"
     assert m.local_role == "staff"
+
+
+from src.review import clear_speaker_status, mark_non_speaker, mark_unidentified
+
+
+class _Seg:
+    """Minimal segment stand-in: clear_speaker_status only reads speaker_label
+    and writes speaker_name."""
+
+    def __init__(self, label, name=None):
+        self.speaker_label = label
+        self.speaker_name = name
+
+
+def test_clear_speaker_status_clears_an_unidentified_mark_and_its_handle():
+    """mark_unidentified writes a synthetic unidentified-<meeting>-<label> handle
+    into local_slug. That handle is a voice-profile key, not a site-local person,
+    so clearing the status must drop it too — otherwise the picker would show a
+    private handle as a real local person."""
+    mappings, segments = {}, [_Seg("S0")]
+    mark_unidentified(mappings, segments, "S0", "2026-02-04-council")
+    assert mappings["S0"].local_slug == "unidentified-2026-02-04-council-s0"
+
+    m = clear_speaker_status(mappings, segments, "S0")
+    assert m is mappings["S0"]
+    assert m.speaker_status is None
+    assert m.local_slug is None
+    assert m.local_role is None
+
+
+def test_clear_speaker_status_clears_a_non_speaker_mark():
+    mappings, segments = {}, [_Seg("S0")]
+    mark_non_speaker(mappings, segments, "S0")
+    m = clear_speaker_status(mappings, segments, "S0")
+    assert m.speaker_status is None
+    assert m.local_slug is None
+
+
+def test_clear_speaker_status_clears_the_placeholder_name_on_mapping_and_segments():
+    """'Unidentified Speaker' / 'Non-speaker' label the STATUS, not a person, so
+    they must not outlive the status they described."""
+    mappings, segments = {}, [_Seg("S0"), _Seg("S1"), _Seg("S0")]
+    mark_non_speaker(mappings, segments, "S0", "Pledge of Allegiance")
+    assert [s.speaker_name for s in segments] == ["Pledge of Allegiance", None,
+                                                  "Pledge of Allegiance"]
+
+    clear_speaker_status(mappings, segments, "S0")
+    assert mappings["S0"].speaker_name is None
+    assert [s.speaker_name for s in segments] == [None, None, None]
+
+
+def test_clear_speaker_status_resets_confidence_and_method():
+    """mark_* asserted human certainty about the MARK. Once the mark is gone that
+    certainty is gone with it, so the speaker returns to Needs attention."""
+    mappings, segments = {}, [_Seg("S0")]
+    mark_unidentified(mappings, segments, "S0", "2026-02-04-council")
+    assert (mappings["S0"].confidence, mappings["S0"].id_method) == (1.0, "human_review")
+
+    m = clear_speaker_status(mappings, segments, "S0")
+    assert m.confidence == 0.0
+    assert m.id_method is None
+
+
+def test_clear_speaker_status_on_an_unknown_label_is_a_noop():
+    assert clear_speaker_status({}, [], "S9") is None
+
+
+def test_clear_speaker_status_on_an_already_clear_mapping_is_a_noop():
+    """A no-op is not success: the GUI route maps None to 404 so an Undo button
+    on a speaker that was never marked cannot report that it did something."""
+    mappings = {"S0": SpeakerMapping(speaker_label="S0", speaker_name="Susan Brackney",
+                                     local_slug="susan-brackney",
+                                     local_role="public_comment", speaker_status=None)}
+    assert clear_speaker_status(mappings, [], "S0") is None
+    # A genuine local person is left completely untouched.
+    assert mappings["S0"].local_slug == "susan-brackney"
+    assert mappings["S0"].local_role == "public_comment"
+    assert mappings["S0"].speaker_name == "Susan Brackney"
+
+
+def test_clear_speaker_status_leaves_a_politician_link_alone():
+    """Clearing a stale mark is not an unlink. Only the mark and its own
+    placeholder fields are dropped."""
+    mappings = {"S0": SpeakerMapping(speaker_label="S0", speaker_name="Non-speaker",
+                                     politician_id="uuid-mk",
+                                     politician_slug="marcy-kaptur",
+                                     speaker_status="non_speaker")}
+    m = clear_speaker_status(mappings, [], "S0")
+    assert m.politician_id == "uuid-mk"
+    assert m.politician_slug == "marcy-kaptur"

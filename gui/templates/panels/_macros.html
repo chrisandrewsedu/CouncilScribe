@@ -1,13 +1,59 @@
+{# One speaker in the review page, as three blocks:
+
+   1. head + evidence (name, confidence, voice hints, sample, clips)
+   2. "Who is this?" — the four identity outcomes, all four always present
+   3. "Also" — rename, merge, enroll: real operations, but not identity outcomes
+
+   Block 2 replaces a single flat flex row that mixed all of the above. In that
+   row the make-local-person form was gated on `not c.is_linked` and on
+   `speaker_status is none`, so a roster-linked or already-marked speaker
+   rendered no local-person control at all and the reviewer had to clear the
+   other field first. Most speakers who need hand-identification are not
+   politicians — anchors, reporters, party officials, members of the public — so
+   the local path is the common case, not a fallback.
+
+   The chosen panel is revealed BY THE SERVER (every other panel carries
+   `hidden`), so the initial paint needs no JavaScript; workspace.js only
+   handles switching. #}
+{# The <input> stays on ONE source line: the render tests match the exact string
+   `name="ident-<label>" value="<kind>" checked`, and a Jinja line break inside
+   the tag would inject a newline plus indentation between the attributes. #}
+{% macro ident_chip(c, kind, text) %}
+<label class="ident-chip{{ ' current' if c.identity_kind == kind }}">
+  <input type="radio" name="ident-{{ c.label }}" value="{{ kind }}"{{ ' checked' if c.identity_kind == kind }}>
+  <span>{{ text }}</span>
+</label>
+{% endmacro %}
+
+{# What choosing `kind` would destroy. link_speaker clears local_slug/local_role
+   and assign_local_person clears politician_*, both to hold migration 623's
+   one-identity-per-speaker invariant; clearing a mark drops its placeholder
+   name. Saying so before the click is the whole point — it used to happen
+   silently. #}
+{% macro ident_cost(c, kind) %}
+  {% if kind != c.identity_kind %}
+    {% if c.identity_kind == 'local' %}
+    <p class="ident-cost">Saving this drops the local person <code>{{ c.local_slug }}</code>.</p>
+    {% elif c.identity_kind == 'roster' %}
+    <p class="ident-cost">Saving this drops the roster link.</p>
+    {% elif c.identity_kind == 'unidentified' %}
+    <p class="ident-cost">Saving this clears the unidentified mark.</p>
+    {% elif c.identity_kind == 'non_speaker' %}
+    <p class="ident-cost">Saving this clears the not-a-speaker mark.</p>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
 {% macro card(c, meeting_id, all_cards, local_role_options=[]) %}
 <div class="card {{ 'confirmed' if c.is_confirmed else 'attention' }}">
   <div class="card-head">
     <span class="label">{{ c.label }}</span>
     <span class="cname">{{ c.display_name }}</span>
+    <span class="identpill ident-{{ c.identity_kind }}">{{ c.identity_pill }}</span>
     {% if c.confidence > 0 %}<span class="conf">conf {{ '%.2f'|format(c.confidence) }}</span>{% endif %}
     <span class="mins">{{ '%.1f'|format(c.minutes) }}m · {{ c.seg_count }} segs</span>
   </div>
-  {% if c.speaker_status == "unidentified" %}<span class="statusbadge unident">unidentified</span>{% endif %}
-  {% if c.speaker_status == "non_speaker" %}<span class="statusbadge nonspk">not-a-speaker</span>{% endif %}
+
   {% if c.duplicate_labels %}
   <div class="dup-name">
     ⚠ Same name as {{ c.duplicate_labels|join(', ') }} — two labels can't be the same person
@@ -20,6 +66,7 @@
     {% endfor %}
   </div>
   {% endif %}
+
   {% for hname, hscore in c.hints %}
     <div class="hint">▸ voice match: {{ hname }} ({{ '%.2f'|format(hscore) }})</div>
   {% endfor %}
@@ -31,84 +78,180 @@
     {% endfor %}
   </div>
   {% endif %}
-  {% if c.is_linked %}
-  <div class="linked">🔗 linked: <span class="pslug">{{ c.politician_slug or c.politician_id }}</span></div>
-  {% endif %}
-  <div class="actions">
-    {% if not c.is_confirmed and c.accept_name %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/name">
-      <input type="hidden" name="name" value="{{ c.accept_name }}">
-      <button type="submit" class="accept">✓ Accept {{ c.accept_name }}</button>
-    </form>
-    {% endif %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/name" class="rename">
-      <input type="text" name="name" placeholder="Type a name…" autocomplete="off">
-      <button type="submit">Save</button>
-    </form>
-    {% if c.is_linked %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/unlink">
-      <button type="submit" class="unlink">Unlink</button>
-    </form>
-    {% endif %}
-    {% if c.speaker_status is none %}
-    {% if c.has_local_person %}
-    <div class="local-person">
-      <span class="localbadge">local: {{ c.local_slug }}{% if c.local_role %} · {{ c.local_role }}{% endif %}</span>
+
+  <div class="ident">
+    <h3>Who is this?</h3>
+    <div class="ident-chips">
+      {{ ident_chip(c, 'roster', 'Roster politician') }}
+      {{ ident_chip(c, 'local', 'Local person') }}
+      {{ ident_chip(c, 'unidentified', 'Unidentified') }}
+      {{ ident_chip(c, 'non_speaker', 'Not a speaker') }}
+    </div>
+
+    <div class="ident-panel" data-ident="roster" {{ 'hidden' if c.identity_kind != 'roster' }}>
+      <p class="ident-help">Someone on an essentials roster — an officeholder or a candidate.</p>
+      {% if c.identity_kind == 'roster' %}
+      <p class="ident-now">Currently: <strong>{{ c.display_name }}</strong>
+        <code class="pslug">{{ c.politician_id or c.politician_slug }}</code></p>
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/unlink">
+        <button type="submit" class="unlink">Unlink</button>
+      </form>
+      {% endif %}
+      {{ ident_cost(c, 'roster') }}
+      {# The search results are rendered by workspace.js as one POST form per
+         hit, each carrying that person's name so speaker_name cannot disagree
+         with the person linked. #}
+      <div class="link-search"
+           data-search-url="/api/politicians/search"
+           data-link-action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/link">
+        <input type="text" placeholder="Search a name…" autocomplete="off">
+        <div class="link-results"></div>
+      </div>
+    </div>
+
+    <div class="ident-panel" data-ident="local" {{ 'hidden' if c.identity_kind != 'local' }}>
+      <p class="ident-help">A person on this site only — not on any roster.
+        The name below is the one readers see.</p>
+      {% if c.identity_kind == 'local' %}
+      <p class="ident-now">Currently: <strong>{{ c.display_name }}</strong>
+        <code>{{ c.local_slug }}</code>{% if c.local_role %} · {{ c.local_role }}{% endif %}</p>
       <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/local-person/clear">
         <button type="submit" class="unlink">Clear local person</button>
       </form>
+      {% endif %}
+      {{ ident_cost(c, 'local') }}
+      {# name is required because publish writes `speaker_name or slug` as a local
+         person's PUBLIC name: without it a reader sees the raw slug. role is
+         required so a blank submission can't silently store
+         resolve_local_role('')'s default (local_roles_for(kind)[0] — 'candidate'
+         for a news_clip, wrong for an anchor). That requirement is about a NEW
+         local person only: role is also published (meetings.local_people.role),
+         so re-saving an EXISTING local person to fix a name typo must not force
+         the role to be retyped from memory — it prefills from c.local_role,
+         same as Name and Slug do. #}
+      {# Neither Name nor Slug may carry a marked speaker's placeholders across,
+         and for a marked speaker there is nothing honest to prefill at all:
+
+         - local_slug is the synthetic unidentified-<meeting>-<label> handle, a
+           voice-profile key that must never become a local_people slug.
+         - speaker_name is 'Unidentified Speaker' or 'Non-speaker', a status word,
+           not a person.
+         - default_slug is derived from that same placeholder name, so it comes out
+           as 'unidentified-speaker' — WORSE than the handle, because it carries no
+           meeting or label and would collide two unrelated strangers from
+           different meetings onto one local_people row.
+
+         So a marked card renders all three fields blank and required: the
+         reviewer states who this is (and what role), or saves nothing. Role is
+         blank for a brand-new speaker (identity_kind == 'none') for the same
+         reason — there is no established role to echo back — and prefilled only
+         when identity_kind == 'local'. #}
+      {% set is_marked = c.identity_kind in ('unidentified', 'non_speaker') %}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/local-person"
+            class="local-person">
+        <label>Name
+          <input type="text" name="name" value="{{ '' if is_marked else (c.name or '') }}" required
+                 autocomplete="off" placeholder="Brian Sterling"></label>
+        <label>Slug
+          <input type="text" name="slug" value="{{ '' if is_marked else (c.local_slug if c.identity_kind == 'local' else c.default_slug) }}" required
+                 pattern="[a-z0-9][a-z0-9_-]{0,99}"
+                 title="lowercase letters, digits, hyphen or underscore"></label>
+        <label>Role
+          <input type="text" name="role" value="{{ '' if is_marked or c.identity_kind != 'local' else (c.local_role or '') }}" required
+                 list="roles-{{ c.label }}" autocomplete="off" placeholder="choose or type…"></label>
+        <datalist id="roles-{{ c.label }}">
+          {% for r in local_role_options %}<option value="{{ r }}"></option>{% endfor %}
+        </datalist>
+        <button type="submit">Save as local person</button>
+      </form>
     </div>
-    {% elif not c.is_linked %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/local-person"
-          class="local-person">
-      <input type="text" name="slug" value="{{ c.default_slug }}" required
-             pattern="[a-z0-9][a-z0-9_-]{0,99}"
-             title="lowercase letters, digits, hyphen or underscore">
-      <input type="text" name="role" list="roles-{{ c.label }}" autocomplete="off"
-             value="{{ local_role_options[0] if local_role_options else '' }}"
-             placeholder="role…">
-      <datalist id="roles-{{ c.label }}">
-        {% for r in local_role_options %}<option value="{{ r }}"></option>{% endfor %}
-      </datalist>
-      <button type="submit">Not in essentials — make local person</button>
-    </form>
-    {% endif %}
-    {% endif %}
-    <div class="link-search"
-         data-search-url="/api/politicians/search"
-         data-link-action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/link">
-      <input type="text" placeholder="Link politician… (type a name)" autocomplete="off">
-      <div class="link-results"></div>
-    </div>
-    {% if all_cards|length > 1 %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/merge" class="merge"
-          data-merge-mismatch="{{ c.merge_mismatches|join(',') }}">
-      <select name="target">
-        <option value="">Merge into…</option>
-        {% for o in all_cards %}{% if o.label != c.label %}
-        <option value="{{ o.label }}">{{ o.label }} — {{ o.display_name }}{% if c.merge_hints.get(o.label) %} ({{ c.merge_hints[o.label] }}){% endif %}</option>
-        {% endif %}{% endfor %}
-      </select>
-      <button type="submit">Merge</button>
-    </form>
-    {% endif %}
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/unidentified">
-      <button type="submit" class="mark">Unidentified</button>
-    </form>
-    <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/not-speaker">
-      <button type="submit" class="mark">Not a speaker</button>
-    </form>
-    {% if c.is_enrollable %}
-      {% if c.is_enrolled %}
-      <span class="voice-saved">✓ voice saved</span>
+
+    <div class="ident-panel" data-ident="unidentified" {{ 'hidden' if c.identity_kind != 'unidentified' }}>
+      <p class="ident-help">A real, distinct person whose name we don't know. Gets a
+        private handle so their voice never merges with another stranger's.</p>
+      {% if c.identity_kind == 'unidentified' %}
+      <p class="ident-now">Marked unidentified <code>{{ c.local_slug }}</code></p>
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/clear-status">
+        <button type="submit" class="unlink">Undo this mark</button>
+      </form>
       {% else %}
-      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/enroll">
-        <button type="submit" class="enroll">Save this voice for future meetings</button>
-        {% if c.thin_sample %}<span class="thin">⚠ short sample</span>{% endif %}
+      {{ ident_cost(c, 'unidentified') }}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/unidentified">
+        <button type="submit" class="mark">Mark as unidentified</button>
       </form>
       {% endif %}
-      <span class="profile-strength {{ c.profile_strength }}" title="{% if c.profile_strength == 'strong' %}Already well-established — enroll only if this captures a new mic/setting.{% elif c.profile_strength == 'new' %}No profile yet — enrolling a clean sample here really helps future auto-ID.{% else %}Still building — a clean sample here strengthens future auto-ID.{% endif %}">{{ c.profile_hint }}</span>
-    {% endif %}
+    </div>
+
+    <div class="ident-panel" data-ident="non_speaker" {{ 'hidden' if c.identity_kind != 'non_speaker' }}>
+      <p class="ident-help">Not a person at all — music, a pledge, a station ID.
+        Never enrolled as a voice.</p>
+      {% if c.identity_kind == 'non_speaker' %}
+      <p class="ident-now">Marked not a speaker</p>
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/clear-status">
+        <button type="submit" class="unlink">Undo this mark</button>
+      </form>
+      {% else %}
+      {{ ident_cost(c, 'non_speaker') }}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/not-speaker">
+        <button type="submit" class="mark">Mark as not a speaker</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="also">
+    <h3>Also</h3>
+    <div class="actions">
+      {% if not c.is_confirmed and c.accept_name %}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/name">
+        <input type="hidden" name="name" value="{{ c.accept_name }}">
+        <button type="submit" class="accept">✓ Accept {{ c.accept_name }}</button>
+      </form>
+      {% endif %}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/name" class="rename">
+        <label>Display name
+          {# No value= prefill, deliberately. This posts to /name -> apply_rename
+             -> rename_speaker, which on a CHANGED name nulls local_slug/
+             local_role/politician_slug/politician_id (see rename_speaker's
+             "a human-assigned name is authoritative" comment in src/review.py).
+             Prefilling the current name here would put a local person's or a
+             roster link's identity one typo-fix away from silent deletion, with
+             no warning below it — every other destructive transition on this
+             card carries an ident_cost line; this box didn't. A blank box
+             keeps "type a name here" a conscious act, as it was before this
+             card was rewritten. #}
+          <input type="text" name="name" value=""
+                 placeholder="Type a name…" autocomplete="off"></label>
+        {% if c.identity_kind != 'none' %}
+        <p class="ident-cost">Saving a different name here drops the current identity.</p>
+        {% endif %}
+        <button type="submit">Save</button>
+      </form>
+      {% if all_cards|length > 1 %}
+      <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/merge" class="merge"
+            data-merge-mismatch="{{ c.merge_mismatches|join(',') }}">
+        <label>Same person as
+          <select name="target">
+            <option value="">Merge into…</option>
+            {% for o in all_cards %}{% if o.label != c.label %}
+            <option value="{{ o.label }}">{{ o.label }} — {{ o.display_name }}{% if c.merge_hints.get(o.label) %} ({{ c.merge_hints[o.label] }}){% endif %}</option>
+            {% endif %}{% endfor %}
+          </select></label>
+        <button type="submit">Merge</button>
+      </form>
+      {% endif %}
+      {% if c.is_enrollable %}
+        {% if c.is_enrolled %}
+        <span class="voice-saved">✓ voice saved</span>
+        {% else %}
+        <form method="post" action="/meetings/{{ meeting_id }}/speakers/{{ c.label }}/enroll">
+          <button type="submit" class="enroll">Save this voice for future meetings</button>
+          {% if c.thin_sample %}<span class="thin">⚠ short sample</span>{% endif %}
+        </form>
+        {% endif %}
+        <span class="profile-strength {{ c.profile_strength }}" title="{% if c.profile_strength == 'strong' %}Already well-established — enroll only if this captures a new mic/setting.{% elif c.profile_strength == 'new' %}No profile yet — enrolling a clean sample here really helps future auto-ID.{% else %}Still building — a clean sample here strengthens future auto-ID.{% endif %}">{{ c.profile_hint }}</span>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endmacro %}
