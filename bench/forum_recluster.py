@@ -37,3 +37,116 @@ def as_unique_label_segments(segments: list[dict]) -> list[dict]:
         clone["speaker_label"] = turn_label(index)
         unique.append(clone)
     return unique
+
+
+UNCLUSTERED_LABEL = "SPEAKER_UNCLUSTERED"
+
+
+def cluster_turns(
+    vectors: dict[int, list[float]],
+    n_turns: int,
+    threshold: float,
+    *,
+    unclustered_label: str = UNCLUSTERED_LABEL,
+) -> list[str]:
+    """One speaker label per turn index, by agglomerative clustering.
+
+    Average linkage over cosine distance. MEASURED elsewhere in this repo
+    (`src/config.py:329`): "complete" scores a candidate by its worst turn pair
+    and a real person's worst pair is often anti-correlated (same-person median
+    -0.125), so it merges almost nothing; "centroid" pools each cluster into one
+    mean and conflated two real people at the most conservative threshold
+    tested. Average is the only workable choice.
+
+    `threshold` is a cosine SIMILARITY floor: clusters join while their mean
+    pairwise similarity is at or above it. Turns with no embedding land in one
+    shared bucket, not in a neighbour's cluster and not in singletons of their
+    own — see the module docstring.
+    """
+    import numpy as np
+    from scipy.cluster.hierarchy import fcluster, linkage
+    from scipy.spatial.distance import pdist
+
+    labels = [unclustered_label] * n_turns
+    indices = sorted(vectors)
+    if not indices:
+        return labels
+
+    matrix = np.asarray([vectors[i] for i in indices], dtype=float)
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    norms[norms == 0] = 1.0
+    matrix = matrix / norms
+
+    if len(indices) == 1:
+        labels[indices[0]] = "SPEAKER_00"
+        return labels
+
+    distances = pdist(matrix, metric="cosine")
+    tree = linkage(distances, method="average")
+    assignments = fcluster(tree, t=1.0 - threshold, criterion="distance")
+
+    # Number labels by first appearance so output is stable across runs.
+    order: dict[int, str] = {}
+    for position, cluster in enumerate(assignments):
+        if cluster not in order:
+            order[cluster] = f"SPEAKER_{len(order):02d}"
+        labels[indices[position]] = order[cluster]
+    return labels
+
+
+def relabel_segments(segments: list[dict], labels: list[str]) -> list[dict]:
+    """Copy `segments` with new speaker labels, spans untouched."""
+    out = []
+    for segment, label in zip(segments, labels):
+        clone = copy.deepcopy(segment)
+        clone["speaker_label"] = label
+        out.append(clone)
+    return out
+
+
+def calibrate(
+    segments: list[dict],
+    vectors: dict[int, list[float]],
+    tune_reference: list[tuple[float, float, str]],
+    thresholds: list[float],
+) -> tuple[float, list[dict]]:
+    """Pick a threshold against the TUNING half of the reference.
+
+    The caller supplies the already-halved reference — `reference_half(windows,
+    "tune")` — so the tune/holdout split lives in exactly one place and cannot
+    drift between the calibrator and the scorer. Calibrating and reporting on
+    the same 32 anchors would prove nothing.
+
+    Ties break toward the HIGHER threshold: conflation misattributes quotes
+    silently, fragmentation surfaces as an extra unnamed speaker the reviewer
+    clears in seconds.
+    """
+    from .forum_gate import GATE_MIN_FRACTION
+    from .identity_score import identity_report
+
+    people = sorted({p for _, _, p in tune_reference})
+
+    grid: list[dict] = []
+    for threshold in thresholds:
+        labels = cluster_turns(vectors, len(segments), threshold)
+        hypothesis = [
+            (s["start_time"], s["end_time"], l)
+            for s, l in zip(segments, labels)
+        ]
+        report = identity_report(
+            hypothesis, tune_reference, min_fraction=GATE_MIN_FRACTION
+        )
+        grid.append({
+            "threshold": threshold,
+            "labels": len(set(labels)),
+            "conflated": len(report.conflation),
+            "fragmented": len(report.fragmentation),
+            "people": len(people),
+        })
+
+    clean = [row for row in grid if row["conflated"] == 0]
+    if clean:
+        best = min(clean, key=lambda r: (r["fragmented"], -r["threshold"]))
+    else:
+        best = min(grid, key=lambda r: (r["conflated"], -r["threshold"]))
+    return best["threshold"], grid

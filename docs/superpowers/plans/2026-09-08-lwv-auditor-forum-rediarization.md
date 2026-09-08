@@ -1589,7 +1589,7 @@ _Filled in by Tasks 3, 5, 6 and 7._
 | --- | --- | --- | --- |
 | incumbent (Precision-2) | | | |
 | experiment A (OSS pyannote 3.1) | 7 labels, 1199 turns | 48.0% (BOND holds 8.6s of 17.9s under label SPEAKER_00) | **FAIL** — `SPEAKER_04` holds BOND 965.8s + KOBIAN 749.4s + MODERATOR 189.7s |
-| experiment B (re-clustered) | | | |
+| experiment B (re-clustered) | 172 labels, 479 turns (threshold 0.60) | 11.6% (BOND holds 12.0s of 103.5s under label SPEAKER_00) | **FAIL** — held-out; see below |
 | shipped | | | |
 
 ### Experiment A (OSS pyannote 3.1, single-pass) — FAIL
@@ -1609,3 +1609,85 @@ speech and turns are short, which is exactly this meeting's shape. A different
 pyannote pipeline (OSS 3.1 vs. Precision-2) reproduced the same conflation
 mechanism rather than avoiding it. Continuing to Task 4 (Experiment B:
 re-cluster Precision-2's existing turn boundaries over per-turn embeddings).
+
+### Experiment B (re-cluster Precision-2's turns over per-turn embeddings) — FAIL, DONE_WITH_CONCERNS
+
+Kept Precision-2's 479 turn boundaries (every question-to-answer boundary in
+`transcript_raw.json` is clean) and re-clustered them with average-linkage
+agglomerative clustering over cosine distance on 448-of-479 per-turn wespeaker
+embeddings (31 turns fell under the worker's 0.3s floor and share one
+`SPEAKER_UNCLUSTERED` bucket rather than joining a neighbour or becoming 32
+singletons). Threshold calibrated on the odd anchor windows (tune half, 186
+turns, still containing MODERATOR turns because the split is by window, not by
+turn) and scored on the even ones (holdout half, 158 turns, 892s, 3 people) —
+never on `all`.
+
+Threshold grid (tuning half only, `GATE_MIN_FRACTION = 0.05`):
+
+```
+threshold  labels  conflated  fragmented   (tuning half only)
+  0.20       11        2          0
+  0.25       20        2          0
+  0.30       32        2          0
+  0.35       54        1          0
+  0.40       72        1          0
+  0.45       94        1          1
+  0.50      114        1          1
+  0.55      145        1          1
+  0.60      172        1          2 <-- chosen
+```
+
+No threshold reaches 0 conflated — there is no plateau. Per the brief's own
+reading rule, this means the per-turn voice signal is too weak on this audio
+to separate the three people cleanly, and the grid should be reported honestly
+rather than widened or the gate lowered. `calibrate()`'s tie-break (fewest
+conflated, then highest threshold) picked 0.60: 172 labels, 1 conflation, 2
+fragmentations on the tuning half.
+
+Scored on the holdout half (`scripts/score_forum_diarization.py --half
+holdout`):
+
+```
+== experiment B (Precision-2 boundaries, re-clustered) ==
+reference half: holdout (32 anchor windows total)
+reference: 158 turns, 892s, 3 people
+hypothesis: 479 turns, 172 labels
+
+-- min_fraction 0.02 (comparable) --
+  conflation:    largest conflation minority share: 11.0% (BOND holds 12.0s of 108.7s under label SPEAKER_00)
+  fragmentation: largest fragmentation minority share: 4.6% (label SPEAKER_08 holds 15.8s of 340.1s for BOND)
+
+-- min_fraction 0.05 (GATE) --
+  conflation:    largest conflation minority share: 11.6% (BOND holds 12.0s of 103.5s under label SPEAKER_00)
+  fragmentation: no fragmentation
+  VERDICT: FAIL
+    - label SPEAKER_00 holds 2 people: BOND 12.0s, MODERATOR 91.5s
+```
+
+(unmapped-label list — 122 small/singleton clusters with no reference overlap,
+a coverage gap rather than an error — omitted here; see
+`.superpowers/sdd/2026-09-08-lwv-auditor-forum-rediarization/task-5-report.md`
+for the full verbatim output.)
+
+This is **not** the sub-15s-label floor artifact the brief warned to watch
+for: `SPEAKER_00`'s overlap with the holdout reference totals 103.5s (GATE
+floor) / 108.7s (comparable floor), an order of magnitude above the 15s the
+brief flagged as suspect, and 534.2s across the whole recording (46 turns).
+Within that label, BOND genuinely contributes 12.0s (holdout-window figure)
+against MODERATOR's dominant share — a real per-turn voice confusion between
+BOND and the moderator at the chosen threshold, not a boundary bleed. The
+three largest labels overall are `SPEAKER_03` (798.5s / 77 turns), `SPEAKER_13`
+(682.5s / 84 turns) and `SPEAKER_00` (534.2s / 46 turns) — plausibly the three
+real people's dominant clusters — but `SPEAKER_00` is not clean, and the
+tuning-half grid never showed a threshold free of conflation in the first
+place, so this is not a calibration accident at one threshold; it is the
+per-turn embedding signal itself failing to separate BOND from MODERATOR on
+this audio.
+
+**Verdict: Experiment B FAILS the gate on the held-out half. DONE_WITH_CONCERNS
+— reporting as a real result, not tuning further** (no widened threshold
+list, no lowered gate, per the brief's explicit instruction). Both candidate
+re-clusterings tried (OSS pyannote 3.1 single-pass, and re-clustering
+Precision-2's own turn boundaries) have now failed to cleanly separate BOND,
+KOBIAN and MODERATOR on this recording. Candidate turn set is at
+`/tmp/experiment-b-turns.json`, not written into the meeting directory.

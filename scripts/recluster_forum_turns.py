@@ -48,3 +48,65 @@ def fetch_turn_embeddings(
         for index in range(len(segments))
         if turn_label(index) in by_label
     }
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    from bench.forum_anchor_reference import (
+        LWV_AUDITOR_FORUM_END,
+        LWV_AUDITOR_SPEAKERS,
+        anchor_reference_windows,
+    )
+    from bench.forum_gate import reference_half
+    from bench.forum_recluster import calibrate, cluster_turns, relabel_segments
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("meeting_id")
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--embeddings", type=Path, default=None,
+                        help="Cached turn-embeddings JSON. Fetched from Modal if absent.")
+    parser.add_argument("--thresholds", type=float, nargs="+",
+                        default=[0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60])
+    args = parser.parse_args(argv)
+
+    from src import config
+
+    meeting_dir = config.MEETINGS_DIR / args.meeting_id
+    segments = json.loads((meeting_dir / "transcript_raw.json").read_text())
+
+    if args.embeddings and args.embeddings.exists():
+        vectors = {int(k): v for k, v in json.loads(args.embeddings.read_text()).items()}
+    else:
+        vectors = fetch_turn_embeddings(args.meeting_id, segments)
+        if args.embeddings:
+            args.embeddings.write_text(json.dumps(vectors))
+    print(f"{len(vectors)} of {len(segments)} turns embedded")
+
+    windows = anchor_reference_windows(
+        segments, LWV_AUDITOR_SPEAKERS, end_time=LWV_AUDITOR_FORUM_END
+    )
+    tune = reference_half(windows, "tune")
+    print(f"{len(windows)} anchor windows; calibrating on the {len(tune)}-turn "
+          f"tuning half, scoring later on the holdout half")
+
+    best, grid = calibrate(segments, vectors, tune, args.thresholds)
+    print("\nthreshold  labels  conflated  fragmented   (tuning half only)")
+    for row in grid:
+        mark = " <-- chosen" if row["threshold"] == best else ""
+        print(f"  {row['threshold']:.2f}      {row['labels']:3d}       "
+              f"{row['conflated']:2d}         {row['fragmented']:2d}{mark}")
+
+    labels = cluster_turns(vectors, len(segments), best)
+    args.out.write_text(json.dumps(relabel_segments(segments, labels)))
+    print(f"\nwrote {args.out} at threshold {best:.2f} "
+          f"({len(set(labels))} labels)")
+    print("Now score it on the held-out half:")
+    print(f"  .venv/bin/python scripts/score_forum_diarization.py {args.out} \\")
+    print(f"      --raw-json {meeting_dir / 'transcript_raw.json'} \\")
+    print("      --half holdout --label 'experiment B'")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
