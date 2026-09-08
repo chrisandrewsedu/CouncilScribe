@@ -3800,14 +3800,21 @@ Environment Variables:
                              "and embeddings have known NaN issues. See bench/diagnose_merge.py.")
     parser.add_argument("--use-vtt", action="store_true",
                         help="Use VTT subtitles instead of Whisper (auto-detected if captions.vtt exists)")
-    parser.add_argument("--diarizer", choices=["oss", "api", "vibevoice"], default="oss",
+    parser.add_argument("--diarizer", choices=["oss", "api", "vibevoice", "api-recluster"],
+                        default="oss",
                         help="Diarization backend. 'oss' uses local pyannote 3.1 "
                              "(default, free, ~50min/3hr meeting on L4). 'api' uses "
                              "pyannote.ai Precision-2 (cleaner segmentation, ~3min "
                              "for the same meeting, ~$0.45 per audio hour). "
                              "Requires PYANNOTE_AI_KEY in env. 'vibevoice' uses "
                              "Microsoft VibeVoice-ASR on Modal and requires "
-                             "--compute modal. "
+                             "--compute modal. 'api-recluster' is not a diarization "
+                             "backend to run from scratch: it is provenance-only, for "
+                             "--redo transcribe on a meeting whose diarization.json/"
+                             "embeddings.json were already hand-replaced by an offline "
+                             "re-clustering of Precision-2's turns (see "
+                             "bench/diagnose_merge.py-style recluster workflows). "
+                             "Requires diarization to already be complete on disk. "
                              "Recommended per bench/FINDINGS.md.")
     parser.add_argument("--compute", choices=["local", "modal"], default="local",
                         help="Compute backend for GPU-intensive stages (diarization "
