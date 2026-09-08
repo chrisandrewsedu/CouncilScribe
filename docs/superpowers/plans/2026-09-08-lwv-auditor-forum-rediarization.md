@@ -1894,7 +1894,7 @@ _Filled in by Tasks 3, 5, 6 and 7._
 
 | Run | Labels | Conflation (gate, 0.05) | Verdict |
 | --- | --- | --- | --- |
-| incumbent (Precision-2) | | | |
+| incumbent (Precision-2) | 10 labels, 479 turns | 41.0% (BOND holds 3.4s of 8.3s under label SPEAKER_02) | **FAIL** — `SPEAKER_09` holds BOND 1047.5s + KOBIAN 803.9s + MODERATOR 195.1s (2046.5s of the reference's 2068s) |
 | experiment A (OSS pyannote 3.1) | 7 labels, 1199 turns | 48.0% (BOND holds 8.6s of 17.9s under label SPEAKER_00) | **FAIL** — `SPEAKER_04` holds BOND 965.8s + KOBIAN 749.4s + MODERATOR 189.7s |
 | experiment B (re-clustered, broken reference) | 172 labels, 479 turns (threshold 0.60) | 11.6% (BOND holds 12.0s of 103.5s under label SPEAKER_00) | **FAIL** — held-out; see below |
 | experiment B (5b, corrected reference) | 14 labels, 479 turns (threshold 0.60, 20s sliver floor) | one residual (known, see below) | **PASS** — held-out; see below |
@@ -2144,3 +2144,149 @@ test suite: 2232 passed, 3 skipped (baseline was 2221 passed before this task; 1
 added, 6 pre-existing tests in `tests/test_forum_anchor_reference.py` updated for the
 legitimate reference-behavior change — see task-5b-report.md for the list and rationale — no
 regressions).
+
+### Task 6 (land the winner in the meeting) — shipped
+
+Kept path B (Task 5b's re-clustered turns, threshold 0.60, 20s sliver floor). Wrote the 14
+labels into `diarization.json` (479 segments, `SPEAKER_UNCLUSTERED` excluded from the 13
+centroids written to `embeddings.json` — averaging voiceprints across many different people
+would produce a meaningless centroid), then re-ran `run_local.py --redo transcribe
+--diarizer api-recluster --no-publish`. `diarization_model` is recorded as
+`pyannote/ai-precision-2+recluster` — its own provenance string, not a claim that plain
+Precision-2 produced these labels — added to `run_local.py:109-116` test-first, plus an
+additive CLI fix (`--diarizer` gained the `api-recluster` choice it needed to actually run).
+
+**Landed on the real meeting** (whole recording, by total speech):
+
+```
+diarization_model: pyannote/ai-precision-2+recluster
+  SPEAKER_UNCLUSTERED    segs= 125 dur=  319.7s (10.0%) None
+  SPEAKER_00             segs=  37 dur=  543.5s (17.0%) Madison Miller (Moderator)
+  SPEAKER_13             segs=  34 dur=  719.5s (22.5%) None
+  SPEAKER_03             segs=  33 dur=  833.2s (26.0%) None
+  SPEAKER_140            segs=   7 dur=   88.9s ( 2.8%) Unknown Commenter 1
+  SPEAKER_08             segs=   6 dur=   37.6s ( 1.2%) None
+  SPEAKER_124            segs=   5 dur=  131.4s ( 4.1%) Volunteer Campaigner
+  SPEAKER_161            segs=   5 dur=  112.2s ( 3.5%) None
+  SPEAKER_56             segs=   4 dur=   24.6s ( 0.8%) None
+  SPEAKER_118            segs=   4 dur=  119.2s ( 3.7%) None
+  SPEAKER_113            segs=   2 dur=   28.0s ( 0.9%) None
+  SPEAKER_134            segs=   2 dur=  100.7s ( 3.1%) None
+  SPEAKER_154            segs=   1 dur=   30.5s ( 1.0%) None
+  SPEAKER_168            segs=   1 dur=  113.1s ( 3.5%) None
+```
+
+No label holds anything near the incumbent's 75%; the largest, `SPEAKER_03`, holds 26.0%.
+Re-scoring the shipped, post-transcribe result against the holdout half (never seen during
+threshold selection) and against the full reference both return `VERDICT: PASS`, so the
+transcribe stage's own boundary snapping/merging did not reintroduce conflation.
+
+**Controller verification by self-introduction** (independent of the anchor-reference gate,
+because it checks the labels directly against known moments rather than against handoff
+text): the moderator's opening at t=8.5 lands on `SPEAKER_00` (named "Madison Miller
+(Moderator)"); Bond's self-introduction at t=198.1 lands on `SPEAKER_03`; Kobian's at t=303.4
+lands on `SPEAKER_13`; and Kobian's closing remarks at t=2461.9 land on `SPEAKER_13` again —
+the same label as her opening, not a fourth one. All three people now sit on three distinct,
+internally-consistent labels. This is the exact defect the plan set out to fix: previously
+all three of these moments were `SPEAKER_09`.
+
+**Two things do not follow automatically from "PASS", and Task 7 states them explicitly
+below**: the quality gate's own `effective_coverage` dropped from 0.8555 (incumbent) to
+0.2479 (shipped), and `SPEAKER_03` / `SPEAKER_13` — Bond's and Kobian's labels — carry no
+`speaker_name`. Both are explained, not hidden, in the Task 7 section.
+
+Full test suite after Task 6: 2233 passed, 3 skipped (one new test added for the provenance
+string; no regressions). Nothing published — `--no-publish` was honored, and the confidence
+gate independently failed in non-interactive mode and queued the meeting for manual review.
+
+### Task 7 (hand over) — what actually landed, and what did not
+
+**The label set is real and correctly separated, not merely re-labeled.** The controller
+self-introduction check above is the strongest evidence: three people, three labels, and
+Kobian's opening and closing both land on the same label. `SPEAKER_03` (Bond, 833.2s across
+the whole recording) and `SPEAKER_13` (Kobian, 719.5s) never overlap in time with each
+other's reference windows, and both re-scoring passes above (`holdout`, `all`) return PASS.
+
+**Why `effective_coverage` dropped, and why that is not a regression.** The incumbent's
+`quality.json` reported 0.8555 effective coverage because one confident label, `SPEAKER_09`,
+covered nearly all of the forum's speech — 2295s of the meeting's 3049s (75%) — under a
+single name, "Madison Miller (Moderator)". That coverage number measured confidence in a
+label that was factually wrong for two of the three people speaking under it. The shipped
+result's 0.2479 effective coverage is low because `SPEAKER_03` and `SPEAKER_13` are
+correctly split out but carry no name yet (see below), so the gate scores them as
+unidentified rather than as confidently, wrongly, "the moderator". A low coverage number on
+two correctly-separated-but-unnamed labels is a better state than a high coverage number
+built on a confident misattribution of three people's speech to one. The gate's own verdict
+reflects this honestly: `failed | effective_coverage 0.2479 < low 0.55`, run directly against
+the live meeting's `quality.json`:
+
+```
+verdict: failed | effective_coverage 0.2479 < low 0.55
+effective_coverage: 0.2479
+```
+
+**`SPEAKER_03` and `SPEAKER_13` are unnamed, on purpose, not by omission.** Voice-profile
+matching and interactive review both require either a known voice profile or a human in the
+loop; this run was non-interactive (`--no-publish`, no roster, no `--confirm-enroll`), so
+the confidence gate failed and review was skipped by design. Better to ship two correctly
+separated, unnamed labels than to guess and risk naming Bond as Kobian or vice versa. Naming
+them is the operator's next step, done in the GUI review, where a human confirms each label
+against the recording.
+
+**The meet-and-greet has no reference and is therefore unverified — not verified-good.** The
+handoff-anchor reference is built entirely from the moderator's spoken handoffs during the
+forum Q&A, and that mechanism stops working (there are no more handoffs to detect) at
+`LWV_AUDITOR_FORUM_END = 2650.0`. Nothing past that point was ever scored by the gate.
+Querying `transcript_named.json` directly, every label with speech after t=2650, with the
+seconds it holds *after* that cutoff:
+
+```
+SPEAKER_124               131.4s over   5 segs
+SPEAKER_118               119.2s over   4 segs
+SPEAKER_168               113.1s over   1 segs
+SPEAKER_161               112.2s over   5 segs
+SPEAKER_134               100.7s over   2 segs
+SPEAKER_UNCLUSTERED        94.0s over  35 segs
+SPEAKER_140                88.9s over   7 segs
+SPEAKER_00                 55.1s over   2 segs
+SPEAKER_154                30.5s over   1 segs
+SPEAKER_113                23.4s over   1 segs
+SPEAKER_56                  6.6s over   1 segs
+```
+
+(875.1s total, none of it scored.) Notably, `SPEAKER_03` and `SPEAKER_13` — Bond's and
+Kobian's forum labels — do **not** appear in this list: both labels' spans end inside the
+forum (198.1–2575.1s and 303.4–2503.3s respectively) and never touch the meet-and-greet at
+all. Their forum speech is verified; nothing about their behavior in the meet-and-greet is
+known, because they don't have a label there — see the fragmentation example below for where
+that speech actually went.
+
+**Concrete example of fragmentation in the unverified region:** Bond re-introduces herself in
+the meet-and-greet at t=3283.5 ("*>> [laughter] >> So, again, I'm Candy Boone. Um before I
+say anything more about myself,*" — the ASR's rendering of her name). That turn landed under
+`SPEAKER_UNCLUSTERED`, not under `SPEAKER_03`, her forum label. That is fragmentation, not
+misattribution: the turn is honestly unattributed rather than confidently wrong, which is the
+better failure mode of the two — but it is still a gap, not a success, and it is not
+corrected by anything in this plan.
+
+**`SPEAKER_UNCLUSTERED` is a bucket, not a person.** It holds 319.7s over 125 segments
+whole-meeting (94.0s of that after t=2650) — every turn where the per-turn embedding had too
+little voice evidence to confidently join a cluster (31 of 479 turns fell under the
+clustering worker's 0.3s floor; more accumulate outside the scored windows). It is expected
+to contain slivers from several different people, by construction, and the gate's own tests
+(`test_the_unattributed_bucket_does_not_count_as_conflation`) treat it as exempt from the
+conflation check for exactly that reason. It must not be mistaken for a fourteenth speaker in
+the GUI review pass.
+
+**Hand-over.** The meeting `2026-04-03-lwv-brown-county-candidate-forum-auditor` is not live;
+nothing was published by this plan. The 14-label set is ready for a label-level name-and-link
+pass in the GUI: `SPEAKER_03` and `SPEAKER_13` need names (Bond and Kobian, per the
+self-introduction evidence above, but confirmed by a human against the recording, not
+assumed from this report). Every label listed in the meet-and-greet table above was never
+covered by the anchor reference and is therefore unverified, not verified-good — that
+includes `SPEAKER_00`'s post-forum closing/housekeeping speech, not just the small unnamed
+labels.
+
+Full test suite (Task 7, unchanged from Task 6): **2233 passed, 3 skipped** — no regressions
+against the pre-Task-6 baseline of 2232 passed / 3 skipped, and no regressions introduced by
+this handover task (read-only).
