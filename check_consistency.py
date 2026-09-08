@@ -42,19 +42,28 @@ from src.speaker_orphans import (  # noqa: E402
 
 
 def _read_named(named_path: Path) -> tuple[int, dict]:
-    """(text-bearing segment count, {"speakers": ...}) from transcript_named.json.
+    """(text-bearing segment count, {"speakers", "empty_labels"}) from the file.
 
-    One read for both: these files run to 5 MB, and the orphan check needs the
-    speakers dict that the segment count is already opening the file for. Blank
-    segments are excluded because publish drops them, so the DB count is only
-    comparable against the same subset.
+    One read for all three: these files run to 5 MB, and the orphan check needs
+    the speakers dict that the segment count is already opening the file for.
+    Blank segments are excluded from the count because publish drops them, so
+    the DB count is only comparable against the same subset.
+
+    The returned dict deliberately does NOT carry `segments` — holding every
+    segment for 172 meetings is the cost this function exists to avoid. So the
+    empty-label verdict is computed HERE, while the full data is in hand, and
+    passed on as a short list. A caller that recomputed it from `meeting_data`
+    would see no segment text at all and report every label as empty.
     """
     with open(named_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     segments = sum(
         1 for s in data.get("segments", []) if s.get("text", "").strip()
     )
-    return segments, {"speakers": data.get("speakers") or {}}
+    return segments, {
+        "speakers": data.get("speakers") or {},
+        "empty_labels": empty_published_labels(data),
+    }
 
 
 def empty_label_details(disk_meetings) -> dict[str, str]:
@@ -68,7 +77,9 @@ def empty_label_details(disk_meetings) -> dict[str, str]:
     """
     details: dict[str, str] = {}
     for slug, disk in disk_meetings.items():
-        labels = empty_published_labels(disk.get("meeting_data") or {})
+        # Precomputed by _read_named, which is the only place the segments are
+        # in memory. Never recompute from meeting_data — see _read_named.
+        labels = (disk.get("meeting_data") or {}).get("empty_labels") or []
         if labels:
             details[slug] = (
                 f"{len(labels)} label(s) with no published text "
