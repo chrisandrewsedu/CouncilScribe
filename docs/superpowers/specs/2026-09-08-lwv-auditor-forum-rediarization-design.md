@@ -80,9 +80,12 @@ Prototype measurement over the incumbent turns:
 
 | | |
 | --- | --- |
-| Handoff anchors | 29 |
-| Reference coverage | 1907s of 2239s forum speech (85%) |
-| Self-introduction checks passed | 6 of 7 |
+| Handoff anchors (prototype, before the two fixes) | 29 |
+| Reference coverage (prototype) | 1907s of 2239s forum speech (85%) |
+| Self-introduction checks passed (prototype) | 6 of 7 |
+| **Anchors after both fixes, as built** | **32** |
+| **Reference coverage after both fixes** | **2068s of 2239s forum speech (92%)** |
+| **Bond/Kobian duration ratio** | **1.32** (was 2.0 in the prototype) |
 
 ### Two known defects in the reference, to fix before gating on it
 

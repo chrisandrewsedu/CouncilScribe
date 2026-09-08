@@ -242,7 +242,7 @@ each named handoff to the next belongs to that person. That reference comes from
 TEXT alone — no voice model, no embeddings — so it can referee a clustering
 without circularity.
 
-Measured on 2026-04-03-lwv-brown-county-candidate-forum-auditor: 34 anchors
+Measured on 2026-04-03-lwv-brown-county-candidate-forum-auditor: 32 anchors
 covering 2068s of 2239s of forum speech (92%).
 
 Pure: no torch, no Modal, no I/O beyond what the caller passes in.
@@ -382,7 +382,7 @@ def anchor_reference_turns(
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `.venv/bin/python -m pytest tests/test_forum_anchor_reference.py -v`
-Expected: PASS, 9 tests.
+Expected: PASS, 10 tests.
 
 - [ ] **Step 5: Verify against the real meeting**
 
@@ -408,7 +408,7 @@ print('BOND/KOBIAN ratio %.2f' % (by['BOND']/by['KOBIAN']))
 Expected, and these are the numbers to hold the implementation to:
 
 ```
-turns 312 coverage 92%
+anchors 32 turns 344 coverage 92%
   BOND       1063.5s
   KOBIAN      804.1s
   MODERATOR   199.9s
@@ -435,7 +435,7 @@ forum. A cue and its name can land in different diarized turns
 discusses the county's debt bond rating, which made a genuine handoff
 to Kobian look ambiguous and gave her answer to Bond.
 
-With both: 34 anchors, 92% of forum speech, Bond/Kobian 1.32 (was 2.0)."
+With both: 32 anchors, 92% of forum speech, Bond/Kobian 1.32 (was 2.0)."
 ```
 
 ---
@@ -1201,7 +1201,7 @@ def calibrate(
     The caller supplies the already-halved reference — `reference_half(windows,
     "tune")` — so the tune/holdout split lives in exactly one place and cannot
     drift between the calibrator and the scorer. Calibrating and reporting on
-    the same 34 anchors would prove nothing.
+    the same 32 anchors would prove nothing.
 
     Ties break toward the HIGHER threshold: conflation misattributes quotes
     silently, fragmentation surfaces as an extra unnamed speaker the reviewer
