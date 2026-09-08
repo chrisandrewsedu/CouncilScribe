@@ -63,3 +63,15 @@ def test_the_gate_is_inert_when_chunking_is_configured_off(monkeypatch, capsys):
     assert _resolve_chunk_minutes(_args(), "council") == 0
     assert _resolve_chunk_minutes(_args(), "debate") == 0
     assert capsys.readouterr().out == ""
+
+
+def test_reclustered_precision_2_has_its_own_provenance_string():
+    """Path B keeps Precision-2's boundaries and replaces only its clustering.
+    Recording it as plain 'pyannote/ai-precision-2' would claim the shipped
+    labels came from a model that never produced them."""
+    import run_local
+
+    assert run_local._diarization_model_name("api") == "pyannote/ai-precision-2"
+    assert run_local._diarization_model_name("api-recluster") == (
+        "pyannote/ai-precision-2+recluster"
+    )

@@ -109,6 +109,11 @@ def _validate_diarizer_compute(args) -> None:
 def _diarization_model_name(diarizer: str) -> str:
     if diarizer == "api":
         return "pyannote/ai-precision-2"
+    if diarizer == "api-recluster":
+        # Precision-2's segmentation kept, its clustering replaced by a
+        # per-turn re-clustering. Distinct from "api" because the labels this
+        # meeting ships did NOT come out of Precision-2.
+        return "pyannote/ai-precision-2+recluster"
     if diarizer == "vibevoice":
         from src.vibevoice import VIBEVOICE_MODEL_ID, VIBEVOICE_MODEL_REVISION
 
