@@ -1518,3 +1518,43 @@ def test_review_page_still_renders_when_prod_cannot_be_reached(
     resp = TestClient(create_app()).get("/meetings/2026-02-04-council/review")
     assert resp.status_code == 200
     assert "warn-stale_published_speaker" not in resp.text
+
+
+def _card_ident(**kw):
+    from gui.models import SpeakerCard
+    base = dict(label="S", name="Brian Sterling", confidence=1.0,
+                method="human_review", minutes=2.0, seg_count=3)
+    base.update(kw)
+    return SpeakerCard(**base)
+
+
+def test_identity_kind_covers_all_five_states():
+    assert _card_ident().identity_kind == "none"
+    assert _card_ident(politician_id="uuid-1").identity_kind == "roster"
+    assert _card_ident(politician_slug="xavier-becerra").identity_kind == "roster"
+    assert _card_ident(local_slug="brian-sterling").identity_kind == "local"
+    assert _card_ident(speaker_status="unidentified",
+                       local_slug="unidentified-m-s0").identity_kind == "unidentified"
+    assert _card_ident(speaker_status="non_speaker").identity_kind == "non_speaker"
+
+
+def test_identity_kind_matches_review_identity_label_precedence():
+    """The picker must never disagree with what publish will store, so the
+    precedence here is exactly src/review.py identity_label's: status beats
+    links, and politician_* beats local_slug."""
+    # A stray link under a mark: the mark wins.
+    assert _card_ident(speaker_status="non_speaker",
+                       politician_id="uuid-1").identity_kind == "non_speaker"
+    assert _card_ident(speaker_status="unidentified",
+                       politician_id="uuid-1").identity_kind == "unidentified"
+    # Both a roster link and a local slug: roster wins.
+    assert _card_ident(politician_id="uuid-1",
+                       local_slug="brian-sterling").identity_kind == "roster"
+
+
+def test_identity_pill_wording():
+    assert _card_ident().identity_pill == "no identity"
+    assert _card_ident(politician_id="uuid-1").identity_pill == "roster"
+    assert _card_ident(local_slug="s").identity_pill == "local"
+    assert _card_ident(speaker_status="unidentified").identity_pill == "unidentified"
+    assert _card_ident(speaker_status="non_speaker").identity_pill == "not a speaker"

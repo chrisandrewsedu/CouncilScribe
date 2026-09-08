@@ -256,6 +256,40 @@ class SpeakerCard:
     def has_local_person(self) -> bool:
         return bool(self.local_slug)
 
+    # Reader-facing wording for each identity_kind. Separate from the kind token
+    # so the template never has to spell a status out and the two can't drift.
+    _IDENTITY_PILLS = {
+        "roster": "roster",
+        "local": "local",
+        "unidentified": "unidentified",
+        "non_speaker": "not a speaker",
+        "none": "no identity",
+    }
+
+    @property
+    def identity_kind(self) -> str:
+        """'roster' | 'local' | 'unidentified' | 'non_speaker' | 'none'.
+
+        Which of the four identity outcomes is currently in force, as one token
+        the picker can switch on. Precedence is exactly src/review.identity_label's
+        — status beats links, politician_* beats local_slug — so the picker can
+        never disagree with what publish will store. Derived, never stored.
+        """
+        if self.speaker_status == "non_speaker":
+            return "non_speaker"
+        if self.speaker_status == "unidentified":
+            return "unidentified"
+        if self.politician_id or self.politician_slug:
+            return "roster"
+        if self.local_slug:
+            return "local"
+        return "none"
+
+    @property
+    def identity_pill(self) -> str:
+        """Short label for the identity pill in the card head."""
+        return self._IDENTITY_PILLS[self.identity_kind]
+
     @property
     def is_confirmed(self) -> bool:
         """A speaker counts as confirmed only when it's trusted the way the
