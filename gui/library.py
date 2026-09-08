@@ -89,13 +89,20 @@ def _summarize(meeting_dir: Path) -> Optional[MeetingSummary]:
 
 
 def scan_meetings(
-    meetings_dir: Path, live_slugs: Optional[set] = None
+    meetings_dir: Path,
+    live_slugs: Optional[set] = None,
+    live_speaker_counts: Optional[dict] = None,
 ) -> list[MeetingSummary]:
     """All meetings under meetings_dir, newest date first (missing dates last).
 
     ``live_slugs`` is the set of slugs currently live on the site (from the DB).
     When provided, each row's ``is_live`` is set True/False accordingly; when
-    None (DB not checked), ``is_live`` stays None and no live badge is shown."""
+    None (DB not checked), ``is_live`` stays None and no live badge is shown.
+
+    ``live_speaker_counts`` is {slug: prod speaker_count} from the same query.
+    It populates ``live_speaker_count`` so the Speakers column can show a
+    divergence from the local transcript — the symptom of an orphan speaker
+    row, which this scan (local files only) cannot otherwise see."""
     if not meetings_dir.exists():
         return []
     summaries: list[MeetingSummary] = []
@@ -106,6 +113,10 @@ def scan_meetings(
         if summary is not None:
             if live_slugs is not None:
                 summary.is_live = summary.meeting_id in live_slugs
+            if live_speaker_counts is not None:
+                summary.live_speaker_count = live_speaker_counts.get(
+                    summary.meeting_id
+                )
             summaries.append(summary)
     # Sort by most-recent processing activity (state-file mtime) so running and
     # just-finished meetings float to the top; fall back to clip date / id.

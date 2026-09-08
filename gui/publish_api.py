@@ -20,10 +20,15 @@ def _db_url() -> Optional[str]:
     return url or None
 
 
-def live_published_slugs() -> Optional[set]:
-    """Slugs currently live in meetings.meetings, in one query.
+def live_meeting_speaker_counts() -> Optional[dict]:
+    """{slug: meetings.meetings.speaker_count} for every live meeting, one query.
 
-    Returns a set on success (possibly empty), or None when the DB isn't
+    The count comes along because an orphan speaker row inflates it, and that
+    divergence from the local transcript is otherwise invisible in the GUI —
+    the library's own Speakers column is computed from local files only. The
+    value can be None for a meeting published before the column was populated.
+
+    Returns a dict on success (possibly empty), or None when the DB isn't
     configured or the query fails — so callers can tell "not live" apart from
     "unknown" and avoid falsely flagging every meeting as unpublished."""
     url = _db_url()
@@ -33,12 +38,49 @@ def live_published_slugs() -> Optional[set]:
         conn = psycopg2.connect(url)
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT slug FROM meetings.meetings")
-                return {r[0] for r in cur.fetchall() if r and r[0]}
+                cur.execute("SELECT slug, speaker_count FROM meetings.meetings")
+                return {r[0]: r[1] for r in cur.fetchall() if r and r[0]}
         finally:
             conn.close()
     except Exception:  # DB down / auth / schema — treat as unknown, never crash
         return None
+
+
+def live_published_slugs() -> Optional[set]:
+    """Slugs currently live in meetings.meetings, in one query.
+
+    Kept as the published touchpoint; derives from live_meeting_speaker_counts
+    so a caller wanting only the slugs costs no extra round trip. Same
+    set / None contract as before."""
+    counts = live_meeting_speaker_counts()
+    return None if counts is None else set(counts)
+
+
+def published_speaker_rows(meeting_id: str):
+    """This meeting's live meetings.speakers rows, as src.speaker_orphans.DbSpeaker.
+
+    Returns [] for a meeting that is not published (nothing live), or None when
+    the DB isn't configured or the query fails — so callers can tell "published
+    nothing" apart from "unknown" and never render a warning they cannot
+    substantiate. Same contract as live_published_slugs, for the same reason.
+    """
+    from src.speaker_orphans import audit_query, rows_by_meeting
+
+    url = _db_url()
+    if not url:
+        return None
+    try:
+        conn = psycopg2.connect(url)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(audit_query(by_slug=True), ([meeting_id],))
+                grouped = rows_by_meeting(cur.fetchall())
+        finally:
+            conn.close()
+    except Exception:  # DB down / auth / schema — unknown, never crash review
+        return None
+    _stored, rows = grouped.get(meeting_id, (None, []))
+    return rows
 
 
 def meeting_published_id(meeting_id: str) -> Optional[str]:
@@ -149,6 +191,7 @@ def apply_publish(meeting_id: str, *, force: bool = False) -> dict:
         attach_thumbnail(meeting, meeting_dir)
         result = publish_meeting(meeting, state.body_slug)
         return {"ok": True, "meeting_id": result.meeting_id,
-                "segments": result.segments, "speakers": result.speakers}
+                "segments": result.segments, "speakers": result.speakers,
+                "removed_speakers": result.removed_speakers}
     except Exception as exc:  # DB / validation failure — surface, don't crash
         return {"ok": False, "reason": "error", "error": str(exc)}

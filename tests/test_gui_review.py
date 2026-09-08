@@ -1455,3 +1455,66 @@ def test_merge_control_renders_each_target_with_its_voice_and_flags_mismatches(
     body = TestClient(create_app()).get("/meetings/2026-02-04-council?tab=review").text
     assert "voice +0.00 ✗" in body            # annotated option
     assert "data-merge-mismatch" in body      # machine-readable for the confirm prompt
+
+
+# --- orphan speaker rows: label surgery on a LIVE meeting leaves prod stale ---
+
+def _prod_rows(*pairs):
+    from src.speaker_orphans import DbSpeaker
+    return [DbSpeaker(label=l, display_name=n) for l, n in pairs]
+
+
+def test_review_warns_when_prod_holds_a_label_the_transcript_dropped(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    # The reviewer merged SPEAKER_09 away locally. Nothing else in the GUI
+    # consults prod, so without this the meeting looks finished while the old
+    # row keeps serving.
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "published_speaker_rows", lambda mid: _prod_rows(
+        ("SPEAKER_00", "Mayor Johnson"), ("SPEAKER_09", "Councilmember Volan")))
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    assert "Before you publish" in body
+    assert "warn-stale_published_speaker" in body
+    assert "SPEAKER_09" in body and "Councilmember Volan" in body
+    assert "republish" in body.lower()
+
+
+def test_review_shows_no_stale_warning_when_prod_matches_the_transcript(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "published_speaker_rows", lambda mid: _prod_rows(
+        ("SPEAKER_00", "Mayor Johnson"), ("SPEAKER_01", None)))
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    assert "warn-stale_published_speaker" not in body
+
+
+def test_review_shows_no_stale_warning_for_an_unpublished_meeting(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    # Not live: an empty row list is "published nothing", never "everything stale".
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "published_speaker_rows", lambda mid: [])
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    assert "warn-stale_published_speaker" not in body
+
+
+def test_review_page_still_renders_when_prod_cannot_be_reached(
+    tagged_meeting_dir, tmp_meetings_dir, monkeypatch
+):
+    # None = unknown (no DB / query failed). Review must not break or invent a
+    # warning it cannot substantiate.
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    import gui.publish_api as pub
+    monkeypatch.setattr(pub, "published_speaker_rows", lambda mid: None)
+    resp = TestClient(create_app()).get("/meetings/2026-02-04-council/review")
+    assert resp.status_code == 200
+    assert "warn-stale_published_speaker" not in resp.text

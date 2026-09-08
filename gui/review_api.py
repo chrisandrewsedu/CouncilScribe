@@ -424,6 +424,22 @@ def apply_enroll(meeting_id: str, label: str) -> bool:
     return True
 
 
+def _stale_published_warnings(meeting) -> list[dict]:
+    """Warnings for live speaker rows this transcript has dropped, or [] when
+    prod is clean, unpublished, or unreachable."""
+    from gui import publish_api
+    from src.speaker_orphans import audit_meeting, stale_publish_warnings
+
+    rows = publish_api.published_speaker_rows(meeting.meeting_id)
+    if not rows:                       # None = unknown, [] = nothing published
+        return []
+    audit = audit_meeting(
+        meeting.meeting_id, rows,
+        {"speakers": {k: v.to_dict() for k, v in meeting.speakers.items()}},
+    )
+    return stale_publish_warnings(audit)
+
+
 def load_review_page(meeting_id: str) -> Optional[ReviewPageData]:
     if not is_safe_meeting_id(meeting_id):
         return None
@@ -460,6 +476,12 @@ def load_review_page(meeting_id: str) -> Optional[ReviewPageData]:
     # these; the GUI reviewer must too) plus, per card, the peer labels that
     # share its name — a rename onto an existing name is usually a merge-in-waiting.
     warnings = review.enrollment_warnings(meeting.speakers, roster)
+    # Plus the one collision enrollment_warnings structurally cannot see: a
+    # meetings.speakers row for a label this transcript no longer has. Label
+    # surgery rewrites the local artifact and nothing else in the GUI consults
+    # prod, so dropping a label from a LIVE meeting otherwise looks finished
+    # while the stale row keeps serving. Best-effort: None means unknown.
+    warnings.extend(_stale_published_warnings(meeting))
     peer_labels: dict[str, list[str]] = {}
     for labels in review.duplicate_named_speakers(meeting.speakers).values():
         for lbl in labels:
