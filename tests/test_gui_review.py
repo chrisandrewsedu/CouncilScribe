@@ -1558,3 +1558,116 @@ def test_identity_pill_wording():
     assert _card_ident(local_slug="s").identity_pill == "local"
     assert _card_ident(speaker_status="unidentified").identity_pill == "unidentified"
     assert _card_ident(speaker_status="non_speaker").identity_pill == "not a speaker"
+
+
+from gui.review_api import (
+    apply_clear_speaker_status,
+    apply_make_local_person,
+    apply_mark_unidentified,
+)
+
+
+def _card_for(meeting_id, label):
+    page = load_review_page(meeting_id)
+    return [c for c in (page.confirmed + page.needs_attention) if c.label == label][0]
+
+
+def test_apply_link_clears_a_mark(tagged_meeting_dir, tmp_meetings_dir):
+    """Reaching a roster identity from a marked state must take one click. Before
+    this, speaker_status survived the link and kept the card showing a stale
+    'unidentified' badge with the local-person path hidden for good."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_unidentified("2026-02-04-council", "SPEAKER_01")
+    assert _card_for("2026-02-04-council", "SPEAKER_01").identity_kind == "unidentified"
+
+    assert apply_link("2026-02-04-council", "SPEAKER_01", "", "uuid-becerra") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.identity_kind == "roster"
+    assert card.speaker_status is None
+    assert card.local_slug is None       # the synthetic handle is gone too
+
+
+def test_apply_make_local_person_clears_a_mark(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_non_speaker("2026-02-04-council", "SPEAKER_01", "Pledge")
+    assert _card_for("2026-02-04-council", "SPEAKER_01").identity_kind == "non_speaker"
+
+    assert apply_make_local_person("2026-02-04-council", "SPEAKER_01",
+                                   "brian-sterling", "official") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.identity_kind == "local"
+    assert card.local_slug == "brian-sterling"
+
+
+def test_apply_link_with_a_name_stores_both(tagged_meeting_dir, tmp_meetings_dir):
+    """The ordering regression test. rename_speaker drops any prior identity when
+    the name changes, so renaming AFTER the link would wipe the link that was
+    just made. Both fields must survive."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    assert apply_link("2026-02-04-council", "SPEAKER_01", "", "uuid-becerra",
+                      name="Xavier Becerra") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.name == "Xavier Becerra"
+    assert card.politician_id == "uuid-becerra"
+    assert card.identity_kind == "roster"
+
+
+def test_apply_link_with_a_name_over_a_mark_stores_both(tagged_meeting_dir, tmp_meetings_dir):
+    """All three steps at once: clear the mark, take the name, keep the link.
+    Clearing after the rename would blank the name; renaming after the link
+    would drop the link."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_non_speaker("2026-02-04-council", "SPEAKER_01", "Music")
+
+    assert apply_link("2026-02-04-council", "SPEAKER_01", "", "uuid-becerra",
+                      name="Xavier Becerra") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.name == "Xavier Becerra"
+    assert card.politician_id == "uuid-becerra"
+    assert card.speaker_status is None
+
+
+def test_apply_make_local_person_with_a_name_stores_name_slug_and_role(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """publish writes `speaker_name or slug` as a local person's PUBLIC name, so a
+    nameless local person reaches readers as the raw slug. The name has to land
+    in the same action."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    assert apply_make_local_person("2026-02-04-council", "SPEAKER_01",
+                                   "brian-sterling", "official",
+                                   name="Brian Sterling") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.name == "Brian Sterling"
+    assert card.local_slug == "brian-sterling"
+    assert card.local_role == "official"
+
+
+def test_apply_writers_unchanged_without_a_name(tagged_meeting_dir, tmp_meetings_dir):
+    """Existing callers pass no name; their behaviour must not shift."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    # SPEAKER_00 is named "Mayor Johnson" on disk; linking without a name keeps it.
+    assert apply_link("2026-02-04-council", "SPEAKER_00", "mayor-johnson", "") is True
+    assert _card_for("2026-02-04-council", "SPEAKER_00").name == "Mayor Johnson"
+
+
+def test_apply_clear_speaker_status_and_its_guards(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_non_speaker("2026-02-04-council", "SPEAKER_01", "Pledge")
+
+    assert apply_clear_speaker_status("2026-02-04-council", "SPEAKER_01") is True
+    card = _card_for("2026-02-04-council", "SPEAKER_01")
+    assert card.identity_kind == "none"
+    assert card.name is None
+
+    # A second clear is a no-op, and a no-op is not success.
+    assert apply_clear_speaker_status("2026-02-04-council", "SPEAKER_01") is False
+    assert apply_clear_speaker_status("2026-02-04-council", "SPEAKER_99") is False
+    assert apply_clear_speaker_status("ghost", "SPEAKER_01") is False
+    assert apply_clear_speaker_status("../x", "SPEAKER_01") is False
