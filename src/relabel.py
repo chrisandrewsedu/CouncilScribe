@@ -348,13 +348,25 @@ def relabel_payload(payload: dict, spans, to_label: str, *, name: str | None = N
         if segment.speaker_label == to_label:
             segment.speaker_name = mapping.speaker_name
 
-    live_labels = {s.speaker_label for s in meeting.segments}
-    emptied = sorted(
-        label for label in list(meeting.speakers)
-        if label not in live_labels and label != to_label
-    )
+    # A label is emptied when no PUBLISHED segment carries it any more — not
+    # merely when it has no segments at all. Moving a label's only real turn
+    # away can leave it holding a zero-length stub, which then survives a
+    # "no segments" test and publishes a speaker row serving nothing. The
+    # present-but-empty check found exactly that on a meeting this tool had
+    # just repaired. Only labels THIS move emptied are dropped; one that was
+    # already empty is the dedicated sweep's business, not a silent side
+    # effect of an unrelated repair.
+    from .speaker_orphans import empty_published_labels
+
+    already_empty = set(empty_published_labels(payload))
+    now_empty = set(empty_published_labels({
+        "speakers": {k: v.to_dict() for k, v in meeting.speakers.items()},
+        "segments": [s.to_dict() for s in meeting.segments],
+    }))
+    emptied = sorted((now_empty - already_empty) - {to_label})
     for label in emptied:
         meeting.speakers.pop(label, None)
+    meeting.segments = [s for s in meeting.segments if s.speaker_label not in emptied]
 
     _, after_merge, reindexed = remerge_meeting(meeting)
     return {

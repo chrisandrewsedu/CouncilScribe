@@ -406,3 +406,163 @@ def test_stale_publish_warnings_are_one_per_orphan_label():
 def test_an_unjudgeable_audit_produces_no_stale_publish_warning():
     audit = audit_meeting("m", [DbSpeaker(label="S0", display_name="A One")], None)
     assert stale_publish_warnings(audit) == []
+
+
+# --- "present but empty": a label the orphan check cannot see ---------------
+
+def test_empty_published_labels_finds_a_label_whose_segments_publish_drops():
+    """A label present in speakers whose every segment publish would drop.
+
+    Not an orphan: `keep_labels` reads the speakers dict, so this label is not
+    stale and audit_meeting is right to pass it. But publish writes the speaker
+    ROW and drops the segments (`if not seg.text: continue`), so the live site
+    gets a row with a NULL display_name serving nothing — and speaker_count
+    claims a speaker that is not there. Measured on prod: two press conferences
+    each report 2 speakers where there is 1.
+    """
+    from src.speaker_orphans import empty_published_labels
+
+    data = {
+        "speakers": {
+            "SPEAKER_00": {"speaker_label": "SPEAKER_00", "speaker_name": "Real"},
+            "SPEAKER_01": {"speaker_label": "SPEAKER_01"},
+        },
+        "segments": [
+            {"speaker_label": "SPEAKER_00", "text": "hello", "start_time": 0.0, "end_time": 1.0},
+            {"speaker_label": "SPEAKER_01", "text": "", "start_time": 5.0, "end_time": 5.0},
+        ],
+    }
+
+    assert empty_published_labels(data) == ["SPEAKER_01"]
+
+
+def test_empty_published_labels_ignores_a_label_with_real_text():
+    from src.speaker_orphans import empty_published_labels
+
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"}},
+        "segments": [
+            {"speaker_label": "SPEAKER_00", "text": "", "start_time": 0.0, "end_time": 0.0},
+            {"speaker_label": "SPEAKER_00", "text": "words", "start_time": 1.0, "end_time": 2.0},
+        ],
+    }
+
+    assert empty_published_labels(data) == []
+
+
+def test_empty_published_labels_treats_whitespace_as_empty():
+    from src.speaker_orphans import empty_published_labels
+
+    # publish tests `if not seg.text`, so a whitespace-only text IS published.
+    # It still leaves a row serving nothing readable, so it counts here.
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"}},
+        "segments": [{"speaker_label": "SPEAKER_00", "text": "   ",
+                      "start_time": 0.0, "end_time": 1.0}],
+    }
+
+    assert empty_published_labels(data) == ["SPEAKER_00"]
+
+
+def test_empty_published_labels_reports_a_label_with_no_segments_at_all():
+    from src.speaker_orphans import empty_published_labels
+
+    data = {"speakers": {"SPEAKER_09": {"speaker_label": "SPEAKER_09"}}, "segments": []}
+
+    assert empty_published_labels(data) == ["SPEAKER_09"]
+
+
+def test_empty_published_labels_is_empty_for_a_healthy_transcript():
+    from src.speaker_orphans import empty_published_labels
+
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"}},
+        "segments": [{"speaker_label": "SPEAKER_00", "text": "hi",
+                      "start_time": 0.0, "end_time": 1.0}],
+    }
+
+    assert empty_published_labels(data) == []
+
+
+def test_empty_published_labels_honours_the_speaker_label_field():
+    from src.speaker_orphans import empty_published_labels
+
+    # Same rule keep_labels follows: publish writes mapping.speaker_label, not
+    # the dict key, and reading the key would invent phantom findings.
+    data = {
+        "speakers": {"stale-key": {"speaker_label": "SPEAKER_00"}},
+        "segments": [{"speaker_label": "SPEAKER_00", "text": "hi",
+                      "start_time": 0.0, "end_time": 1.0}],
+    }
+
+    assert empty_published_labels(data) == []
+
+
+def test_drop_empty_labels_removes_the_label_and_its_empty_segments():
+    from src.speaker_orphans import drop_empty_labels
+
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"},
+                     "SPEAKER_01": {"speaker_label": "SPEAKER_01"}},
+        "segments": [
+            {"speaker_label": "SPEAKER_00", "text": "hi", "start_time": 0.0, "end_time": 1.0},
+            {"speaker_label": "SPEAKER_01", "text": "", "start_time": 5.0, "end_time": 5.0},
+        ],
+    }
+
+    result, dropped = drop_empty_labels(data)
+
+    assert dropped == ["SPEAKER_01"]
+    assert list(result["speakers"]) == ["SPEAKER_00"]
+    assert [s["speaker_label"] for s in result["segments"]] == ["SPEAKER_00"]
+
+
+def test_drop_empty_labels_leaves_a_healthy_transcript_alone():
+    from src.speaker_orphans import drop_empty_labels
+
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"}},
+        "segments": [{"speaker_label": "SPEAKER_00", "text": "hi",
+                      "start_time": 0.0, "end_time": 1.0}],
+    }
+
+    result, dropped = drop_empty_labels(data)
+
+    assert dropped == []
+    assert result == data
+
+
+def test_drop_empty_labels_keeps_an_empty_segment_of_a_surviving_label():
+    from src.speaker_orphans import drop_empty_labels
+
+    # Only the dropped labels' segments go. A real speaker's own empty stub is
+    # publish's problem, not a reason to rewrite their turns.
+    data = {
+        "speakers": {"SPEAKER_00": {"speaker_label": "SPEAKER_00"},
+                     "SPEAKER_01": {"speaker_label": "SPEAKER_01"}},
+        "segments": [
+            {"speaker_label": "SPEAKER_00", "text": "hi", "start_time": 0.0, "end_time": 1.0},
+            {"speaker_label": "SPEAKER_00", "text": "", "start_time": 2.0, "end_time": 2.0},
+            {"speaker_label": "SPEAKER_01", "text": "", "start_time": 5.0, "end_time": 5.0},
+        ],
+    }
+
+    result, dropped = drop_empty_labels(data)
+
+    assert dropped == ["SPEAKER_01"]
+    assert len(result["segments"]) == 2
+
+
+def test_drop_empty_labels_does_not_mutate_the_input():
+    from src.speaker_orphans import drop_empty_labels
+
+    data = {
+        "speakers": {"SPEAKER_01": {"speaker_label": "SPEAKER_01"}},
+        "segments": [{"speaker_label": "SPEAKER_01", "text": "",
+                      "start_time": 5.0, "end_time": 5.0}],
+    }
+
+    drop_empty_labels(data)
+
+    assert list(data["speakers"]) == ["SPEAKER_01"]
+    assert len(data["segments"]) == 1
