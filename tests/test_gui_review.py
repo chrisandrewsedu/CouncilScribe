@@ -535,7 +535,10 @@ def test_link_and_unlink_routes(tagged_meeting_dir, tmp_meetings_dir):
                     data={"politician_slug": "clerk-smith", "politician_id": "uuid-cs"},
                     follow_redirects=False)
     assert r.status_code == 303
-    assert "clerk-smith" in client.get("/meetings/2026-02-04-council/review").text
+    # The roster panel's "Currently:" line shows politician_id preferentially
+    # (c.politician_id or c.politician_slug) — that's the stable identifier the
+    # rest of the pipeline keys on, so a slug-only assertion doesn't hold.
+    assert "uuid-cs" in client.get("/meetings/2026-02-04-council/review").text
 
     r2 = client.post("/meetings/2026-02-04-council/speakers/SPEAKER_01/unlink", follow_redirects=False)
     assert r2.status_code == 303
@@ -720,7 +723,7 @@ def test_status_badge_renders(tagged_meeting_dir, tmp_meetings_dir):
     _write_meeting(mdir)
     apply_mark_non_speaker("2026-02-04-council", "SPEAKER_01", "Pledge")
     body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
-    assert "not-a-speaker" in body or "non-speaker" in body  # a visible status badge
+    assert ">not a speaker<" in body  # the identity pill, not the hyphenated old badge
 
 
 from gui.models import ENROLL_MIN_SPEECH_SECONDS
@@ -1268,12 +1271,21 @@ def _write_meeting_local_person_states(mdir):
 
 
 def test_review_page_render_local_person_branch_selection(tagged_meeting_dir, tmp_meetings_dir):
-    """Render test for the _macros.html card: branch selection, verified by
-    inspecting the returned HTML rather than by manual inspection. This is the
-    Critical's regression guard — an unidentified speaker (SPEAKER_03) must show
-    NEITHER the create form nor the badge+Clear button, since its local_slug is
-    the synthetic unidentified-<meeting>-<label> handle, not a local person a
-    reviewer authored."""
+    """Render test for the _macros.html card: which identity panel the SERVER
+    reveals for each state, verified by inspecting the returned HTML.
+
+    Task 5 replaced the old elif-gated markup — which OMITTED the
+    make-local-person form from the DOM entirely for a linked or marked
+    speaker — with four panels that are ALWAYS present and toggled by a
+    `hidden` attribute. So raw substring presence of the local-person form is
+    no longer the right thing to assert (it's now present for every speaker);
+    which panel is revealed is. The Critical's original regression this
+    guarded — an unidentified speaker offering a bogus create-local-person
+    form, since mark_unidentified's local_slug is the synthetic
+    unidentified-<meeting>-<label> handle, not a local person a reviewer
+    authored — is now guarded by the 'local' panel staying hidden whenever
+    identity_kind != 'local'."""
+    import re
     from fastapi.testclient import TestClient
     from gui.app import create_app
     mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
@@ -1283,28 +1295,30 @@ def test_review_page_render_local_person_branch_selection(tagged_meeting_dir, tm
     assert r.status_code == 200
     html = r.text
 
-    def create_form_present(label):
-        return f'/meetings/2026-02-04-council/speakers/{label}/local-person"' in html
+    def revealed_panels(label):
+        card = _card_html(html, label)
+        panels = re.findall(r'<div class="ident-panel" data-ident="(\w+)"([^>]*)>', card)
+        return [kind for kind, attrs in panels if "hidden" not in attrs]
 
-    def clear_button_present(label):
-        return f'/meetings/2026-02-04-council/speakers/{label}/local-person/clear"' in html
+    # 1. plain unlinked speaker, no identity at all -> no panel is pre-revealed;
+    #    the four chips are the prompt, not a default local-person form.
+    assert revealed_panels("SPEAKER_00") == []
 
-    # 1. plain unlinked speaker -> shows the create form
-    assert create_form_present("SPEAKER_00") is True
-    assert clear_button_present("SPEAKER_00") is False
+    # 2. speaker with a local person -> the local panel is revealed, showing
+    #    the current slug and a Clear button.
+    assert revealed_panels("SPEAKER_01") == ["local"]
+    speaker_01_card = _card_html(html, "SPEAKER_01")
+    assert "jo-doe" in speaker_01_card
+    assert 'action="/meetings/2026-02-04-council/speakers/SPEAKER_01/local-person/clear"' in speaker_01_card
 
-    # 2. speaker with a local person -> shows the badge + Clear, not the create form
-    assert clear_button_present("SPEAKER_01") is True
-    assert create_form_present("SPEAKER_01") is False
-    assert "local: jo-doe" in html
+    # 3. speaker linked to a politician -> the roster panel is revealed, and
+    #    the local panel (with its create form) stays hidden.
+    assert revealed_panels("SPEAKER_02") == ["roster"]
 
-    # 3. speaker linked to a politician -> shows neither
-    assert create_form_present("SPEAKER_02") is False
-    assert clear_button_present("SPEAKER_02") is False
-
-    # 4. UNIDENTIFIED speaker -> shows neither (the Critical's regression guard)
-    assert create_form_present("SPEAKER_03") is False
-    assert clear_button_present("SPEAKER_03") is False
+    # 4. UNIDENTIFIED speaker -> the unidentified panel is revealed, and the
+    #    local panel stays hidden (the Critical's regression guard: its
+    #    local_slug is the synthetic handle, not an authored local person).
+    assert revealed_panels("SPEAKER_03") == ["unidentified"]
 
 
 def test_local_person_route_rejects_a_bad_slug_with_400(tagged_meeting_dir, tmp_meetings_dir):
@@ -1716,3 +1730,150 @@ def test_local_person_route_accepts_a_name(tagged_meeting_dir, tmp_meetings_dir)
     card = _card_for("2026-02-04-council", "SPEAKER_01")
     assert card.name == "Brian Sterling"
     assert card.local_slug == "brian-sterling"
+
+
+def _linked_body(tagged_meeting_dir):
+    """Review page HTML for a meeting whose SPEAKER_00 is roster-linked."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    import json as _json
+    data = _json.loads((mdir / "transcript_named.json").read_text())
+    data["speakers"]["SPEAKER_00"]["politician_id"] = "uuid-mj"
+    (mdir / "transcript_named.json").write_text(_json.dumps(data))
+    return TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+
+
+def test_a_linked_speaker_still_offers_the_local_person_panel(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """THE REGRESSION THAT PROMPTED THIS WORK. The old macro gated the
+    make-local-person form on `{% elif not c.is_linked %}`, so a roster-linked
+    speaker rendered no such form and the reviewer had to click Unlink first.
+    Most speakers needing hand-identification are NOT politicians, so the local
+    path is the common case, not a fallback."""
+    body = _linked_body(tagged_meeting_dir)
+    assert 'action="/meetings/2026-02-04-council/speakers/SPEAKER_00/local-person"' in body
+
+
+def test_every_card_offers_all_four_outcomes(tagged_meeting_dir, tmp_meetings_dir):
+    body = _linked_body(tagged_meeting_dir)
+    for label in ("SPEAKER_00", "SPEAKER_01"):
+        for kind in ("roster", "local", "unidentified", "non_speaker"):
+            assert f'name="ident-{label}" value="{kind}"' in body, f"{label}/{kind}"
+
+
+def _card_html(body, label):
+    """The HTML of one speaker's card, sliced out of the review page so the
+    per-card assertions below cannot be satisfied by a sibling card."""
+    chunks = body.split('<div class="card ')
+    hits = [ch for ch in chunks if f'name="ident-{label}"' in ch]
+    assert len(hits) == 1, f"expected exactly one card for {label}, got {len(hits)}"
+    return hits[0]
+
+
+def test_the_current_outcome_is_the_checked_one(tagged_meeting_dir, tmp_meetings_dir):
+    """SPEAKER_00 is roster-linked, SPEAKER_01 has no identity at all. Exactly
+    one chip is checked on the linked card, and none on the other — 'no identity'
+    is a real state, and pre-checking a chip there would assert a choice nobody
+    made."""
+    body = _linked_body(tagged_meeting_dir)
+
+    linked = _card_html(body, "SPEAKER_00")
+    assert linked.count('name="ident-SPEAKER_00"') == 4
+    assert linked.count("checked") == 1
+    assert 'value="roster" checked' in linked
+
+    plain = _card_html(body, "SPEAKER_01")
+    assert plain.count('name="ident-SPEAKER_01"') == 4
+    assert plain.count("checked") == 0
+
+
+def test_only_the_current_panel_is_revealed(tagged_meeting_dir, tmp_meetings_dir):
+    """Server-rendered reveal: the initial paint needs no JavaScript, so exactly
+    one of a card's four panels lacks `hidden`."""
+    import re
+    body = _linked_body(tagged_meeting_dir)
+
+    linked = _card_html(body, "SPEAKER_00")
+    panels = re.findall(r'<div class="ident-panel" data-ident="(\w+)"([^>]*)>', linked)
+    assert len(panels) == 4, f"expected 4 panels, got {panels}"
+    revealed = [kind for kind, attrs in panels if "hidden" not in attrs]
+    assert revealed == ["roster"]
+
+    # A speaker with no identity reveals nothing: the four chips are the prompt.
+    plain = re.findall(r'<div class="ident-panel" data-ident="(\w+)"([^>]*)>',
+                       _card_html(body, "SPEAKER_01"))
+    assert [k for k, a in plain if "hidden" not in a] == []
+
+
+def test_a_local_person_card_warns_what_the_roster_panel_would_drop(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """link_speaker clears local_slug/local_role, so picking a politician
+    destroys the local person. That used to happen silently."""
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_make_local_person("2026-02-04-council", "SPEAKER_01", "brian-sterling",
+                            "official", name="Brian Sterling")
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    assert "brian-sterling" in body
+    assert "drops the local person" in body
+
+
+def test_a_marked_card_offers_an_undo(tagged_meeting_dir, tmp_meetings_dir):
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_non_speaker("2026-02-04-council", "SPEAKER_01", "Pledge")
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    assert 'action="/meetings/2026-02-04-council/speakers/SPEAKER_01/clear-status"' in body
+
+
+def test_the_local_person_panel_asks_for_a_name_and_a_role(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """The role field must NOT prefill. local_roles_for('council')[0] is
+    'public_comment' and for a news_clip it is 'candidate' — a silent wrong
+    default on a person published to readers."""
+    body = _linked_body(tagged_meeting_dir)
+    assert 'name="name" value="Mayor Johnson" required' in body   # prefilled from the card
+    assert 'name="role" value="" required' in body                # blank, explicit
+
+
+def test_a_marked_card_does_not_prefill_its_placeholders_as_a_local_person(
+        tagged_meeting_dir, tmp_meetings_dir):
+    """A marked speaker has nothing honest to prefill. local_slug is the synthetic
+    unidentified-<meeting>-<label> handle (a voice-profile key); speaker_name is
+    the status word 'Unidentified Speaker'; and default_slug, derived from that
+    same placeholder, is 'unidentified-speaker' — worse still, because it carries
+    no meeting or label and would collide two unrelated strangers from different
+    meetings onto one local_people row. Both fields render blank and required.
+
+    The two slugs are asserted by VALUE, taken from the real helpers rather than
+    typed by hand: make_unidentified_slug replaces the underscore in SPEAKER_01
+    with a hyphen, so a hand-written 'speaker_01' would make this negative
+    assertion pass while testing nothing."""
+    from src.review import default_local_slug, make_unidentified_slug
+
+    mdir = tagged_meeting_dir("x", meeting_id="2026-02-04-council", completed_stage=4)
+    _write_meeting(mdir)
+    apply_mark_unidentified("2026-02-04-council", "SPEAKER_01")
+    body = TestClient(create_app()).get("/meetings/2026-02-04-council/review").text
+    card = _card_html(body, "SPEAKER_01")
+
+    handle = make_unidentified_slug("2026-02-04-council", "SPEAKER_01")
+    assert handle == "unidentified-2026-02-04-council-speaker-01"   # guards the guard
+    assert f'value="{handle}"' not in card
+    assert f'value="{default_local_slug("Unidentified Speaker", "SPEAKER_01")}"' not in card
+
+    assert 'name="name" value="" required' in card
+    assert 'name="slug" value="" required' in card
+
+
+def test_the_identity_pill_renders(tagged_meeting_dir, tmp_meetings_dir):
+    body = _linked_body(tagged_meeting_dir)
+    assert 'class="identpill' in body
+    assert ">roster<" in body
+    assert ">no identity<" in body
+
+
+def test_workspace_js_reveals_the_chosen_panel(tmp_meetings_dir):
+    js = Path("gui/static/workspace.js").read_text()
+    assert "ident-panel" in js
+    assert 'data-ident' in js

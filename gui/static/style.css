@@ -153,3 +153,38 @@ table.library .ctx { font-size: 0.8rem; color: #667; margin: 0.1rem 0; }
 .pending-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: #f1f1f4; border-radius: 0.5rem; padding: 0.15rem 0.5rem; font-size: 0.82rem; }
 .pending-chip form { margin: 0; }
 .pending-chip button { border: none; background: none; cursor: pointer; color: #999; font-size: 0.8rem; padding: 0; }
+
+/* --- Speaker identity chooser -------------------------------------------
+   The four identity outcomes. All four chips always render; the checked one
+   is the speaker's current identity and its panel is the only visible one. */
+.identpill { font-size: 0.72rem; text-transform: lowercase; padding: 0.05rem 0.4rem;
+             border-radius: 0.4rem; background: #eee; color: #666; }
+.identpill.ident-roster { background: #e8eefc; color: #2a4a8a; }
+.identpill.ident-local { background: #eaf5ec; color: #2b6b40; }
+.identpill.ident-unidentified { background: #eeeeff; color: #444455; }
+.identpill.ident-non_speaker { background: #f0f0f0; color: #777; }
+.identpill.ident-none { background: #fdf0e3; color: #8a5a1a; }
+
+.ident, .also { margin-top: 0.7rem; border-top: 1px solid #eceef2; padding-top: 0.5rem; }
+.ident h3, .also h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+                      color: #8a94a6; margin: 0 0 0.4rem; font-weight: 600; }
+.ident-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.ident-chip { display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;
+              font-size: 0.85rem; padding: 0.2rem 0.55rem; border: 1px solid #d3d9e3;
+              border-radius: 999px; background: #fafbfd; }
+.ident-chip:hover { background: #f1f4fa; }
+.ident-chip.current { border-color: #2a4a8a; background: #e8eefc; font-weight: 600; }
+
+.ident-panel { margin-top: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid #e3e7ee;
+               border-radius: 0.5rem; background: #fbfcfe;
+               display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+.ident-help { margin: 0; font-size: 0.8rem; color: #667; }
+.ident-now { margin: 0; font-size: 0.85rem; }
+.ident-cost { margin: 0; font-size: 0.8rem; color: #8a5a1a; background: #fdf3e6;
+              border-radius: 0.3rem; padding: 0.2rem 0.4rem; }
+.ident-panel form { display: flex; gap: 0.4rem; align-items: flex-end; flex-wrap: wrap; margin: 0; }
+.ident-panel label, .also label { display: inline-flex; flex-direction: column; gap: 0.15rem;
+                                  font-size: 0.72rem; color: #8a94a6; text-transform: uppercase;
+                                  letter-spacing: 0.04em; }
+.ident-panel label input, .also label input, .also label select { text-transform: none;
+                                  letter-spacing: normal; font-size: 0.85rem; color: #222; }
